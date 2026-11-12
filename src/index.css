@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --bg: #faf9f5;
+  --bg-sidebar: #f5f4ed;
+  --surface: #ffffff;
+  --surface-2: #f0eee6;
+  --border: #e6e4db;
+  --text: #1f1e1d;
+  --text-muted: #73726c;
+  --accent: #c96442;
+  --accent-hover: #b5573a;
+  --accent-fg: #ffffff;
+  --code-bg: #f5f4ed;
+  --code-header: #edebe2;
+  --info: #3b6fa8;
+  --success: #3f7d58;
+  --warning: #b7791f;
+  --danger: #b93c3c;
+
+  --chart-1: #c96442;
+  --chart-2: #5b7fa6;
+  --chart-3: #6b8f71;
+  --chart-4: #c9962b;
+  --chart-5: #8b6ba8;
+  --chart-6: #c25b7a;
+  --chart-7: #4f9da6;
+  --chart-8: #8a8579;
+
+  --hljs-comment: #a8a69e;
+  --hljs-keyword: #c96442;
+  --hljs-string: #3f7d58;
+  --hljs-number: #b7791f;
+  --hljs-function: #3b6fa8;
+  --hljs-variable: #1f1e1d;
+  --hljs-attr: #5b7fa6;
+  --hljs-tag: #c96442;
+  --hljs-meta: #8a8579;
+}
+
+:root[data-theme="dark"] {
+  --bg: #262624;
+  --bg-sidebar: #1f1e1d;
+  --surface: #30302e;
+  --surface-2: #3a3938;
+  --border: #3e3d3a;
+  --text: #eceae2;
+  --text-muted: #a8a69e;
+  --accent: #d97757;
+  --accent-hover: #e58a6c;
+  --accent-fg: #ffffff;
+  --code-bg: #1f1e1d;
+  --code-header: #2b2a28;
+  --info: #6fa3db;
+  --success: #5fb07f;
+  --warning: #e0a63b;
+  --danger: #e26d6d;
+
+  --hljs-comment: #73726c;
+  --hljs-keyword: #d97757;
+  --hljs-string: #5fb07f;
+  --hljs-number: #e0a63b;
+  --hljs-function: #6fa3db;
+  --hljs-variable: #eceae2;
+  --hljs-attr: #8a8579;
+  --hljs-tag: #d97757;
+  --hljs-meta: #a8a69e;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sidebar: var(--bg-sidebar);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-codebg: var(--code-bg);
+  --color-codehead: var(--code-header);
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", Georgia, serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+@layer utilities {
+  .prose-chat {
+    font-family: var(--font-serif);
+    font-size: 16.5px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .prose-chat > *:first-child {
+    margin-top: 0;
+  }
+  .prose-chat > *:last-child {
+    margin-bottom: 0;
+  }
+  .prose-chat p {
+    margin-top: 0;
+    margin-bottom: 1em;
+  }
+  .prose-chat h1,
+  .prose-chat h2,
+  .prose-chat h3,
+  .prose-chat h4 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
+  }
+  .prose-chat h1 {
+    font-size: 1.5em;
+  }
+  .prose-chat h2 {
+    font-size: 1.3em;
+  }
+  .prose-chat h3 {
+    font-size: 1.1em;
+  }
+  .prose-chat ul,
+  .prose-chat ol {
+    margin-top: 0;
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+  }
+  .prose-chat ul {
+    list-style-type: disc;
+  }
+  .prose-chat ol {
+    list-style-type: decimal;
+  }
+  .prose-chat li {
+    margin-bottom: 0.25em;
+  }
+  .prose-chat li::marker {
+    color: var(--text-muted);
+  }
+  .prose-chat blockquote {
+    border-left: 3px solid var(--border);
+    padding-left: 1em;
+    margin: 1em 0;
+    color: var(--text-muted);
+  }
+  .prose-chat a {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--text-muted);
+    text-underline-offset: 2px;
+    transition: text-decoration-color 150ms;
+  }
+  .prose-chat a:hover {
+    text-decoration-color: var(--text);
+  }
+  .prose-chat strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .prose-chat code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--surface-2);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+  }
+  .prose-chat pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+  .prose-chat pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .prose-chat hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 2em 0;
+  }
+  .prose-chat table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+  .prose-chat th,
+  .prose-chat td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  .prose-chat th {
+    background: var(--surface-2);
+    font-weight: 500;
+  }
+
+  .hljs-comment,
+  .hljs-quote {
+    color: var(--hljs-comment);
+    font-style: italic;
+  }
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-literal,
+  .hljs-section,
+  .hljs-link {
+    color: var(--hljs-keyword);
+  }
+  .hljs-string,
+  .hljs-title,
+  .hljs-name,
+  .hljs-type,
+  .hljs-attribute,
+  .hljs-symbol,
+  .hljs-bullet,
+  .hljs-addition,
+  .hljs-variable,
+  .hljs-template-tag,
+  .hljs-template-variable {
+    color: var(--hljs-string);
+  }
+  .hljs-number,
+  .hljs-meta .hljs-keyword,
+  .hljs-built_in,
+  .hljs-builtin-name,
+  .hljs-params {
+    color: var(--hljs-number);
+  }
+  .hljs-function,
+  .hljs-class .hljs-title {
+    color: var(--hljs-function);
+  }
+  .hljs-attr {
+    color: var(--hljs-attr);
+  }
+  .hljs-tag {
+    color: var(--hljs-tag);
+  }
+  .hljs-meta {
+    color: var(--hljs-meta);
+  }
+}

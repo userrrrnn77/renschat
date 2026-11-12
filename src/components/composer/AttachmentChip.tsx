@@ -1,0 +1,57 @@
+import { formatBytes, getExt } from "../../lib/files";
+import { X, RotateCcw, FileText } from "lucide-react";
+import type { AttachmentUpload } from "../../lib/upload";
+import { cn } from "../../lib/cn";
+
+export function AttachmentChip({
+  attachment,
+  onRemove,
+  onRetry,
+}: {
+  attachment: AttachmentUpload;
+  onRemove: () => void;
+  onRetry: () => void;
+}) {
+  const isImage = attachment.mime.startsWith("image/");
+  const isFailed = attachment.state === "failed";
+
+  return (
+    <div
+      className={cn(
+        "relative flex items-center gap-2 border rounded-lg px-3 py-1.5 text-xs bg-surface",
+        isFailed ? "border-danger/50" : "border-line",
+      )}>
+      {isImage && attachment.localUrl ? (
+        <img
+          src={attachment.localUrl}
+          alt=""
+          className="w-6 h-6 rounded object-cover"
+        />
+      ) : (
+        <FileText className="w-4 h-4 text-muted" />
+      )}
+      <div className="flex flex-col truncate max-w-30">
+        <span className="truncate font-medium">{attachment.name}</span>
+        <span className="text-muted">{formatBytes(attachment.size)}</span>
+      </div>
+
+      {attachment.state === "uploading" && (
+        <div
+          className="absolute bottom-0 left-0 h-0.5 bg-accent transition-all"
+          style={{ width: `${attachment.progress}%` }}
+        />
+      )}
+
+      <button
+        onClick={isFailed ? onRetry : onRemove}
+        className="p-1 hover:bg-surface2 rounded-md transition-colors ml-1"
+        title={isFailed ? "Ulangi" : "Hapus"}>
+        {isFailed ? (
+          <RotateCcw className="w-3.5 h-3.5 text-danger" />
+        ) : (
+          <X className="w-3.5 h-3.5 text-muted" />
+        )}
+      </button>
+    </div>
+  );
+}
