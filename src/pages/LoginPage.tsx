@@ -1,8 +1,11 @@
+// src/pages/LoginPage.tsx
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAuthStore } from "../store/authStore";
 import { SparkleLogo } from "../components/ui/Icons";
 import { Spinner } from "../components/ui/Spinner";
+import { Mail, Lock, User, ArrowRight, CheckCircle2 } from "lucide-react";
+import { cn } from "../lib/cn";
 
 export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,93 +38,218 @@ export function LoginPage() {
     } catch (err: any) {
       if (err.status === 401) setError("Email atau password salah");
       else if (err.status === 409) setError("Email sudah terdaftar");
-      else setError(err.message || "Terjadi kesalahan");
+      else setError(err.message || "Terjadi kesalahan pada server");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg p-4">
-      <div className="w-full max-w-sm bg-surface border border-line rounded-2xl p-8 shadow-sm animate-in fade-in zoom-in-95">
-        <div className="flex flex-col items-center mb-8">
-          <SparkleLogo className="w-8 h-8 text-accent mb-2" />
-          <h1 className="text-2xl font-serif font-semibold text-ink">GenUI</h1>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-bg relative overflow-hidden p-4 sm:p-8">
+      {/* Background Ornaments (Sesuai request lo) */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="flex bg-surface2 p-1 rounded-lg mb-6">
-          <button
-            onClick={() => setIsLogin(true)}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${isLogin ? "bg-surface shadow-sm text-ink" : "text-muted"}`}>
-            Masuk
-          </button>
-          <button
-            onClick={() => setIsLogin(false)}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${!isLogin ? "bg-surface shadow-sm text-ink" : "text-muted"}`}>
-            Daftar
-          </button>
-        </div>
+      {/* Split Card Container */}
+      <div className="w-full max-w-5xl bg-surface/80 backdrop-blur-xl border border-line rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative z-10 animate-in fade-in zoom-in-95 duration-500 min-h-150">
+        {/* ── KIRI: Branding Panel ────────────────────────────────────── */}
+        <div className="hidden md:flex w-full md:w-[45%] relative bg-accent flex-col justify-between p-12 overflow-hidden text-accent-fg">
+          {/* Ornamen abstrak panel kiri */}
+          <div className="absolute top-0 right-0 w-100 h-100 bg-white/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-75 h-75 bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
 
-        {error && (
-          <div className="mb-4 p-3 bg-danger/10 text-danger text-sm rounded-lg border border-danger/20">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div>
-              <label className="block text-xs font-medium text-muted mb-1">
-                Nama
-              </label>
-              <input
-                required
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-              />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <SparkleLogo className="w-5 h-5 text-white" animate />
             </div>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1">
-              Email
-            </label>
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1">
-              Password
-            </label>
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-            />
+            <span className="text-xl font-bold tracking-tight">GenUI</span>
           </div>
 
-          <button
-            disabled={loading}
-            type="submit"
-            className="w-full flex justify-center items-center h-10 bg-accent hover:bg-accent-hover text-accent-fg font-medium rounded-lg text-sm transition-colors mt-2">
-            {loading ? (
-              <Spinner className="w-5 h-5" />
-            ) : isLogin ? (
-              "Masuk"
-            ) : (
-              "Daftar"
-            )}
-          </button>
-        </form>
+          {/* Teks Dinamis dengan Animasi Switch */}
+          <div
+            key={isLogin ? "login" : "register"}
+            className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-3xl font-semibold leading-tight mb-4">
+              {isLogin ? "Welcome back." : "Mari bergabung bersama GenUI."}
+            </h2>
+            <p className="text-white/80 text-[15px] leading-relaxed mb-8">
+              {isLogin
+                ? "Senang melihatmu lagi. Lanjutkan percakapan, buat tabel, analisis dokumen, atau generate file bareng asisten AI."
+                : "Tingkatkan produktivitasmu dengan asisten AI generatif yang bisa merender UI, dokumen, dan visualisasi data langsung di dalam chat."}
+            </p>
+
+            <div className="space-y-4">
+              {[
+                "Generative UI (Tabel, Chart, PDF)",
+                "Pemahaman dokumen (RAG Pipeline)",
+                "Thinking Harness & Tool Calling",
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 text-sm text-white/90">
+                  <CheckCircle2 className="w-5 h-5 text-white/60" />
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative z-10 text-xs text-white/50">
+            © {new Date().getFullYear()} GenUI. Dibuat untuk produktivitas.
+          </div>
+        </div>
+
+        {/* ── KANAN: Form Panel ───────────────────────────────────────── */}
+        <div className="w-full md:w-[55%] flex flex-col justify-center p-6 sm:p-10 md:p-12 relative bg-surface">
+          {/* Logo Mobile (muncul cuma pas di HP) */}
+          <div className="md:hidden absolute top-6 left-6 flex items-center gap-2">
+            <SparkleLogo className="w-6 h-6 text-accent" animate />
+            <span className="text-lg font-semibold text-ink">GenUI</span>
+          </div>
+
+          <div className="mt-8 md:mt-0 w-full max-w-sm mx-auto">
+            {/* Toggle Login/Register */}
+            <div className="flex bg-surface2 p-1 rounded-xl mb-8">
+              <button
+                onClick={() => {
+                  setIsLogin(true);
+                  setError("");
+                }}
+                className={cn(
+                  "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  isLogin
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-muted hover:text-ink",
+                )}>
+                Masuk
+              </button>
+              <button
+                onClick={() => {
+                  setIsLogin(false);
+                  setError("");
+                }}
+                className={cn(
+                  "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  !isLogin
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-muted hover:text-ink",
+                )}>
+                Daftar
+              </button>
+            </div>
+
+            {/* Animasi transisi form (key berdasarkan isLogin) */}
+            <div
+              key={isLogin ? "form-login" : "form-register"}
+              className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="mb-6">
+                <h1 className="text-2xl font-semibold text-ink tracking-tight">
+                  {isLogin ? "Masuk ke akunmu" : "Buat akun baru"}
+                </h1>
+                <p className="text-sm text-muted mt-1">
+                  {isLogin
+                    ? "Masukkan kredensial untuk melanjutkan."
+                    : "Isi data di bawah untuk mendaftar."}
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-5 p-3 bg-danger/10 text-danger text-sm rounded-xl border border-danger/20 flex items-center gap-2 animate-in fade-in">
+                  <div className="w-1.5 h-1.5 rounded-full bg-danger shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted ml-1">
+                      Nama Lengkap
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+                      <input
+                        required
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full bg-bg border border-line rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted ml-1">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+                    <input
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="nama@email.com"
+                      className="w-full bg-bg border border-line rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted ml-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+                    <input
+                      required
+                      type="password"
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-bg border border-line rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  disabled={loading}
+                  type="submit"
+                  className="w-full group flex justify-center items-center gap-2 h-11 bg-accent hover:bg-accent-hover text-accent-fg font-medium rounded-xl text-sm transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
+                  {loading ? (
+                    <Spinner className="w-5 h-5" />
+                  ) : (
+                    <>
+                      {isLogin ? "Masuk ke Akun" : "Buat Akun Baru"}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-8 text-xs text-muted">
+              <Link to="/terms" className="hover:text-ink transition-colors">
+                Syarat & Ketentuan
+              </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link to="/privacy" className="hover:text-ink transition-colors">
+                Kebijakan Privasi
+              </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link to="/faq" className="hover:text-ink transition-colors">
+                FAQ
+              </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link to="/contact" className="hover:text-ink transition-colors">
+                Bantuan
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

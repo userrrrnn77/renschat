@@ -25,11 +25,23 @@ export function FilePreviewPanel() {
         `${import.meta.env.VITE_API_BASE_URL || ""}/api/files/${preview.fileId}/content`,
         { credentials: "include" },
       )
-        .then((res) => res.json())
-        .then((data) => {
+        .then(async (res) => {
+          if (!res.ok) {
+            if (res.status === 415) {
+              setTextContent(
+                "File ini bertipe biner dan tidak bisa ditampilkan sebagai teks.",
+              );
+              return;
+            }
+            throw new Error("fetch failed");
+          }
+          const data = await res.json();
           if (data.text) setTextContent(data.text);
         })
-        .catch(console.error)
+        .catch((err) => {
+          console.error(err);
+          setTextContent("Gagal memuat teks file.");
+        })
         .finally(() => setLoadingText(false));
     }
   }, [preview]);

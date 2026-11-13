@@ -1,7 +1,16 @@
 import { useRef, useState, useEffect } from "react";
+import { Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
-import { LogOut, Sun, Moon, Monitor } from "lucide-react";
+import {
+  LogOut,
+  Sun,
+  Moon,
+  Monitor,
+  BookOpen,
+  Shield,
+  MessageCircle,
+} from "lucide-react";
 import { cn } from "../../lib/cn";
 
 export function UserMenu() {
@@ -64,6 +73,24 @@ export function UserMenu() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="px-1 py-1 border-t border-line mt-1 pt-1">
+            <Link
+              to="/faq"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <BookOpen className="w-4 h-4 text-muted" /> FAQ
+            </Link>
+            <Link
+              to="/privacy"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <Shield className="w-4 h-4 text-muted" /> Privasi
+            </Link>
+            <Link
+              to="/contact"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <MessageCircle className="w-4 h-4 text-muted" /> Bantuan
+            </Link>
           </div>
 
           <button

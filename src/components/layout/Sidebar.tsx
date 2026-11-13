@@ -1,11 +1,13 @@
+// src/components/layout/Sidebar.tsx
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   useSessionsStore,
   selectGroupedSessions,
 } from "../../store/sessionsStore";
-import { useAuthStore } from "../../store/authStore";
+
 import { useUIStore } from "../../store/uiStore";
+import { useConfirmStore } from "../../store/confirmStore";
 import { SessionItem } from "./SessionItem";
 import { UserMenu } from "./UserMenu";
 import { SparkleLogo } from "../ui/Icons";
@@ -27,6 +29,7 @@ export function Sidebar() {
     remove,
   } = useSessionsStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const askConfirm = useConfirmStore((s) => s.request);
 
   const groups = selectGroupedSessions();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,6 +49,20 @@ export function Sidebar() {
   const handleNewChat = () => {
     navigate("/");
     if (window.innerWidth < 768) toggleSidebar();
+  };
+
+  const handleDelete = async (id: string): Promise<void> => {
+    const ok = await askConfirm({
+      title: "Hapus chat ini?",
+      description:
+        "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
+      confirmLabel: "Hapus",
+      cancelLabel: "Batal",
+      variant: "danger",
+    });
+    if (!ok) return;
+    void remove(id);
+    if (id === currentSessionId) navigate("/");
   };
 
   if (!sidebarOpen) return null;
@@ -116,10 +133,7 @@ export function Sidebar() {
                       onRename={(title) => patch(s.id, { title })}
                       onPin={(pinned) => patch(s.id, { pinned })}
                       onDelete={() => {
-                        if (confirm("Hapus chat ini?")) {
-                          remove(s.id);
-                          if (s.id === currentSessionId) navigate("/");
-                        }
+                        void handleDelete(s.id);
                       }}
                     />
                   ))}

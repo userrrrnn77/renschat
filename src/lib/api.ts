@@ -88,13 +88,17 @@ export const api = {
       fetchApi<void>(`/sessions/${id}`, { method: "DELETE" }),
   },
   files: {
-    presign: (body: any) =>
+    presign: (body: any, signal?: AbortSignal) =>
       fetchApi<any>("/files/presign", {
         method: "POST",
         body: JSON.stringify(body),
+        ...(signal !== undefined ? { signal } : {}),
       }),
-    complete: (id: string) =>
-      fetchApi<any>(`/files/${id}/complete`, { method: "POST" }),
+    complete: (id: string, signal?: AbortSignal) =>
+      fetchApi<any>(`/files/${id}/complete`, {
+        method: "POST",
+        ...(signal !== undefined ? { signal } : {}),
+      }),
     get: (id: string) => fetchApi<any>(`/files/${id}`),
     delete: (id: string) =>
       fetchApi<void>(`/files/${id}`, { method: "DELETE" }),

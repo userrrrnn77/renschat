@@ -1,3 +1,4 @@
+// src/App.tsx
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { useAuthStore } from "./store/authStore";
@@ -6,6 +7,13 @@ import { ChatPage } from "./pages/ChatPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SparkleLogo } from "./components/ui/Icons";
 import { Toaster } from "./components/ui/Toaster";
+import { ConfirmModal } from "./components/ui/ConfirmModal";
+import {
+  TermsPage,
+  PrivacyPage,
+  FaqPage,
+  ContactPage,
+} from "./pages/StaticPages";
 
 export default function App() {
   const { status, bootstrap } = useAuthStore();
@@ -15,7 +23,6 @@ export default function App() {
     bootstrap();
     setMounted(true);
 
-    // Listen for global unauthorized events
     const handleUnauthorized = () => {
       useAuthStore.getState().clear();
     };
@@ -57,6 +64,11 @@ export default function App() {
           element={status === "authed" ? <Navigate to="/" /> : <LoginPage />}
         />
 
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
         <Route
           element={
             status === "authed" ? <AppShell /> : <Navigate to="/login" />
@@ -68,6 +80,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <Toaster />
+      <ConfirmModal />
     </BrowserRouter>
   );
 }

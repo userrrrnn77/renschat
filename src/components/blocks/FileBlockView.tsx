@@ -1,4 +1,5 @@
-import { formatBytes, getExt, isImage } from "../../lib/files";
+// src/components/blocks/FileBlockView.tsx
+import { formatBytes, getExt } from "../../lib/files";
 import type { FileBlock } from "../../types";
 import { useUIStore } from "../../store/uiStore";
 

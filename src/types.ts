@@ -1,15 +1,18 @@
+// src/types.ts
 export type Cell = string | number | boolean | null;
 
 export interface TextBlock {
   type: "text";
   markdown: string;
 }
+
 export interface CodeBlock {
   type: "code";
   language: string;
   filename?: string;
   content: string;
 }
+
 export interface FileBlock {
   type: "file";
   fileId: string;
@@ -20,11 +23,13 @@ export interface FileBlock {
   preview: "code" | "text" | "image" | "pdf" | "none";
   note?: string;
 }
+
 export interface ImageBlock {
   type: "image";
   fileId: string;
   alt?: string;
 }
+
 export interface TableBlock {
   type: "table";
   title?: string;
@@ -35,6 +40,7 @@ export interface TableBlock {
   }[];
   rows: Record<string, Cell>[];
 }
+
 export interface ChartBlock {
   type: "chart";
   kind: "bar" | "line" | "area" | "pie" | "scatter";
@@ -43,6 +49,7 @@ export interface ChartBlock {
   series: { key: string; label?: string }[];
   data: Record<string, Cell>[];
 }
+
 export interface CardBlock {
   type: "card";
   title: string;
@@ -51,12 +58,16 @@ export interface CardBlock {
   tone: "neutral" | "info" | "success" | "warning" | "danger";
   actions?: { label: string; prompt: string }[];
 }
+
 export interface ChoicesBlock {
   type: "choices";
   question: string;
   multi: boolean;
   options: { label: string; value?: string }[];
+  questionId?: string;
+  answer?: string[];
 }
+
 export type Block =
   | TextBlock
   | CodeBlock
@@ -67,21 +78,43 @@ export type Block =
   | CardBlock
   | ChoicesBlock;
 
+export type StreamPhase = "clarifying" | "retrieving" | "generating" | null;
+
+export interface PendingClarification {
+  questionId: string;
+  question: string;
+  multi: boolean;
+  options: { label: string; value?: string }[];
+  timeoutMs: number;
+  receivedAt: number;
+}
+
+export type IndexStatus =
+  | "disabled"
+  | "pending"
+  | "indexing"
+  | "ready"
+  | "failed";
+
 export interface User {
   id: string;
   email: string;
   name: string;
   timezone: string;
 }
+
 export interface SessionItem {
   id: string;
   title: string;
+  titleAuto: boolean;
   pinned: boolean;
   archived: boolean;
   lastMessageAt: string | null;
   createdAt: string;
 }
+
 export type MessageStatus = "streaming" | "done" | "aborted" | "error";
+
 export interface ServerMessage {
   id: string;
   role: "user" | "assistant" | "tool";
@@ -89,7 +122,9 @@ export interface ServerMessage {
   status: MessageStatus;
   createdAt: string;
   attachmentIds?: string[];
+  sources?: SourceRef[];
 }
+
 export interface FileMeta {
   id: string;
   name: string;
@@ -98,18 +133,49 @@ export interface FileMeta {
   version: number;
   origin: "upload" | "generated";
   status: "pending" | "processing" | "ready" | "failed";
+  indexStatus: IndexStatus | null;
   error: string | null;
   summaryLine: string | null;
   createdAt: string;
 }
+
 export interface Usage {
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
 }
 
+export interface SourceRef {
+  n: number;
+  fileId: string;
+  name: string;
+  idx: number;
+  snippet: string;
+}
+
 export type StreamEvent =
   | { event: "message.start"; data: { messageId: string; sessionId: string } }
+  | {
+      event: "status";
+      data: { phase: "clarifying" | "retrieving" | "generating" };
+    }
+  | {
+      event: "clarification.needed";
+      data: {
+        questionId: string;
+        question: string;
+        multi: boolean;
+        options: { label: string; value?: string }[];
+        timeoutMs: number;
+      };
+    }
+  | {
+      event: "clarification.resolved";
+      data: { questionId: string; answer: string[] };
+    }
+  | { event: "sources"; data: { sources: SourceRef[] } }
+  | { event: "thinking.delta"; data: { delta: string } }
+  | { event: "thinking.end"; data: { durationMs: number } }
   | { event: "block.start"; data: { index: number; block: Block } }
   | { event: "block.delta"; data: { index: number; delta: string } }
   | { event: "block.end"; data: { index: number; block: Block } }
@@ -136,6 +202,7 @@ export interface ToolRun {
   summary?: string;
   beforeIndex: number;
 }
+
 export interface AttachmentRef {
   id: string;
   name: string;
@@ -143,6 +210,7 @@ export interface AttachmentRef {
   size: number;
   localUrl?: string;
 }
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -153,4 +221,6 @@ export interface ChatMessage {
   tools?: ToolRun[];
   error?: { code: string; message: string };
   usage?: Usage | null;
+  sources?: SourceRef[];
+  thinking?: { text: string; done: boolean; durationMs?: number };
 }

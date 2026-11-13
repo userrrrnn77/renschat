@@ -1,7 +1,15 @@
-import { formatBytes, getExt } from "../../lib/files";
+import { formatBytes } from "../../lib/files";
 import { X, RotateCcw, FileText } from "lucide-react";
 import type { AttachmentUpload } from "../../lib/upload";
 import { cn } from "../../lib/cn";
+
+const UPLOADING_STATES: ReadonlySet<AttachmentUpload["state"]> = new Set([
+  "queued",
+  "presigning",
+  "uploading",
+  "completing",
+  "processing",
+]);
 
 export function AttachmentChip({
   attachment,
@@ -14,11 +22,12 @@ export function AttachmentChip({
 }) {
   const isImage = attachment.mime.startsWith("image/");
   const isFailed = attachment.state === "failed";
+  const isUploading = UPLOADING_STATES.has(attachment.state);
 
   return (
     <div
       className={cn(
-        "relative flex items-center gap-2 border rounded-lg px-3 py-1.5 text-xs bg-surface",
+        "relative flex items-center gap-2 border rounded-lg px-3 py-1.5 text-xs bg-surface overflow-hidden",
         isFailed ? "border-danger/50" : "border-line",
       )}>
       {isImage && attachment.localUrl ? (
@@ -32,10 +41,14 @@ export function AttachmentChip({
       )}
       <div className="flex flex-col truncate max-w-30">
         <span className="truncate font-medium">{attachment.name}</span>
-        <span className="text-muted">{formatBytes(attachment.size)}</span>
+        <span className="text-muted">
+          {isUploading
+            ? `${attachment.state === "processing" ? "Memproses" : "Mengunggah"}… ${attachment.progress}%`
+            : formatBytes(attachment.size)}
+        </span>
       </div>
 
-      {attachment.state === "uploading" && (
+      {isUploading && (
         <div
           className="absolute bottom-0 left-0 h-0.5 bg-accent transition-all"
           style={{ width: `${attachment.progress}%` }}
@@ -45,9 +58,11 @@ export function AttachmentChip({
       <button
         onClick={isFailed ? onRetry : onRemove}
         className="p-1 hover:bg-surface2 rounded-md transition-colors ml-1"
-        title={isFailed ? "Ulangi" : "Hapus"}>
+        title={isFailed ? "Ulangi" : isUploading ? "Batal unggah" : "Hapus"}>
         {isFailed ? (
           <RotateCcw className="w-3.5 h-3.5 text-danger" />
+        ) : isUploading ? (
+          <X className="w-3.5 h-3.5 text-danger" />
         ) : (
           <X className="w-3.5 h-3.5 text-muted" />
         )}

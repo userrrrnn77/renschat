@@ -1,6 +1,9 @@
+// src/store/authStore.ts
 import { create } from "zustand";
 import { api, ApiError } from "../lib/api";
 import type { User } from "../types";
+import { useChatStore } from "./chatStore";
+import { useComposerStore } from "./composerStore";
 
 interface AuthState {
   user: User | null;
@@ -10,6 +13,11 @@ interface AuthState {
   register: (body: any) => Promise<void>;
   logout: () => Promise<void>;
   clear: () => void;
+}
+
+function resetClientStores(): void {
+  useChatStore.getState().reset();
+  useComposerStore.getState().reset();
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -38,8 +46,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await api.auth.logout();
-    } catch {}
+    } catch {
+      // ignore
+    }
+    resetClientStores();
     set({ user: null, status: "anon" });
   },
-  clear: () => set({ user: null, status: "anon" }),
+  clear: () => {
+    resetClientStores();
+    set({ user: null, status: "anon" });
+  },
 }));

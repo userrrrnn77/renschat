@@ -3,10 +3,11 @@ import { useChatStore } from "../../store/chatStore";
 import { BlockRenderer } from "../blocks/BlockRenderer";
 import { ToolChip } from "./ToolChip";
 import { ThinkingIndicator } from "./ThinkingIndicator";
+import { ClarificationCard } from "./ClarificationCard";
+import { ThinkingPanel } from "./ThinkingPanel";
 import { copyToClipboard } from "../../lib/copy";
 import { Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../../types";
-import { cn } from "../../lib/cn";
 
 export function AssistantMessage({
   message,
@@ -20,7 +21,11 @@ export function AssistantMessage({
   const [copied, setCopied] = useState(false);
   const isStreaming = message.status === "streaming";
 
-  const handleCopy = () => {
+  const session = useChatStore((s) => s.bySession[sessionId]);
+  const phase = session?.phase ?? null;
+  const pendingClarification = session?.pendingClarification ?? null;
+
+  const handleCopy = (): void => {
     const text = message.blocks
       .map((b) => {
         if (b.type === "text") return b.markdown;
@@ -34,13 +39,26 @@ export function AssistantMessage({
     setTimeout(() => setCopied(false), 1500);
   };
 
-  // Group tools by beforeIndex
   const toolsBefore = (index: number) =>
     (message.tools || []).filter((t) => t.beforeIndex === index);
 
   return (
     <div className="flex flex-col gap-4 py-4 group">
-      {message.blocks.length === 0 && isStreaming && <ThinkingIndicator />}
+      {message.blocks.length === 0 &&
+        isStreaming &&
+        !pendingClarification &&
+        !message.thinking?.text && <ThinkingIndicator phase={phase} />}
+
+      {message.thinking || message.sources ? (
+        <ThinkingPanel
+          phase={phase}
+          thinkingText={message.thinking?.text ?? ""}
+          thinkingDone={message.thinking?.done ?? true}
+          durationMs={message.thinking?.durationMs}
+          sources={message.sources}
+          isStreaming={isStreaming}
+        />
+      ) : null}
 
       {message.blocks.map((block, i) => (
         <div key={i}>
@@ -56,6 +74,13 @@ export function AssistantMessage({
         .map((t) => (
           <ToolChip key={t.callId} tool={t} />
         ))}
+
+      {pendingClarification && isStreaming && (
+        <ClarificationCard
+          sessionId={sessionId}
+          clarification={pendingClarification}
+        />
+      )}
 
       {message.error && (
         <div className="text-sm text-danger bg-danger/10 border border-danger/20 p-3 rounded-lg">

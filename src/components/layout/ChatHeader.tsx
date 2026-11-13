@@ -1,6 +1,8 @@
+// src/components/layout/ChatHeader.tsx
 import { useParams, useNavigate } from "react-router";
 import { useSessionsStore } from "../../store/sessionsStore";
 import { useUIStore } from "../../store/uiStore";
+import { useConfirmStore } from "../../store/confirmStore";
 import { Menu as MenuIcon, ChevronDown } from "lucide-react";
 import { Menu } from "../ui/Menu";
 import { useState } from "react";
@@ -10,6 +12,7 @@ export function ChatHeader() {
   const navigate = useNavigate();
   const { items, patch, remove } = useSessionsStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const askConfirm = useConfirmStore((s) => s.request);
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState("");
 
@@ -18,6 +21,21 @@ export function ChatHeader() {
   const handleRename = () => {
     if (id && title.trim()) patch(id, { title: title.trim() });
     setIsEditing(false);
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (!session) return;
+    const ok = await askConfirm({
+      title: "Hapus chat ini?",
+      description:
+        "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
+      confirmLabel: "Hapus",
+      cancelLabel: "Batal",
+      variant: "danger",
+    });
+    if (!ok) return;
+    void remove(session.id);
+    navigate("/");
   };
 
   return (
@@ -67,10 +85,7 @@ export function ChatHeader() {
             </button>
             <button
               onClick={() => {
-                if (confirm("Hapus chat ini?")) {
-                  remove(session.id);
-                  navigate("/");
-                }
+                void handleDelete();
               }}
               className="w-full text-left px-3 py-1.5 text-sm hover:bg-danger/10 text-danger">
               Hapus

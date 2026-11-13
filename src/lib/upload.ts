@@ -1,5 +1,6 @@
+// src/lib/upload.ts
 import { api } from "./api";
-import type { AttachmentRef } from "../types";
+import type { AttachmentRef, FileMeta, IndexStatus } from "../types";
 
 export type UploadState =
   | "queued"
@@ -10,11 +11,18 @@ export type UploadState =
   | "ready"
   | "failed";
 
-export interface AttachmentUpload extends AttachmentRef {
+export interface AttachmentUpload {
+  localId: string;
+  fileId: string | null;
+  name: string;
+  mime: string;
+  size: number;
+  localUrl?: string;
   file: File;
   progress: number;
   state: UploadState;
   error?: string;
+  indexStatus?: IndexStatus | null;
 }
 
 export const resolveMime = (file: File): string => {
@@ -36,19 +44,34 @@ export const resolveMime = (file: File): string => {
 export const uploadFile = async (
   sessionId: string,
   file: File,
-  onState: (state: UploadState, progress: number, error?: string) => void,
+  onState: (
+    state: UploadState,
+    progress: number,
+    error?: string,
+    indexStatus?: IndexStatus | null,
+  ) => void,
   signal?: AbortSignal,
 ): Promise<AttachmentRef> => {
+  const throwIfAborted = (): void => {
+    if (signal?.aborted) throw new Error("Aborted");
+  };
+
   try {
+    throwIfAborted();
     onState("presigning", 0);
     const mime = resolveMime(file);
-    const { fileId, uploadUrl, requiredHeaders } = await api.files.presign({
-      sessionId,
-      name: file.name,
-      mime,
-      size: file.size,
-    });
 
+    const { fileId, uploadUrl, requiredHeaders } = await api.files.presign(
+      {
+        sessionId,
+        name: file.name,
+        mime,
+        size: file.size,
+      },
+      signal,
+    );
+
+    throwIfAborted();
     onState("uploading", 0);
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -70,40 +93,48 @@ export const uploadFile = async (
       xhr.onerror = () => reject(new Error("Network error during upload"));
       xhr.onabort = () => reject(new Error("Aborted"));
 
-      if (signal) {
-        signal.addEventListener("abort", () => xhr.abort());
-      }
+      const onAbort = (): void => xhr.abort();
+      if (signal) signal.addEventListener("abort", onAbort, { once: true });
 
       xhr.send(file);
     });
 
+    throwIfAborted();
     onState("completing", 100);
-    await api.files.complete(fileId);
+    await api.files.complete(fileId, signal);
 
+    throwIfAborted();
     onState("processing", 100);
     let ready = false;
     let failed = false;
     let errorMsg = "";
+    let finalIndexStatus: IndexStatus | null = null;
     let attempts = 0;
 
     while (!ready && !failed && attempts < 80) {
-      if (signal?.aborted) throw new Error("Aborted");
+      throwIfAborted();
       await new Promise((r) => setTimeout(r, 1500));
-      const meta = await api.files.get(fileId);
-      if (meta.status === "ready") ready = true;
-      else if (meta.status === "failed") {
+      throwIfAborted();
+      const meta = (await api.files.get(fileId)) as FileMeta;
+      if (meta.status === "ready") {
+        ready = true;
+        finalIndexStatus = meta.indexStatus ?? null;
+      } else if (meta.status === "failed") {
         failed = true;
         errorMsg = meta.error || "Proses file gagal";
       }
       attempts++;
     }
 
-    if (!ready) throw new Error("Timeout menunggu file siap");
+    if (!ready) {
+      throw new Error(failed ? errorMsg : "Timeout menunggu file siap");
+    }
 
-    onState("ready", 100);
+    onState("ready", 100, undefined, finalIndexStatus);
     return { id: fileId, name: file.name, mime, size: file.size };
-  } catch (err: any) {
-    onState("failed", 0, err.message || "Upload gagal");
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Upload gagal";
+    onState("failed", 0, message);
     throw err;
   }
 };

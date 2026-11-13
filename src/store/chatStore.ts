@@ -1,7 +1,13 @@
+// src/store/chatStore.ts
 import { create } from "zustand";
 import { fetchApi } from "../lib/api";
 import { parseSse } from "../lib/sse";
-import type { ChatMessage, StreamEvent, ServerMessage } from "../types";
+import type {
+  ChatMessage,
+  PendingClarification,
+  ServerMessage,
+  StreamPhase,
+} from "../types";
 import { useSessionsStore } from "./sessionsStore";
 
 interface ChatState {
@@ -13,20 +19,53 @@ interface ChatState {
       loaded: boolean;
       loading: boolean;
       streaming: boolean;
+      phase: StreamPhase;
+      pendingClarification: PendingClarification | null;
     }
   >;
   controllers: Record<string, AbortController>;
   open: (id: string) => Promise<void>;
   loadOlder: (id: string) => Promise<void>;
-  send: (id: string, text: string, attachments: any[]) => Promise<void>;
+  send: (
+    id: string,
+    text: string,
+    attachments: Array<{
+      id: string;
+      name: string;
+      mime: string;
+      size: number;
+      localUrl?: string;
+    }>,
+  ) => Promise<void>;
   stop: (id: string) => void;
+  respond: (
+    sessionId: string,
+    questionId: string,
+    answer: string[],
+  ) => Promise<void>;
   reset: () => void;
+}
+
+type SetChatState = (
+  partial: Partial<ChatState> | ((s: ChatState) => Partial<ChatState>),
+) => void;
+
+function mapServerMessage(m: ServerMessage): ChatMessage {
+  return {
+    id: m.id,
+    role: m.role === "user" ? "user" : "assistant",
+    blocks: m.blocks,
+    status: m.status,
+    createdAt: m.createdAt,
+    ...(m.sources !== undefined ? { sources: m.sources } : {}),
+  };
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   bySession: {},
   controllers: {},
 
+  // REPLACE: open
   open: async (id) => {
     if (get().bySession[id]?.loaded) return;
 
@@ -39,22 +78,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
           loaded: false,
           loading: true,
           streaming: false,
+          phase: null,
+          pendingClarification: null,
         },
       },
     }));
 
     try {
-      const data = await fetchApi<any>(`/sessions/${id}?limit=50`);
-      const mappedMessages: ChatMessage[] = data.messages.map(
-        (m: ServerMessage) => ({
-          id: m.id,
-          role: m.role as "user" | "assistant",
-          blocks: m.blocks,
-          status: m.status,
-          createdAt: m.createdAt,
-          // attachments mapping if needed
-        }),
-      );
+      const data = await fetchApi<{
+        messages: ServerMessage[];
+        nextCursor: string | null;
+      }>(`/sessions/${id}?limit=50`);
+      const mappedMessages: ChatMessage[] = data.messages.map(mapServerMessage);
 
       set((s) => ({
         bySession: {
@@ -65,6 +100,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
             loaded: true,
             loading: false,
             streaming: false,
+            phase: null,
+            pendingClarification: null,
           },
         },
       }));
@@ -87,18 +124,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
 
     try {
-      const data = await fetchApi<any>(
-        `/sessions/${id}?limit=50&cursor=${session.nextCursor}`,
-      );
-      const mappedMessages: ChatMessage[] = data.messages.map(
-        (m: ServerMessage) => ({
-          id: m.id,
-          role: m.role as "user" | "assistant",
-          blocks: m.blocks,
-          status: m.status,
-          createdAt: m.createdAt,
-        }),
-      );
+      const data = await fetchApi<{
+        messages: ServerMessage[];
+        nextCursor: string | null;
+      }>(`/sessions/${id}?limit=50&cursor=${session.nextCursor}`);
+      const mappedMessages: ChatMessage[] = data.messages.map(mapServerMessage);
 
       set((s) => ({
         bySession: {
@@ -122,6 +152,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const ac = new AbortController();
     const tempUserId = `tmp-u-${Date.now()}`;
     const tempAssistantId = `tmp-a-${Date.now()}`;
+    let currentAssistantId = tempAssistantId;
 
     set((s) => ({
       controllers: { ...s.controllers, [sessionId]: ac },
@@ -135,6 +166,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
             loading: false,
           }),
           streaming: true,
+          phase: null,
+          pendingClarification: null,
           messages: [
             ...(s.bySession[sessionId]?.messages || []),
             {
@@ -181,44 +214,71 @@ export const useChatStore = create<ChatState>((set, get) => ({
       for await (const chunk of stream) {
         if (chunk.event === "message") continue;
         const data = JSON.parse(chunk.data);
-        handleEvent(set, get, sessionId, tempAssistantId, chunk.event, data);
+
+        if (chunk.event === "message.start") {
+          const realId = data.messageId as string;
+          set((s) => renameMessage(s, sessionId, tempAssistantId, realId));
+          currentAssistantId = realId;
+          continue;
+        }
+
+        handleEvent(set, get, sessionId, currentAssistantId, chunk.event, data);
       }
 
-      // If stream ends but status still streaming (no message.end), mark as error
+      // Fallback: stream berakhir tanpa message.end → tandai status error.
       const current = get().bySession[sessionId]?.messages.find(
-        (m) => m.id === tempAssistantId,
+        (m) => m.id === currentAssistantId,
       );
       if (current?.status === "streaming") {
         set((s) =>
-          updateAssistantMessage(s, sessionId, tempAssistantId, {
+          updateAssistantMessage(s, sessionId, currentAssistantId, {
             status: "error",
             error: { code: "DISCONNECTED", message: "Koneksi terputus" },
           }),
         );
+      } else if (current?.status === "done") {
+        // Title gen backend fire-and-forget: event `title` via SSE
+        // sering tidak sampai (koneksi sudah ditutup `message.end`).
+        // Poll GET /api/sessions/:id sampai `titleAuto === false`.
+        useSessionsStore.getState().pollTitle(sessionId);
       }
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
         set((s) =>
-          updateAssistantMessage(s, sessionId, tempAssistantId, {
+          updateAssistantMessage(s, sessionId, currentAssistantId, {
             status: "aborted",
+            error: undefined,
           }),
         );
       } else {
         set((s) =>
-          updateAssistantMessage(s, sessionId, tempAssistantId, {
+          updateAssistantMessage(s, sessionId, currentAssistantId, {
             status: "error",
             error: { code: "ERROR", message: "Gagal mengirim pesan" },
           }),
         );
       }
     } finally {
-      set((s) => ({
-        controllers: { ...s.controllers, [sessionId]: undefined as any },
-        bySession: {
-          ...s.bySession,
-          [sessionId]: { ...s.bySession[sessionId], streaming: false },
-        },
-      }));
+      set((s) => {
+        const nextControllers = { ...s.controllers };
+        delete nextControllers[sessionId];
+        const existing = s.bySession[sessionId];
+        if (!existing) {
+          return { controllers: nextControllers };
+        }
+        return {
+          controllers: nextControllers,
+          bySession: {
+            ...s.bySession,
+            [sessionId]: {
+              ...existing,
+              streaming: false,
+              phase: null,
+              pendingClarification: null,
+            },
+          },
+        };
+      });
       useSessionsStore.getState().bump(sessionId);
     }
   },
@@ -227,23 +287,40 @@ export const useChatStore = create<ChatState>((set, get) => ({
     get().controllers[id]?.abort();
   },
 
-  reset: () => set({ bySession: {}, controllers: {} }),
+  respond: async (sessionId, questionId, answer) => {
+    await fetchApi(`/sessions/${sessionId}/respond`, {
+      method: "POST",
+      body: JSON.stringify({ questionId, answer }),
+    });
+  },
+
+  reset: () => {
+    const state = get();
+    Object.values(state.controllers).forEach((ac) => {
+      try {
+        ac.abort();
+      } catch {
+        // ignore
+      }
+    });
+    set({ bySession: {}, controllers: {} });
+  },
 }));
 
 function updateAssistantMessage(
-  state: any,
+  state: ChatState,
   sessionId: string,
   msgId: string,
-  updates: any,
-) {
+  updates: Partial<ChatMessage>,
+): Partial<ChatState> {
   const session = state.bySession[sessionId];
-  if (!session) return state;
+  if (!session) return {};
   return {
     bySession: {
       ...state.bySession,
       [sessionId]: {
         ...session,
-        messages: session.messages.map((m: any) =>
+        messages: session.messages.map((m) =>
           m.id === msgId ? { ...m, ...updates } : m,
         ),
       },
@@ -251,89 +328,211 @@ function updateAssistantMessage(
   };
 }
 
-function handleEvent(
-  set: any,
-  get: any,
+function renameMessage(
+  state: ChatState,
   sessionId: string,
-  tempAssistantId: string,
+  oldId: string,
+  newId: string,
+): Partial<ChatState> {
+  const session = state.bySession[sessionId];
+  if (!session) return {};
+  return {
+    bySession: {
+      ...state.bySession,
+      [sessionId]: {
+        ...session,
+        messages: session.messages.map((m) =>
+          m.id === oldId ? { ...m, id: newId } : m,
+        ),
+      },
+    },
+  };
+}
+
+function handleEvent(
+  set: SetChatState,
+  get: () => ChatState,
+  sessionId: string,
+  assistantId: string,
   event: string,
-  data: any,
-) {
-  if (event === "message.start") {
-    set((s: any) => {
-      const session = s.bySession[sessionId];
-      return {
+  data: unknown,
+): void {
+  const session = get().bySession[sessionId];
+  if (!session) return;
+
+  const payload = data as Record<string, any>;
+
+  // ── Session-level events ──────────────────────────────────────────
+  switch (event) {
+    case "status":
+      set((s) => ({
         bySession: {
           ...s.bySession,
           [sessionId]: {
-            ...session,
-            messages: session.messages.map((m: any) =>
-              m.id === tempAssistantId ? { ...m, id: data.messageId } : m,
-            ),
+            ...s.bySession[sessionId],
+            phase: payload.phase as StreamPhase,
           },
         },
-      };
-    });
-    return;
+      }));
+      return;
+    case "clarification.needed":
+      set((s) => ({
+        bySession: {
+          ...s.bySession,
+          [sessionId]: {
+            ...s.bySession[sessionId],
+            pendingClarification: {
+              questionId: payload.questionId as string,
+              question: payload.question as string,
+              multi: payload.multi as boolean,
+              options: payload.options as {
+                label: string;
+                value?: string;
+              }[],
+              timeoutMs: payload.timeoutMs as number,
+              receivedAt: Date.now(),
+            },
+          },
+        },
+      }));
+      return;
+    case "clarification.resolved":
+      set((s) => ({
+        bySession: {
+          ...s.bySession,
+          [sessionId]: {
+            ...s.bySession[sessionId],
+            pendingClarification: null,
+          },
+        },
+      }));
+      return;
+    case "title":
+      useSessionsStore.getState().setTitle(sessionId, payload.title);
+      return;
   }
 
-  const currentId = get().bySession[sessionId]?.messages.find(
-    (m: any) => m.role === "assistant" && m.status === "streaming",
-  )?.id;
-  if (!currentId) return;
-
-  const session = get().bySession[sessionId];
-  const msg = session.messages.find((m: any) => m.id === currentId);
+  // ── Message-level events ─────────────────────────────────────────
+  const msg = session.messages.find((m) => m.id === assistantId);
   if (!msg) return;
 
-  let updates: any = {};
+  let updates: Partial<ChatMessage> | null = null;
 
   switch (event) {
-    case "block.start":
-      updates.blocks = [...(msg.blocks || [])];
-      updates.blocks[data.index] = data.block;
+    case "sources":
+      updates = { sources: payload.sources as any };
       break;
-    case "block.delta": {
-      updates.blocks = [...(msg.blocks || [])];
-      const blk = { ...updates.blocks[data.index] };
-      if (blk.type === "text") blk.markdown += data.delta;
-      if (blk.type === "code") blk.content += data.delta;
-      updates.blocks[data.index] = blk;
+    case "thinking.delta": {
+      const current = msg.thinking ?? { text: "", done: false };
+      updates = {
+        thinking: {
+          ...current,
+          text: current.text + (payload.delta as string),
+        },
+      };
       break;
     }
-    case "block.end":
-      updates.blocks = [...(msg.blocks || [])];
-      updates.blocks[data.index] = data.block;
-      break;
-    case "tool.start":
-      updates.tools = [
-        ...(msg.tools || []),
-        {
-          callId: data.callId,
-          name: data.name,
-          status: "running",
-          beforeIndex: msg.blocks.length,
+    case "thinking.end": {
+      const current = msg.thinking ?? { text: "", done: false };
+      updates = {
+        thinking: {
+          ...current,
+          done: true,
+          durationMs: payload.durationMs as number,
         },
-      ];
+      };
+      break;
+    }
+    case "block.start":
+    case "block.end": {
+      const blocks = [...(msg.blocks || [])];
+      blocks[payload.index as number] = payload.block;
+      updates = { blocks };
+      break;
+    }
+    case "block.delta": {
+      const blocks = [...(msg.blocks || [])];
+      const prev = blocks[payload.index as number];
+      if (prev && prev.type === "text") {
+        blocks[payload.index as number] = {
+          ...prev,
+          markdown: prev.markdown + (payload.delta as string),
+        };
+      } else if (prev && prev.type === "code") {
+        blocks[payload.index as number] = {
+          ...prev,
+          content: prev.content + (payload.delta as string),
+        };
+      }
+      updates = { blocks };
+      break;
+    }
+    case "tool.start":
+      updates = {
+        tools: [
+          ...(msg.tools || []),
+          {
+            callId: payload.callId,
+            name: payload.name,
+            status: "running",
+            beforeIndex: msg.blocks.length,
+          },
+        ],
+      };
       break;
     case "tool.end":
-      updates.tools = (msg.tools || []).map((t: any) =>
-        t.callId === data.callId
-          ? { ...t, status: data.ok ? "ok" : "error", summary: data.summary }
-          : t,
-      );
-      break;
-    case "title":
-      useSessionsStore.getState().setTitle(sessionId, data.title);
+      updates = {
+        tools: (msg.tools || []).map((t) =>
+          t.callId === payload.callId
+            ? {
+                ...t,
+                status: payload.ok ? "ok" : "error",
+                summary: payload.summary,
+              }
+            : t,
+        ),
+      };
       break;
     case "error":
-      updates.error = { code: data.code, message: data.message };
+      updates = {
+        error: { code: payload.code, message: payload.message },
+      };
       break;
-    case "message.end":
-      updates.status = data.status;
-      updates.usage = data.usage;
-      break;
+    case "message.end": {
+      set((s) => {
+        const cur = s.bySession[sessionId];
+        if (!cur) return s;
+        return {
+          bySession: {
+            ...s.bySession,
+            [sessionId]: {
+              ...cur,
+              phase: null,
+              pendingClarification: null,
+              messages: cur.messages.map((m) =>
+                m.id === assistantId
+                  ? {
+                      ...m,
+                      status: payload.status,
+                      usage: payload.usage,
+                      ...(payload.status === "done" ||
+                      payload.status === "aborted"
+                        ? { error: undefined }
+                        : {}),
+                    }
+                  : m,
+              ),
+            },
+          },
+        };
+      });
+      return;
+    }
+    default:
+      return;
   }
 
-  set((s: any) => updateAssistantMessage(s, sessionId, currentId, updates));
+  if (updates) {
+    set((s) => updateAssistantMessage(s, sessionId, assistantId, updates));
+  }
 }

@@ -1,3 +1,5 @@
+// src/components/composer/Composer.tsx
+
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useComposerStore } from "../../store/composerStore";
@@ -5,7 +7,8 @@ import { useChatStore } from "../../store/chatStore";
 import { useSessionsStore } from "../../store/sessionsStore";
 import { api } from "../../lib/api";
 import { AttachmentChip } from "./AttachmentChip";
-import { Plus, ArrowUp, Square } from "lucide-react";
+import { Spinner } from "../ui/Spinner";
+import { Plus, ArrowUp, Square, FileText, X } from "lucide-react";
 import { cn } from "../../lib/cn";
 
 export function Composer({
@@ -16,11 +19,23 @@ export function Composer({
   isNew?: boolean;
 }) {
   const key = isNew ? "new" : sessionId;
+  
   const draft = useComposerStore((s) => s.drafts[key]) || {
     text: "",
     attachments: [],
+    pastedTexts: [],
   };
-  const { setText, addFiles, removeAttachment, clear } = useComposerStore();
+
+  const {
+    setText,
+    addFiles,
+    addPastedText,
+    removeAttachment,
+    removePastedText,
+    retryAttachment,
+    clear,
+  } = useComposerStore();
+
   const { send, stop, bySession } = useChatStore();
 
   const navigate = useNavigate();
@@ -32,7 +47,6 @@ export function Composer({
 
   const [isComposing, setIsComposing] = useState(false);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -42,29 +56,41 @@ export function Composer({
   }, [draft.text]);
 
   const handleSend = async () => {
-    if (!draft.text.trim() && draft.attachments.length === 0) return;
+    const combinedText = [...draft.pastedTexts.map((p) => p.text), draft.text]
+      .filter((t) => t.trim().length > 0)
+      .join("\n\n");
+
+    if (!combinedText && draft.attachments.length === 0) return;
+
     if (
       draft.attachments.some(
         (a) =>
           a.state === "failed" ||
           a.state === "uploading" ||
-          a.state === "queued",
+          a.state === "queued" ||
+          a.state === "presigning" ||
+          a.state === "completing" ||
+          a.state === "processing",
       )
     )
       return;
 
-    const text = draft.text;
-    const attachments = draft.attachments
-      .filter((a) => a.state === "ready")
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        mime: a.mime,
-        size: a.size,
-        localUrl: a.localUrl,
-      }));
+    const text = combinedText;
 
-    clear(key);
+    const readyAttachments = draft.attachments.filter(
+      (a) => a.state === "ready" && a.fileId !== null,
+    );
+
+    const attachments = readyAttachments.map((a) => ({
+      id: a.fileId as string,
+      name: a.name,
+      mime: a.mime,
+      size: a.size,
+      localUrl: a.localUrl,
+    }));
+
+    // File sudah "dipindahkan" ke message — jangan hapus dari server.
+    clear(key, { keepServerFiles: true });
 
     let targetId = sessionId;
 
@@ -76,7 +102,7 @@ export function Composer({
         navigate(`/chat/${targetId}`, { replace: true });
       } catch (err) {
         console.error("Gagal membuat sesi baru", err);
-        return; // Hentikan jika gagal buat sesi
+        return;
       }
     }
 
@@ -90,6 +116,15 @@ export function Composer({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const text = e.clipboardData.getData("text");
+    // Jika paste > 1000 karakter atau > 15 baris, jadikan chip.
+    if (text.length > 1000 || text.split("\n").length > 15) {
+      e.preventDefault();
+      addPastedText(key, text);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0 && !isNew) {
       addFiles(sessionId, Array.from(e.target.files), sessionId);
@@ -100,21 +135,46 @@ export function Composer({
   const isUploading = draft.attachments.some(
     (a) => a.state !== "ready" && a.state !== "failed",
   );
+
   const isDisabled =
     isStreaming ||
-    (!draft.text.trim() && draft.attachments.length === 0) ||
+    (!draft.text.trim() &&
+      draft.pastedTexts.length === 0 && // yang ini bre
+      draft.attachments.length === 0) ||
     isUploading;
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-6">
+      {draft.pastedTexts.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {draft.pastedTexts.map((p) => (
+            <div
+              key={p.localId}
+              className="flex items-center gap-2 border border-line rounded-lg px-3 py-1.5 text-xs bg-surface">
+              <FileText className="w-4 h-4 text-muted" />
+              <div className="flex flex-col">
+                <span className="font-medium">Teks yang di-paste</span>
+                <span className="text-muted">{p.text.length} karakter</span>
+              </div>
+              <button
+                onClick={() => removePastedText(key, p.localId)}
+                className="p-1 hover:bg-surface2 rounded-md ml-1"
+                title="Hapus">
+                <X className="w-3.5 h-3.5 text-muted" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {draft.attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {draft.attachments.map((a) => (
             <AttachmentChip
-              key={a.id}
+              key={a.localId}
               attachment={a}
-              onRemove={() => removeAttachment(key, a.id)}
-              onRetry={() => addFiles(sessionId, [a.file], sessionId)}
+              onRemove={() => removeAttachment(key, a.localId)}
+              onRetry={() => retryAttachment(key, a.localId, sessionId)}
             />
           ))}
         </div>
@@ -142,6 +202,7 @@ export function Composer({
           onChange={(e) => setText(key, e.target.value)}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)}
+          onPaste={handlePaste}
           onCompositionEnd={() => setIsComposing(false)}
           placeholder={
             isNew ? "Apa yang bisa dibantu hari ini?" : "Balas ke GenUI…"
@@ -163,6 +224,8 @@ export function Composer({
           )}>
           {isStreaming ? (
             <Square className="w-4 h-4" fill="currentColor" />
+          ) : isUploading ? (
+            <Spinner className="w-4 h-4" />
           ) : (
             <ArrowUp className="w-5 h-5" />
           )}

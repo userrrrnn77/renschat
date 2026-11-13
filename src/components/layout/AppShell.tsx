@@ -1,10 +1,10 @@
+// src/components/layout/AppShell.tsx
 import { Outlet } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { useUIStore } from "../../store/uiStore";
 import { FilePreviewPanel } from "../preview/FilePreviewPanel";
 import { Lightbox } from "../preview/Lightbox";
-import { Toaster } from "../ui/Toaster";
 
 export function AppShell() {
   const { preview } = useUIStore();
@@ -24,7 +24,6 @@ export function AppShell() {
         )}
       </div>
       <Lightbox />
-      <Toaster />
     </div>
   );
 }
