@@ -177,6 +177,3 @@ Jangan menaruh secret apa pun di frontend (key NVIDIA/R2, token Ko-fi, JWT secre
 - Media generated dihapus otomatis 24 jam setelah dibuat.
 - Donasi bersifat opsional; seluruh fitur inti tetap gratis.
 - Atribusi model & lisensi (FLUX Kommunity License, NVIDIA API Trial Terms) tercantum di halaman Terms/About.
-```
-
-Tinggal tempel bre. Kalau mau gw tambahin bagian screenshot atau badge repo, bilang aja.
