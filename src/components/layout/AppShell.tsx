@@ -5,6 +5,7 @@ import { ChatHeader } from "./ChatHeader";
 import { useUIStore } from "../../store/uiStore";
 import { FilePreviewPanel } from "../preview/FilePreviewPanel";
 import { Lightbox } from "../preview/Lightbox";
+import { DonateCard } from "../media/DonateCard";
 
 export function AppShell() {
   const { preview } = useUIStore();
@@ -24,6 +25,7 @@ export function AppShell() {
         )}
       </div>
       <Lightbox />
+      <DonateCard />
     </div>
   );
 }

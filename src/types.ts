@@ -28,6 +28,94 @@ export interface ImageBlock {
   type: "image";
   fileId: string;
   alt?: string;
+  /** Field media generated (§14.2); kosong untuk upload. */
+  expiresAt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface EntitlementsImageModel {
+  id: "flux2-klein" | "flux3-klein";
+  label: string;
+  locked: boolean;
+  badge: string;
+  /** "DONATION_REQUIRED" | "MEDIA_DISABLED" — hanya ada bila locked. */
+  reason?: string;
+}
+
+export interface EntitlementsVideoEngine {
+  id: "auto" | "python" | "cosmos";
+  label: string;
+  locked: boolean;
+}
+
+export interface Entitlements {
+  mediaEnabled: boolean;
+  isDonor: boolean;
+  credits: { imageFlux3: number; videoCosmos: number };
+  donationCode: string | null;
+  koFiUrl: string | null;
+  image: { models: EntitlementsImageModel[] };
+  video: {
+    engine: "cosmos" | "python";
+    engines: EntitlementsVideoEngine[];
+    aspects: Array<"16:9" | "9:16">;
+  };
+  dailyRemaining: { imageFlux2: number; videoPython: number };
+}
+
+export interface GenerationInput {
+  mode?: "auto" | "image" | "video";
+  imageModel?: "flux2-klein" | "flux3-klein";
+  video?: {
+    aspect?: "16:9" | "9:16";
+    engine?: "auto" | "cosmos" | "python";
+  };
+}
+
+export type JobStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+export interface JobInfo {
+  id: string;
+  status: JobStatus;
+  engine: "flux2" | "flux3" | "cosmos" | "python";
+  kind: "image" | "video";
+  fileId: string | null;
+  error: { code: string; message: string } | null;
+  queuedAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface MediaUrlResponse {
+  url: string;
+  mime: string;
+  expiresAt: string | null;
+  width: number | null;
+  height: number | null;
+  durationSec: number | null;
+}
+
+export interface ClaimDonationResponse {
+  status: "credited";
+  creditsGranted: { imageFlux3: number; videoCosmos: number };
+}
+
+export interface VideoBlock {
+  type: "video";
+  fileId: string;
+  engine: "cosmos" | "python";
+  aspect: "16:9" | "9:16";
+  durationSec?: number;
+  /** ISO timestamp kedaluwarsa media generated (24 jam). */
+  expiresAt?: string;
+  width?: number;
+  height?: number;
 }
 
 export interface TableBlock {
@@ -73,6 +161,7 @@ export type Block =
   | CodeBlock
   | FileBlock
   | ImageBlock
+  | VideoBlock
   | TableBlock
   | ChartBlock
   | CardBlock
@@ -87,6 +176,14 @@ export interface PendingClarification {
   options: { label: string; value?: string }[];
   timeoutMs: number;
   receivedAt: number;
+}
+
+export interface MediaProgress {
+  jobId: string;
+  engine: string;
+  kind: "image" | "video";
+  status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+  message?: string;
 }
 
 export type IndexStatus =
@@ -184,6 +281,10 @@ export type StreamEvent =
       event: "tool.end";
       data: { callId: string; ok: boolean; summary: string };
     }
+  | {
+      event: "media.progress";
+      data: MediaProgress;
+    }
   | { event: "title"; data: { sessionId: string; title: string } }
   | { event: "error"; data: { code: string; message: string } }
   | {
@@ -219,6 +320,8 @@ export interface ChatMessage {
   createdAt: string;
   attachments?: AttachmentRef[];
   tools?: ToolRun[];
+  /** Progres media generate terakhir pada pesan ini (event media.progress). */
+  mediaProgress?: MediaProgress;
   error?: { code: string; message: string };
   usage?: Usage | null;
   sources?: SourceRef[];

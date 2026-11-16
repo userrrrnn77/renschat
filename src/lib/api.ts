@@ -1,4 +1,10 @@
-import type { User } from "../types";
+import type {
+  ClaimDonationResponse,
+  Entitlements,
+  JobInfo,
+  MediaUrlResponse,
+  User,
+} from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -102,5 +108,18 @@ export const api = {
     get: (id: string) => fetchApi<any>(`/files/${id}`),
     delete: (id: string) =>
       fetchApi<void>(`/files/${id}`, { method: "DELETE" }),
+    /** Presigned GET URL untuk <img>/<video> (§7.4). Key R2 tidak pernah ke FE. */
+    url: (id: string) => fetchApi<MediaUrlResponse>(`/files/${id}/url`),
+  },
+  me: {
+    entitlements: () => fetchApi<Entitlements>("/me/entitlements"),
+    claimDonation: (body: { email: string; kofiTransactionId: string }) =>
+      fetchApi<ClaimDonationResponse>("/me/donations/claim", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+  },
+  jobs: {
+    get: (id: string) => fetchApi<JobInfo>(`/jobs/${id}`),
   },
 };

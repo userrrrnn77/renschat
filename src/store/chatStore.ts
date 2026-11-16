@@ -4,6 +4,8 @@ import { fetchApi } from "../lib/api";
 import { parseSse } from "../lib/sse";
 import type {
   ChatMessage,
+  GenerationInput,
+  MediaProgress,
   PendingClarification,
   ServerMessage,
   StreamPhase,
@@ -36,6 +38,7 @@ interface ChatState {
       size: number;
       localUrl?: string;
     }>,
+    generation?: GenerationInput,
   ) => Promise<void>;
   stop: (id: string) => void;
   respond: (
@@ -148,7 +151,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  send: async (sessionId, text, attachments) => {
+  send: async (sessionId, text, attachments, generation) => {
     const ac = new AbortController();
     const tempUserId = `tmp-u-${Date.now()}`;
     const tempAssistantId = `tmp-a-${Date.now()}`;
@@ -202,6 +205,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           body: JSON.stringify({
             text,
             attachmentIds: attachments.map((a) => a.id),
+            ...(generation !== undefined ? { generation } : {}),
           }),
           credentials: "include",
           signal: ac.signal,
@@ -225,7 +229,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         handleEvent(set, get, sessionId, currentAssistantId, chunk.event, data);
       }
 
-      // Fallback: stream berakhir tanpa message.end → tandai status error.
       const current = get().bySession[sessionId]?.messages.find(
         (m) => m.id === currentAssistantId,
       );
@@ -237,9 +240,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }),
         );
       } else if (current?.status === "done") {
-        // Title gen backend fire-and-forget: event `title` via SSE
-        // sering tidak sampai (koneksi sudah ditutup `message.end`).
-        // Poll GET /api/sessions/:id sampai `titleAuto === false`.
         useSessionsStore.getState().pollTitle(sessionId);
       }
     } catch (err: unknown) {
@@ -493,6 +493,21 @@ function handleEvent(
         ),
       };
       break;
+    case "media.progress": {
+      // §14.2: progres media generate, bukan block. Indikator ditampilkan
+      // pada pesan yang sedang streaming.
+      const mp = payload as MediaProgress;
+      updates = {
+        mediaProgress: {
+          jobId: mp.jobId,
+          engine: mp.engine,
+          kind: mp.kind,
+          status: mp.status,
+          ...(mp.message !== undefined ? { message: mp.message } : {}),
+        },
+      };
+      break;
+    }
     case "error":
       updates = {
         error: { code: payload.code, message: payload.message },

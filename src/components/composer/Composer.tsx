@@ -5,6 +5,8 @@ import { useNavigate } from "react-router";
 import { useComposerStore } from "../../store/composerStore";
 import { useChatStore } from "../../store/chatStore";
 import { useSessionsStore } from "../../store/sessionsStore";
+import { useMediaStore, buildGeneration } from "../../store/mediaStore";
+import { GenerationToolbar } from "../media/GenerationToolbar";
 import { api } from "../../lib/api";
 import { AttachmentChip } from "./AttachmentChip";
 import { Spinner } from "../ui/Spinner";
@@ -19,7 +21,7 @@ export function Composer({
   isNew?: boolean;
 }) {
   const key = isNew ? "new" : sessionId;
-  
+
   const draft = useComposerStore((s) => s.drafts[key]) || {
     text: "",
     attachments: [],
@@ -37,6 +39,8 @@ export function Composer({
   } = useComposerStore();
 
   const { send, stop, bySession } = useChatStore();
+  const selection = useMediaStore((s) => s.selection);
+  const resetSelection = useMediaStore((s) => s.resetSelection);
 
   const navigate = useNavigate();
   const upsertSession = useSessionsStore((s) => s.upsert);
@@ -89,6 +93,8 @@ export function Composer({
       localUrl: a.localUrl,
     }));
 
+    const generation = buildGeneration(selection);
+
     // File sudah "dipindahkan" ke message — jangan hapus dari server.
     clear(key, { keepServerFiles: true });
 
@@ -106,7 +112,9 @@ export function Composer({
       }
     }
 
-    await send(targetId, text, attachments);
+    await send(targetId, text, attachments, generation);
+    // §15.2: pilihan eksplisit tidak lengket — reset ke auto setelah kirim.
+    if (generation !== undefined) resetSelection();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -139,12 +147,17 @@ export function Composer({
   const isDisabled =
     isStreaming ||
     (!draft.text.trim() &&
-      draft.pastedTexts.length === 0 && // yang ini bre
+      draft.pastedTexts.length === 0 &&
       draft.attachments.length === 0) ||
     isUploading;
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-6">
+      <GenerationToolbar
+        composerKey={key}
+        disabled={isStreaming || isUploading}
+      />
+
       {draft.pastedTexts.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {draft.pastedTexts.map((p) => (

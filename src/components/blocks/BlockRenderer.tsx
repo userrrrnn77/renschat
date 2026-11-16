@@ -7,6 +7,7 @@ import { CardBlockView } from "./CardBlockView";
 import { ChoicesBlockView } from "./ChoicesBlockView";
 import { FileBlockView } from "./FileBlockView";
 import { ImageBlockView } from "./ImageBlockView";
+import { VideoBlockView } from "./VideoBlockView";
 
 export function BlockRenderer({
   block,
@@ -36,6 +37,8 @@ export function BlockRenderer({
       return <FileBlockView block={block} />;
     case "image":
       return <ImageBlockView block={block} />;
+    case "video":
+      return <VideoBlockView block={block} />;
     default:
       return (
         <div className="text-sm text-muted italic">

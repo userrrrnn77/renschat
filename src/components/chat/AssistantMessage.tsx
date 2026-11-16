@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useChatStore } from "../../store/chatStore";
+import { useMediaStore } from "../../store/mediaStore";
 import { BlockRenderer } from "../blocks/BlockRenderer";
 import { ToolChip } from "./ToolChip";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ClarificationCard } from "./ClarificationCard";
 import { ThinkingPanel } from "./ThinkingPanel";
 import { copyToClipboard } from "../../lib/copy";
+import { Spinner } from "../ui/Spinner";
 import { Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../../types";
 
@@ -20,6 +22,7 @@ export function AssistantMessage({
 }) {
   const [copied, setCopied] = useState(false);
   const isStreaming = message.status === "streaming";
+  const setDonateOpen = useMediaStore((s) => s.setDonateOpen);
 
   const session = useChatStore((s) => s.bySession[sessionId]);
   const phase = session?.phase ?? null;
@@ -41,6 +44,16 @@ export function AssistantMessage({
 
   const toolsBefore = (index: number) =>
     (message.tools || []).filter((t) => t.beforeIndex === index);
+
+  const mp = message.mediaProgress;
+  const showMediaProgress =
+    isStreaming &&
+    mp !== undefined &&
+    (mp.status === "queued" || mp.status === "running");
+
+  const errorAction =
+    message.error?.code === "INSUFFICIENT_CREDITS" ||
+    message.error?.code === "ENTITLEMENT_REQUIRED";
 
   return (
     <div className="flex flex-col gap-4 py-4 group">
@@ -75,6 +88,19 @@ export function AssistantMessage({
           <ToolChip key={t.callId} tool={t} />
         ))}
 
+      {showMediaProgress && mp && (
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-surface2 border border-line self-start">
+          <Spinner className="w-3 h-3" />
+          <span>
+            {mp.message
+              ? mp.message
+              : mp.kind === "image"
+                ? "Membuat gambar…"
+                : "Membuat video…"}
+          </span>
+        </div>
+      )}
+
       {pendingClarification && isStreaming && (
         <ClarificationCard
           sessionId={sessionId}
@@ -84,7 +110,15 @@ export function AssistantMessage({
 
       {message.error && (
         <div className="text-sm text-danger bg-danger/10 border border-danger/20 p-3 rounded-lg">
-          {message.error.message}
+          <p>{message.error.message}</p>
+          {errorAction && (
+            <button
+              type="button"
+              onClick={() => setDonateOpen(true)}
+              className="mt-2 px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-medium hover:bg-accent-hover transition-colors">
+              Buka donasi
+            </button>
+          )}
         </div>
       )}
 

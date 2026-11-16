@@ -1,3 +1,4 @@
+// src/components/chat/ToolChip.tsx
 import { Spinner } from "../ui/Spinner";
 import { cn } from "../../lib/cn";
 import type { ToolRun } from "../../types";
@@ -10,6 +11,8 @@ import {
   BarChart2,
   Image as ImageIcon,
   Terminal,
+  Film,
+  Sparkles,
 } from "lucide-react";
 
 const labels: Record<string, string> = {
@@ -24,6 +27,9 @@ const labels: Record<string, string> = {
   search_attachment: "Mencari di lampiran…",
   inspect_image: "Menganalisis gambar…",
   run_command: "Menjalankan perintah…",
+  generate_image: "Membuat gambar…",
+  generate_video_cosmos: "Membuat video (Cosmos3)…",
+  generate_video_python: "Membuat video (Python)…",
 };
 
 const icons: Record<string, any> = {
@@ -36,10 +42,18 @@ const icons: Record<string, any> = {
   search_attachment: Search,
   inspect_image: ImageIcon,
   run_command: Terminal,
+  generate_image: ImageIcon,
+  generate_video_cosmos: Film,
+  generate_video_python: Sparkles,
 };
 
 export function ToolChip({ tool }: { tool: ToolRun }) {
-  if (tool.status === "ok" && tool.name.startsWith("render_")) return null;
+  if (
+    tool.status === "ok" &&
+    (tool.name.startsWith("render_") || tool.name.startsWith("generate_"))
+  ) {
+    return null;
+  }
 
   const label = labels[tool.name] || `Menjalankan ${tool.name}…`;
   const Icon = icons[tool.name] || Terminal;

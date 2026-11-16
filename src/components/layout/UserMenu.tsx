@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
+import { useMediaStore } from "../../store/mediaStore";
 import {
   LogOut,
   Sun,
@@ -10,6 +11,8 @@ import {
   BookOpen,
   Shield,
   MessageCircle,
+  Coffee,
+  FileText,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 
@@ -17,6 +20,7 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, setTheme } = useUIStore();
+  const setDonateOpen = useMediaStore((s) => s.setDonateOpen);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,10 +80,24 @@ export function UserMenu() {
           </div>
 
           <div className="px-1 py-1 border-t border-line mt-1 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setDonateOpen(true);
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <Coffee className="w-4 h-4 text-muted" /> Donasi (opsional)
+            </button>
             <Link
               to="/faq"
               className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
               <BookOpen className="w-4 h-4 text-muted" /> FAQ
+            </Link>
+            <Link
+              to="/terms"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <FileText className="w-4 h-4 text-muted" /> Syarat & Ketentuan
             </Link>
             <Link
               to="/privacy"
