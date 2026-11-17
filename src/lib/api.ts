@@ -4,6 +4,7 @@ import type {
   JobInfo,
   MediaUrlResponse,
   User,
+  Preferences,
 } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
@@ -116,6 +117,12 @@ export const api = {
     claimDonation: (body: { email: string; kofiTransactionId: string }) =>
       fetchApi<ClaimDonationResponse>("/me/donations/claim", {
         method: "POST",
+        body: JSON.stringify(body),
+      }),
+    getPreferences: () => fetchApi<Preferences>("/me/preferences"),
+    updatePreferences: (body: Preferences) =>
+      fetchApi<Preferences>("/me/preferences", {
+        method: "PUT",
         body: JSON.stringify(body),
       }),
   },

@@ -18,8 +18,11 @@ import {
   Cell,
 } from "recharts";
 import type { ChartBlock } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function ChartBlockView({ block }: { block: ChartBlock }) {
+  const { t } = useTranslation();
+
   const colors = [
     "#C96442",
     "#5B7FA6",
@@ -206,7 +209,7 @@ export function ChartBlockView({ block }: { block: ChartBlock }) {
         // Fallback element agar TypeScript tidak error dan UI tidak crash
         return (
           <div className="flex items-center justify-center h-full text-sm text-muted">
-            Tipe grafik tidak didukung
+            {t("blocks.unsupportedChart")}
           </div>
         );
     }

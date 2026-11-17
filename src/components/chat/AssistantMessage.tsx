@@ -10,6 +10,7 @@ import { copyToClipboard } from "../../lib/copy";
 import { Spinner } from "../ui/Spinner";
 import { Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function AssistantMessage({
   message,
@@ -20,6 +21,8 @@ export function AssistantMessage({
   sessionId: string;
   isLast: boolean;
 }) {
+  const { t } = useTranslation();
+
   const [copied, setCopied] = useState(false);
   const isStreaming = message.status === "streaming";
   const setDonateOpen = useMediaStore((s) => s.setDonateOpen);
@@ -95,8 +98,8 @@ export function AssistantMessage({
             {mp.message
               ? mp.message
               : mp.kind === "image"
-                ? "Membuat gambar…"
-                : "Membuat video…"}
+                ? t("chat.makingImage")
+                : t("chat.makingVideo")}
           </span>
         </div>
       )}
@@ -116,7 +119,7 @@ export function AssistantMessage({
               type="button"
               onClick={() => setDonateOpen(true)}
               className="mt-2 px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-medium hover:bg-accent-hover transition-colors">
-              Buka donasi
+              {t("chat.openDonation")}
             </button>
           )}
         </div>
@@ -132,13 +135,17 @@ export function AssistantMessage({
             ) : (
               <Copy className="w-4 h-4" />
             )}
-            Salin
+            {t("common.copy")}
           </button>
           {message.status === "aborted" && (
-            <span className="text-warning font-medium">Dihentikan</span>
+            <span className="text-warning font-medium">
+              {t("chat.stopped")}
+            </span>
           )}
           {message.status === "error" && (
-            <span className="text-danger font-medium">Terjadi kesalahan</span>
+            <span className="text-danger font-medium">
+              {t("chat.errorOccurred")}
+            </span>
           )}
         </div>
       )}

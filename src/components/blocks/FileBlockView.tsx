@@ -2,8 +2,11 @@
 import { formatBytes, getExt } from "../../lib/files";
 import type { FileBlock } from "../../types";
 import { useUIStore } from "../../store/uiStore";
+import { useTranslation } from "react-i18next";
 
 export function FileBlockView({ block }: { block: FileBlock }) {
+  const { t } = useTranslation();
+
   const openPreview = useUIStore((s) => s.openPreview);
 
   return (
@@ -37,7 +40,7 @@ export function FileBlockView({ block }: { block: FileBlock }) {
         onClick={(e) => e.stopPropagation()}
         className="px-3 py-1.5 text-xs font-medium bg-surface2 hover:bg-line rounded-lg transition-colors shrink-0"
         download>
-        Unduh
+        {t("common.download")}
       </a>
     </div>
   );

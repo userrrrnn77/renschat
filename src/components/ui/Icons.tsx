@@ -1,4 +1,4 @@
-// src/components/ui/Icons.tsx (atau src/components/SparkleLogo.tsx)
+// src/components/ui/Icons.tsx
 import React from "react";
 
 export const SparkleLogo = ({

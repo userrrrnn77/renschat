@@ -3,6 +3,7 @@ import { MoreHorizontal, Edit2, Pin, Trash2 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { SessionItem as SessionType } from "../../types";
 import { useUIStore } from "../../store/uiStore";
+import { useTranslation } from "react-i18next";
 
 export function SessionItem({
   session,
@@ -19,6 +20,8 @@ export function SessionItem({
   onPin: (pinned: boolean) => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(session.title);
@@ -71,7 +74,9 @@ export function SessionItem({
               ? "bg-surface2 text-ink font-medium"
               : "text-muted hover:bg-surface2 hover:text-ink",
           )}>
-          <span className="truncate pr-2">{session.title || "Chat baru"}</span>
+          <span className="truncate pr-2">
+            {session.title || t("sidebar.newChat")}
+          </span>
         </button>
       )}
 
@@ -99,7 +104,7 @@ export function SessionItem({
                   setMenuOpen(false);
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-surface2 text-left">
-                <Edit2 className="w-3.5 h-3.5" /> Ganti nama
+                <Edit2 className="w-3.5 h-3.5" /> {t("menu.rename")}
               </button>
               <button
                 onClick={() => {
@@ -108,7 +113,7 @@ export function SessionItem({
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-surface2 text-left">
                 <Pin className="w-3.5 h-3.5" />{" "}
-                {session.pinned ? "Lepas sematan" : "Sematkan"}
+                {session.pinned ? t("menu.unpin") : t("menu.pin")}
               </button>
               <button
                 onClick={() => {
@@ -116,7 +121,7 @@ export function SessionItem({
                   setMenuOpen(false);
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-danger/10 text-danger text-left">
-                <Trash2 className="w-3.5 h-3.5" /> Hapus
+                <Trash2 className="w-3.5 h-3.5" /> {t("menu.delete")}
               </button>
             </div>
           )}

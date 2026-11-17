@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlockView } from "../blocks/CodeBlockView";
 import { cn } from "../../lib/cn";
+import { useTranslation } from "react-i18next";
 
 export function Markdown({
   children,
@@ -10,6 +11,8 @@ export function Markdown({
   children: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className={cn("prose-chat", className)}>
       <ReactMarkdown
@@ -47,7 +50,7 @@ export function Markdown({
           img({ src, alt }) {
             return (
               <a href={src as string} target="_blank" rel="noopener noreferrer">
-                {alt || "Gambar"}
+                {alt || t("media.image")}
               </a>
             );
           },

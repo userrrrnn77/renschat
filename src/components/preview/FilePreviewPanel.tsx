@@ -7,8 +7,11 @@ import { copyToClipboard } from "../../lib/copy";
 import { Skeleton } from "../ui/Skeleton";
 import { highlightCode } from "../../lib/highlight";
 import { Markdown } from "../ui/Markdown";
+import { useTranslation } from "react-i18next";
 
 export function FilePreviewPanel() {
+  const { t } = useTranslation();
+
   const { preview, closePreview } = useUIStore();
   const [textContent, setTextContent] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState(false);
@@ -28,9 +31,7 @@ export function FilePreviewPanel() {
         .then(async (res) => {
           if (!res.ok) {
             if (res.status === 415) {
-              setTextContent(
-                "File ini bertipe biner dan tidak bisa ditampilkan sebagai teks.",
-              );
+              setTextContent(t("preview.binaryError"));
               return;
             }
             throw new Error("fetch failed");
@@ -40,7 +41,7 @@ export function FilePreviewPanel() {
         })
         .catch((err) => {
           console.error(err);
-          setTextContent("Gagal memuat teks file.");
+          setTextContent(t("preview.loadTextError"));
         })
         .finally(() => setLoadingText(false));
     }
@@ -100,7 +101,7 @@ export function FilePreviewPanel() {
           ) : url ? (
             <img src={url} className="max-w-full rounded-lg" />
           ) : (
-            <div className="text-danger">Gagal memuat gambar</div>
+            <div className="text-danger">{t("preview.loadImageError")}</div>
           ))}
 
         {preview.preview === "pdf" &&
@@ -112,7 +113,7 @@ export function FilePreviewPanel() {
               className="w-full h-full min-h-125 rounded-lg border border-line"
             />
           ) : (
-            <div className="text-danger">Gagal memuat PDF</div>
+            <div className="text-danger">{t("preview.loadPdfError")}</div>
           ))}
 
         {(preview.preview === "text" || preview.preview === "code") &&
@@ -125,12 +126,12 @@ export function FilePreviewPanel() {
                   <button
                     onClick={() => setShowRaw(false)}
                     className={`px-3 py-1 text-xs rounded-md ${!showRaw ? "bg-surface shadow-sm" : "text-muted"}`}>
-                    Pratinjau
+                    {t("preview.tabPreview")}
                   </button>
                   <button
                     onClick={() => setShowRaw(true)}
                     className={`px-3 py-1 text-xs rounded-md ${showRaw ? "bg-surface shadow-sm" : "text-muted"}`}>
-                    Kode
+                    {t("preview.tabCode")}
                   </button>
                 </div>
               )}
@@ -146,7 +147,7 @@ export function FilePreviewPanel() {
               )}
             </div>
           ) : (
-            <div className="text-muted">Gagal memuat teks</div>
+            <div className="text-muted">{t("preview.loadTextFail")}</div>
           ))}
 
         {preview.preview === "none" && (
@@ -154,7 +155,7 @@ export function FilePreviewPanel() {
             <div className="w-20 h-20 bg-surface2 rounded-xl flex items-center justify-center text-3xl font-bold uppercase">
               {getExt(preview.name)}
             </div>
-            <p>Pratinjau tidak tersedia untuk tipe file ini.</p>
+            <p>{t("preview.noPreview")}</p>
           </div>
         )}
       </div>

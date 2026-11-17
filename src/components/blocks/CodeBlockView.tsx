@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { highlightCode } from "../../lib/highlight";
 import { copyToClipboard } from "../../lib/copy";
 import { cn } from "../../lib/cn";
+import { useTranslation } from "react-i18next";
 import type { CodeBlock } from "../../types";
 
 export function CodeBlockView({ block }: { block: CodeBlock }) {
+  const { t } = useTranslation();
+
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [html, setHtml] = useState("");
@@ -45,13 +48,13 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
             <button
               onClick={downloadFile}
               className="hover:text-ink transition-colors">
-              Unduh
+              {t("common.download")}
             </button>
           )}
           <button
             onClick={handleCopy}
             className="hover:text-ink transition-colors w-12 text-right">
-            {copied ? "Tersalin" : "Salin"}
+            {copied ? t("common.copied") : t("common.copy")}
           </button>
         </div>
       </div>
@@ -71,7 +74,7 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
         <button
           onClick={() => setExpanded(!expanded)}
           className="w-full py-2 bg-codehead text-xs text-muted hover:text-ink border-t border-line transition-colors">
-          {expanded ? "Ciutkan" : "Tampilkan semua"}
+          {expanded ? t("blocks.collapse") : t("blocks.expand")}
         </button>
       )}
     </div>

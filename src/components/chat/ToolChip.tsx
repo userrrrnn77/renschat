@@ -13,24 +13,9 @@ import {
   Terminal,
   Film,
   Sparkles,
+  Globe,
 } from "lucide-react";
-
-const labels: Record<string, string> = {
-  render_table: "Membuat tabel…",
-  render_chart: "Membuat grafik…",
-  render_card: "Menyiapkan kartu…",
-  render_choices: "Menyiapkan pilihan…",
-  create_file: "Membuat file…",
-  present_files: "Menampilkan file…",
-  generate_pdf: "Membuat PDF…",
-  read_attachment: "Membaca lampiran…",
-  search_attachment: "Mencari di lampiran…",
-  inspect_image: "Menganalisis gambar…",
-  run_command: "Menjalankan perintah…",
-  generate_image: "Membuat gambar…",
-  generate_video_cosmos: "Membuat video (Cosmos3)…",
-  generate_video_python: "Membuat video (Python)…",
-};
+import { useTranslation } from "react-i18next";
 
 const icons: Record<string, any> = {
   render_table: Table,
@@ -45,17 +30,23 @@ const icons: Record<string, any> = {
   generate_image: ImageIcon,
   generate_video_cosmos: Film,
   generate_video_python: Sparkles,
+  web_scrape: Globe,
 };
 
 export function ToolChip({ tool }: { tool: ToolRun }) {
+  const { t } = useTranslation();
+
   if (
     tool.status === "ok" &&
-    (tool.name.startsWith("render_") || tool.name.startsWith("generate_"))
+    (tool.name.startsWith("render_") || tool.name.startsWith("generate_")) &&
+    tool.name !== "web_scrape"
   ) {
     return null;
   }
 
-  const label = labels[tool.name] || `Menjalankan ${tool.name}…`;
+  const label = t(`tools.${tool.name}`, {
+    defaultValue: t("tools.generic", { name: tool.name }),
+  });
   const Icon = icons[tool.name] || Terminal;
 
   return (

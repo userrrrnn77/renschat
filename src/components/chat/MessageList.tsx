@@ -4,8 +4,11 @@ import { UserMessage } from "./UserMessage";
 import { AssistantMessage } from "./AssistantMessage";
 import { Skeleton } from "../ui/Skeleton";
 import { useStickToBottom } from "../../hooks/useStickToBottom";
+import { useTranslation } from "react-i18next";
 
 export function MessageList({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+
   const session = useChatStore((s) => s.bySession[sessionId]);
   const loadOlder = useChatStore((s) => s.loadOlder);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +37,7 @@ export function MessageList({ sessionId }: { sessionId: string }) {
             <button
               onClick={() => loadOlder(sessionId)}
               className="text-xs text-muted hover:text-ink px-3 py-1 bg-surface2 rounded-full border border-line">
-              Muat pesan lama
+              {t("chat.loadOlder")}
             </button>
           </div>
         )}

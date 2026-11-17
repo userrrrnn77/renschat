@@ -6,8 +6,11 @@ import { useConfirmStore } from "../../store/confirmStore";
 import { Menu as MenuIcon, ChevronDown } from "lucide-react";
 import { Menu } from "../ui/Menu";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function ChatHeader() {
+  const { t } = useTranslation();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { items, patch, remove } = useSessionsStore();
@@ -26,11 +29,10 @@ export function ChatHeader() {
   const handleDelete = async (): Promise<void> => {
     if (!session) return;
     const ok = await askConfirm({
-      title: "Hapus chat ini?",
-      description:
-        "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
-      confirmLabel: "Hapus",
-      cancelLabel: "Batal",
+      title: t("sidebar.deleteTitle"),
+      description: t("sidebar.deleteDesc"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
       variant: "danger",
     });
     if (!ok) return;
@@ -66,7 +68,9 @@ export function ChatHeader() {
             align="left"
             trigger={
               <button className="flex items-center gap-1 text-sm font-medium text-ink hover:text-muted transition-colors truncate max-w-50 md:max-w-xs">
-                <span className="truncate">{session.title || "Chat baru"}</span>
+                <span className="truncate">
+                  {session.title || t("sidebar.newChat")}
+                </span>
                 <ChevronDown className="w-4 h-4 text-muted" />
               </button>
             }>
@@ -76,24 +80,26 @@ export function ChatHeader() {
                 setTitle(session.title);
               }}
               className="w-full text-left px-3 py-1.5 text-sm hover:bg-surface2">
-              Ganti nama
+              {t("menu.rename")}
             </button>
             <button
               onClick={() => patch(session.id, { pinned: !session.pinned })}
               className="w-full text-left px-3 py-1.5 text-sm hover:bg-surface2">
-              {session.pinned ? "Lepas sematan" : "Sematkan"}
+              {session.pinned ? t("menu.unpin") : t("menu.pin")}
             </button>
             <button
               onClick={() => {
                 void handleDelete();
               }}
               className="w-full text-left px-3 py-1.5 text-sm hover:bg-danger/10 text-danger">
-              Hapus
+              {t("menu.delete")}
             </button>
           </Menu>
         )
       ) : (
-        <span className="font-medium text-sm text-ink">Chat baru</span>
+        <span className="font-medium text-sm text-ink">
+          {t("sidebar.newChat")}
+        </span>
       )}
     </header>
   );

@@ -3,15 +3,18 @@ import { useEffect, useRef } from "react";
 import { Modal } from "./Modal";
 import { useConfirmStore } from "../../store/confirmStore";
 import { cn } from "../../lib/cn";
+import { useTranslation } from "react-i18next";
 
 export function ConfirmModal() {
+  const { t } = useTranslation();
+
   const { open, options, confirm, cancel } = useConfirmStore();
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
   const variant = options?.variant ?? "danger";
-  const confirmLabel = options?.confirmLabel ?? "Konfirmasi";
-  const cancelLabel = options?.cancelLabel ?? "Batal";
+  const confirmLabel = options?.confirmLabel ?? t("common.confirm");
+  const cancelLabel = options?.cancelLabel ?? t("common.cancel");
 
   // Autofocus: destructive → fokus tombol Batal (safety). Primary →
   // fokus tombol utama (Enter langsung konfirmasi).

@@ -12,6 +12,7 @@ import { AttachmentChip } from "./AttachmentChip";
 import { Spinner } from "../ui/Spinner";
 import { Plus, ArrowUp, Square, FileText, X } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { useTranslation } from "react-i18next";
 
 export function Composer({
   sessionId,
@@ -20,6 +21,8 @@ export function Composer({
   sessionId: string;
   isNew?: boolean;
 }) {
+  const { t } = useTranslation();
+
   const key = isNew ? "new" : sessionId;
 
   const draft = useComposerStore((s) => s.drafts[key]) || {
@@ -166,13 +169,15 @@ export function Composer({
               className="flex items-center gap-2 border border-line rounded-lg px-3 py-1.5 text-xs bg-surface">
               <FileText className="w-4 h-4 text-muted" />
               <div className="flex flex-col">
-                <span className="font-medium">Teks yang di-paste</span>
-                <span className="text-muted">{p.text.length} karakter</span>
+                <span className="font-medium">{t("composer.pastedText")}</span>
+                <span className="text-muted">
+                  {t("composer.chars", { count: p.text.length })}
+                </span>
               </div>
               <button
                 onClick={() => removePastedText(key, p.localId)}
                 className="p-1 hover:bg-surface2 rounded-md ml-1"
-                title="Hapus">
+                title={t("common.delete")}>
                 <X className="w-3.5 h-3.5 text-muted" />
               </button>
             </div>
@@ -198,7 +203,7 @@ export function Composer({
           onClick={() => fileInputRef.current?.click()}
           disabled={isStreaming || isNew}
           className="p-2 mb-1 text-muted hover:text-ink hover:bg-surface2 rounded-xl transition-colors disabled:opacity-50"
-          title="Lampirkan file">
+          title={t("composer.attachFile")}>
           <Plus className="w-5 h-5" />
         </button>
         <input
@@ -218,7 +223,9 @@ export function Composer({
           onPaste={handlePaste}
           onCompositionEnd={() => setIsComposing(false)}
           placeholder={
-            isNew ? "Apa yang bisa dibantu hari ini?" : "Balas ke GenUI…"
+            isNew
+              ? t("composer.placeholderNew")
+              : t("composer.placeholderReply")
           }
           className="flex-1 max-h-50 bg-transparent py-3 px-1 resize-none focus:outline-none text-[15px] leading-relaxed placeholder:text-muted/70"
           rows={1}
@@ -245,7 +252,7 @@ export function Composer({
         </button>
       </div>
       <div className="text-center mt-2 text-[11px] text-muted">
-        GenUI bisa salah. Periksa kembali informasi penting.
+        {t("composer.disclaimer")}
       </div>
     </div>
   );

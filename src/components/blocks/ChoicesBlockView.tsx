@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "../../lib/cn";
 import type { ChoicesBlock } from "../../types";
 import { useChatStore } from "../../store/chatStore";
+import { useTranslation } from "react-i18next";
 
 export function ChoicesBlockView({
   block,
@@ -14,6 +15,8 @@ export function ChoicesBlockView({
   sessionId: string;
   isLast: boolean;
 }) {
+  const { t } = useTranslation();
+
   const [selected, setSelected] = useState<string[]>([]);
   const isStreaming = useChatStore((s) => s.bySession[sessionId]?.streaming);
   const send = useChatStore((s) => s.send);
@@ -66,7 +69,7 @@ export function ChoicesBlockView({
           disabled={selected.length === 0}
           onClick={() => send(sessionId, selected.join(", "), [])}
           className="mt-4 w-full py-2 bg-accent text-accent-fg rounded-lg text-sm font-medium hover:bg-accent-hover disabled:opacity-50 transition-colors">
-          Kirim Pilihan
+          {t("blocks.sendChoices")}
         </button>
       )}
     </div>

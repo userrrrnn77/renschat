@@ -1,11 +1,11 @@
-# GenUI Chat Frontend
+# RensChat Frontend
 
 Frontend chat AI generative UI — Vite + React 19 + TypeScript + Tailwind v4 + Zustand. Merender jawaban model sebagai blok (teks, kode, tabel, chart, kartu, file, gambar, video), dengan toolbar generate gambar/video, badge kredit, dan alur donasi Ko-fi yang **opsional**. Semua fitur inti tetap gratis; penegakan akses sepenuhnya di backend — UI hanya kosmetik.
 
 ## Prasyarat
 
 - **Node.js** `>= 20` atau **Bun** `>= 1.1`
-- **Backend GenUI** sudah jalan (default `http://localhost:3000`) — lihat README backend
+- **Backend RensChat** sudah jalan (default `http://localhost:3000`) — lihat README backend
 - Browser modern (fetch streaming / ReadableStream untuk SSE)
 
 ## Setup cepat

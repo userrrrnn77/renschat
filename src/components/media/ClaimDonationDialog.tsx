@@ -4,6 +4,7 @@ import { Modal } from "../ui/Modal";
 import { api, ApiError } from "../../lib/api";
 import { useMediaStore } from "../../store/mediaStore";
 import { useToastStore } from "../../store/toastStore";
+import { useTranslation } from "react-i18next";
 
 export function ClaimDonationDialog({
   open,
@@ -12,6 +13,8 @@ export function ClaimDonationDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
   const [txId, setTxId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +34,10 @@ export function ClaimDonationDialog({
       });
       pushToast(
         "success",
-        `Kredit masuk: +${res.creditsGranted.imageFlux3} gambar, +${res.creditsGranted.videoCosmos} video`,
+        t("donation.creditsAdded", {
+          image: res.creditsGranted.imageFlux3,
+          video: res.creditsGranted.videoCosmos,
+        }),
       );
       await fetchEntitlements();
       setEmail("");
@@ -41,11 +47,11 @@ export function ClaimDonationDialog({
       if (err instanceof ApiError) {
         setError(
           err.code === "CLAIM_NOT_FOUND"
-            ? "Klaim donasi tidak ditemukan. Periksa email dan ID transaksi."
+            ? t("donation.claimNotFound")
             : err.message,
         );
       } else {
-        setError(err instanceof Error ? err.message : "Gagal mengklaim donasi");
+        setError(err instanceof Error ? err.message : t("donation.claimError"));
       }
     } finally {
       setBusy(false);
@@ -56,14 +62,15 @@ export function ClaimDonationDialog({
     <Modal open={open} onClose={busy ? () => {} : onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-ink">Klaim donasi</h2>
-          <p className="text-sm text-muted mt-1">
-            Masukkan email dan ID transaksi Ko-fi untuk mengaitkan donasi ke
-            akun ini.
-          </p>
+          <h2 className="text-lg font-semibold text-ink">
+            {t("donation.claimTitle")}
+          </h2>
+          <p className="text-sm text-muted mt-1">{t("donation.claimDesc")}</p>
         </div>
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted">Email donatur</span>
+          <span className="text-xs font-medium text-muted">
+            {t("donation.donorEmail")}
+          </span>
           <input
             type="email"
             value={email}
@@ -76,7 +83,7 @@ export function ClaimDonationDialog({
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs font-medium text-muted">
-            ID transaksi Ko-fi (kofi_transaction_id)
+            {t("donation.txId")}
           </span>
           <input
             type="text"
@@ -88,7 +95,7 @@ export function ClaimDonationDialog({
             className="w-full px-3 py-2 bg-surface2 border border-line rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60"
           />
           <span className="text-[11px] text-muted">
-            Lihat di email konfirmasi Ko-fi atau di halaman Riwayat donasi.
+            {t("donation.txIdDesc")}
           </span>
         </label>
         {error && <p className="text-xs text-danger">{error}</p>}
@@ -98,13 +105,13 @@ export function ClaimDonationDialog({
             onClick={onClose}
             disabled={busy}
             className="px-3 py-1.5 text-sm text-muted hover:text-ink transition-colors disabled:opacity-50">
-            Batal
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy || email.length < 3 || txId.length < 1}
             className="px-4 py-1.5 text-sm bg-accent text-accent-fg rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50">
-            {busy ? "Mengklaim…" : "Klaim"}
+            {busy ? t("donation.claiming") : t("donation.claimButton")}
           </button>
         </div>
       </form>

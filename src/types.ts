@@ -193,11 +193,22 @@ export type IndexStatus =
   | "ready"
   | "failed";
 
+export interface Personality {
+  mode: "auto" | "serious" | "casual" | "playful";
+  note?: string;
+}
+
+export interface Preferences {
+  personality: Personality;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   timezone: string;
+  avatarUrl?: string;
+  authProviders?: string[];
 }
 
 export interface SessionItem {

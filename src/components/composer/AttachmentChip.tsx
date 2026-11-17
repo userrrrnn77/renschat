@@ -2,6 +2,7 @@ import { formatBytes } from "../../lib/files";
 import { X, RotateCcw, FileText } from "lucide-react";
 import type { AttachmentUpload } from "../../lib/upload";
 import { cn } from "../../lib/cn";
+import { useTranslation } from "react-i18next";
 
 const UPLOADING_STATES: ReadonlySet<AttachmentUpload["state"]> = new Set([
   "queued",
@@ -20,6 +21,8 @@ export function AttachmentChip({
   onRemove: () => void;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
+
   const isImage = attachment.mime.startsWith("image/");
   const isFailed = attachment.state === "failed";
   const isUploading = UPLOADING_STATES.has(attachment.state);
@@ -43,7 +46,7 @@ export function AttachmentChip({
         <span className="truncate font-medium">{attachment.name}</span>
         <span className="text-muted">
           {isUploading
-            ? `${attachment.state === "processing" ? "Memproses" : "Mengunggah"}… ${attachment.progress}%`
+            ? `${attachment.state === "processing" ? t("upload.processing") : t("upload.uploading")}… ${attachment.progress}%`
             : formatBytes(attachment.size)}
         </span>
       </div>
@@ -58,7 +61,13 @@ export function AttachmentChip({
       <button
         onClick={isFailed ? onRetry : onRemove}
         className="p-1 hover:bg-surface2 rounded-md transition-colors ml-1"
-        title={isFailed ? "Ulangi" : isUploading ? "Batal unggah" : "Hapus"}>
+        title={
+          isFailed
+            ? t("upload.retry")
+            : isUploading
+              ? t("upload.cancelUpload")
+              : t("upload.remove")
+        }>
         {isFailed ? (
           <RotateCcw className="w-3.5 h-3.5 text-danger" />
         ) : isUploading ? (

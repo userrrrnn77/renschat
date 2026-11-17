@@ -5,6 +5,7 @@ import { useMediaStore } from "../../store/mediaStore";
 import { useToastStore } from "../../store/toastStore";
 import { ClaimDonationDialog } from "./ClaimDonationDialog";
 import { Copy, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Dialog donasi (bukan sekadar card): dibuka dari UserMenu, ImageModelDropdown
@@ -12,6 +13,8 @@ import { Copy, ExternalLink } from "lucide-react";
  * hidup di mediaStore agar bisa dipicu dari mana saja.
  */
 export function DonateCard() {
+  const { t } = useTranslation();
+
   const open = useMediaStore((s) => s.donateOpen);
   const setOpen = useMediaStore((s) => s.setDonateOpen);
   const entitlements = useMediaStore((s) => s.entitlements);
@@ -27,9 +30,9 @@ export function DonateCard() {
     if (!entitlements?.donationCode) return;
     try {
       await navigator.clipboard.writeText(entitlements.donationCode);
-      pushToast("success", "Kode donasi disalin");
+      pushToast("success", t("donation.codeCopied"));
     } catch {
-      pushToast("error", "Gagal menyalin kode");
+      pushToast("error", t("donation.codeCopyError"));
     }
   };
 
@@ -39,20 +42,18 @@ export function DonateCard() {
         <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold text-ink">
-              Buka fitur ekstra lewat donasi
+              {t("donation.title")}
             </h2>
-            <p className="text-sm text-muted mt-1">
-              Satu donasi (min. USD 3) langsung memberi{" "}
-              <strong className="text-ink">+10 kredit gambar FLUX.3</strong> dan{" "}
-              <strong className="text-ink">+4 kredit video Cosmos</strong>{" "}
-              sekaligus.
-            </p>
+            <p
+              className="text-sm text-muted mt-1"
+              dangerouslySetInnerHTML={{ __html: t("donation.desc") }}
+            />
           </div>
 
           {entitlements?.donationCode ? (
             <div className="border border-line rounded-lg p-3 bg-surface2">
               <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
-                Kode donasi kamu
+                {t("donation.yourCode")}
               </p>
               <div className="flex items-center gap-2">
                 <code className="font-mono text-base text-ink flex-1">
@@ -62,18 +63,18 @@ export function DonateCard() {
                   type="button"
                   onClick={handleCopyCode}
                   className="p-1.5 rounded-md hover:bg-surface border border-line transition-colors"
-                  aria-label="Salin kode donasi"
-                  title="Salin kode donasi">
+                  aria-label={t("donation.copyCode")}
+                  title={t("donation.copyCode")}>
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
               <p className="text-xs text-muted mt-2 leading-relaxed">
-                Tulis kode ini di pesan donasi supaya kredit masuk otomatis.
+                {t("donation.codeDesc")}
               </p>
             </div>
           ) : (
             <div className="border border-line rounded-lg p-3 bg-surface2 text-sm text-muted">
-              Memuat kode donasi…
+              {t("donation.loadingCode")}
             </div>
           )}
 
@@ -84,23 +85,23 @@ export function DonateCard() {
                 target="_blank"
                 rel="noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-accent text-accent-fg rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors">
-                Buka Ko-fi <ExternalLink className="w-4 h-4" />
+                {t("donation.openKofi")} <ExternalLink className="w-4 h-4" />
               </a>
             ) : (
               <p className="text-xs text-muted">
-                Halaman Ko-fi belum dikonfigurasi server.
+                {t("donation.kofiNotConfigured")}
               </p>
             )}
             <button
               type="button"
               onClick={() => setClaimOpen(true)}
               className="text-xs text-accent hover:underline text-left">
-              Sudah donasi tapi kredit belum masuk? Klaim di sini
+              {t("donation.alreadyDonated")}
             </button>
           </div>
 
           <p className="text-[11px] text-muted text-center border-t border-line pt-3">
-            Semua fitur tetap gratis. Donasi bersifat opsional.
+            {t("donation.freeNote")}
           </p>
         </div>
       </Modal>

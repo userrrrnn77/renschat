@@ -1,7 +1,11 @@
 // src/components/media/CreditBadge.tsx
 import { useMediaStore } from "../../store/mediaStore";
+import { useTranslation } from "react-i18next";
+import { Image, Video } from "lucide-react";
 
 export function CreditBadge() {
+  const { t } = useTranslation();
+
   const entitlements = useMediaStore((s) => s.entitlements);
   if (!entitlements || !entitlements.isDonor) return null;
 
@@ -10,9 +14,13 @@ export function CreditBadge() {
 
   return (
     <div className="ml-auto inline-flex items-center gap-2 text-xs text-muted px-2 py-1 rounded-md bg-surface2 border border-line">
-      <span title="Kredit gambar FLUX.3">🖼 {imageFlux3}</span>
+      <span title={t("media.image")}>
+        <Image /> {imageFlux3}
+      </span>
       <span className="text-muted/50">·</span>
-      <span title="Kredit video Cosmos">🎬 {videoCosmos}</span>
+      <span title={t("media.video")}>
+        <Video /> {videoCosmos}
+      </span>
     </div>
   );
 }

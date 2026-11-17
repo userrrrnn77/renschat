@@ -1,6 +1,9 @@
 import { UploadCloud } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function DropOverlay({ isVisible }: { isVisible: boolean }) {
+  const { t } = useTranslation();
+
   if (!isVisible) return null;
 
   return (
@@ -11,11 +14,12 @@ export function DropOverlay({ isVisible }: { isVisible: boolean }) {
         </div>
         <div className="text-center">
           <p className="text-lg font-medium text-ink">
-            Lepas file untuk melampirkan
+            {t("composer.dropTitle")}
           </p>
           <p className="text-sm text-muted mt-1">
-            PDF, gambar, dokumen, atau kode · maks{" "}
-            {import.meta.env.VITE_MAX_UPLOAD_MB || 20} MB
+            {t("composer.dropDesc", {
+              mb: import.meta.env.VITE_MAX_UPLOAD_MB || 20,
+            })}
           </p>
         </div>
       </div>

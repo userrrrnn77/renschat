@@ -14,7 +14,11 @@ import { SparkleLogo } from "../ui/Icons";
 import { Plus, Search } from "lucide-react";
 import { Skeleton } from "../ui/Skeleton";
 
+import { useTranslation } from "react-i18next";
+
 export function Sidebar() {
+  const { t } = useTranslation();
+
   const navigate = useNavigate();
   const { id: currentSessionId } = useParams();
   const {
@@ -53,11 +57,10 @@ export function Sidebar() {
 
   const handleDelete = async (id: string): Promise<void> => {
     const ok = await askConfirm({
-      title: "Hapus chat ini?",
-      description:
-        "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
-      confirmLabel: "Hapus",
-      cancelLabel: "Batal",
+      title: t("sidebar.deleteTitle"),
+      description: t("sidebar.deleteDesc"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
       variant: "danger",
     });
     if (!ok) return;
@@ -80,7 +83,7 @@ export function Sidebar() {
             onClick={() => navigate("/")}>
             <SparkleLogo className="w-5 h-5 text-accent" />
             <span className="font-serif font-semibold text-lg text-ink">
-              GenUI
+              RensChat
             </span>
           </div>
         </div>
@@ -89,7 +92,7 @@ export function Sidebar() {
           <button
             onClick={handleNewChat}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors">
-            <Plus className="w-4 h-4" /> Chat baru
+            <Plus className="w-4 h-4" /> {t("sidebar.newChat")}
           </button>
         </div>
 
@@ -97,7 +100,7 @@ export function Sidebar() {
           <Search className="w-4 h-4 absolute left-5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
-            placeholder="Cari chat..."
+            placeholder={t("sidebar.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 bg-surface2 border-none rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-muted/70 text-ink"

@@ -8,6 +8,7 @@ import { ChoicesBlockView } from "./ChoicesBlockView";
 import { FileBlockView } from "./FileBlockView";
 import { ImageBlockView } from "./ImageBlockView";
 import { VideoBlockView } from "./VideoBlockView";
+import { useTranslation } from "react-i18next";
 
 export function BlockRenderer({
   block,
@@ -18,6 +19,8 @@ export function BlockRenderer({
   sessionId: string;
   isLast: boolean;
 }) {
+  const { t } = useTranslation();
+
   switch (block.type) {
     case "text":
       return <TextBlockView block={block} />;
@@ -42,7 +45,7 @@ export function BlockRenderer({
     default:
       return (
         <div className="text-sm text-muted italic">
-          Tipe konten tidak didukung: {(block as any).type}
+          {t("blocks.unsupportedContent", { type: (block as any).type })}
         </div>
       );
   }

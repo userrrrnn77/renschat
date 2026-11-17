@@ -8,12 +8,14 @@ interface UIState {
   theme: Theme;
   preview: FileBlock | null;
   lightbox: string | null;
+  personalityOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   setTheme: (theme: Theme) => void;
   openPreview: (file: FileBlock) => void;
   closePreview: () => void;
   setLightbox: (url: string | null) => void;
+  setPersonalityOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => {
@@ -46,5 +48,7 @@ export const useUIStore = create<UIState>((set) => {
     openPreview: (file) => set({ preview: file }),
     closePreview: () => set({ preview: null }),
     setLightbox: (url) => set({ lightbox: url }),
+    personalityOpen: false,
+    setPersonalityOpen: (open) => set({ personalityOpen: open }),
   };
 });

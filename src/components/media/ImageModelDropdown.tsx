@@ -1,7 +1,9 @@
 // src/components/media/ImageModelDropdown.tsx
 import { useEffect, useRef, useState } from "react";
+import { Lock, ChevronDown } from "lucide-react";
 import { useMediaStore } from "../../store/mediaStore";
 import type { EntitlementsImageModel } from "../../types";
+import { useTranslation } from "react-i18next";
 
 const FALLBACK_MODELS: EntitlementsImageModel[] = [
   {
@@ -20,6 +22,7 @@ const FALLBACK_MODELS: EntitlementsImageModel[] = [
 ];
 
 export function ImageModelDropdown() {
+  const { t } = useTranslation();
   const entitlements = useMediaStore((s) => s.entitlements);
   const selection = useMediaStore((s) => s.selection);
   const setSelection = useMediaStore((s) => s.setSelection);
@@ -60,32 +63,30 @@ export function ImageModelDropdown() {
         aria-haspopup="menu"
         aria-expanded={open}>
         <span>{current.label}</span>
-        <span className="text-muted">
-          {current.locked ? "🔒" : ""} {current.badge}
+        <span className="text-muted inline-flex items-center gap-1">
+          {current.locked && <Lock className="w-3 h-3" />}
+          {current.badge}
         </span>
-        <span className="text-muted">▾</span>
+        <ChevronDown className="w-3 h-3 text-muted" />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute top-full mt-1 left-0 w-64 bg-surface border border-line rounded-lg shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2">
+          className="absolute bottom-full mb-2 left-0 w-64 bg-surface border border-line rounded-lg shadow-lg z-50 py-1 animate-in fade-in slide-in-from-bottom-2">
           {models.map((m) => (
             <button
               key={m.id}
               role="menuitem"
               aria-disabled={m.locked}
               onClick={() => handleSelect(m)}
-              title={
-                m.locked
-                  ? "Terbuka setelah traktir kopi di Ko-fi (opsional)"
-                  : m.label
-              }
+              title={m.locked ? t("media.lockedTooltip") : m.label}
               className="w-full text-left px-3 py-2 hover:bg-surface2 transition-colors flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5">
                 {m.locked && (
-                  <span aria-hidden="true" aria-label="Terkunci">
-                    🔒
-                  </span>
+                  <Lock
+                    className="w-3.5 h-3.5 text-muted shrink-0"
+                    aria-label={t("media.locked")}
+                  />
                 )}
                 <span className="text-sm">{m.label}</span>
               </span>
@@ -96,7 +97,7 @@ export function ImageModelDropdown() {
           ))}
           <div className="border-t border-line mt-1 pt-1 px-3 py-1.5">
             <p className="text-[11px] text-muted leading-relaxed">
-              FLUX.3 membuka akses model lebih berat. Semua fitur tetap gratis.
+              {t("media.flux3Note")}
             </p>
           </div>
         </div>

@@ -2,8 +2,11 @@
 import { useEffect, useState } from "react";
 import { SparkleLogo } from "../ui/Icons";
 import type { StreamPhase } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function ThinkingIndicator({ phase }: { phase: StreamPhase }) {
+  const { t } = useTranslation();
+
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -16,10 +19,10 @@ export function ThinkingIndicator({ phase }: { phase: StreamPhase }) {
 
   const label =
     phase === "clarifying"
-      ? "Menunggu jawabanmu"
+      ? t("chat.thinking.waiting")
       : phase === "retrieving"
-        ? "Mencari di dokumen"
-        : "Berpikir";
+        ? t("chat.thinking.searching")
+        : t("chat.thinking.thinking");
 
   return (
     <div className="flex items-center gap-2 text-muted py-2">

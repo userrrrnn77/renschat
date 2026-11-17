@@ -19,6 +19,14 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target,
           changeOrigin: true,
+          // Pastikan redirect OAuth dari backend tidak di-cache atau diproses aneh oleh Vite
+          configure: (proxy) => {
+            proxy.on("proxyRes", (proxyRes) => {
+              if (proxyRes.statusCode === 302 || proxyRes.statusCode === 301) {
+                // Biarkan Vite meneruskan Location header dari backend
+              }
+            });
+          },
         },
       },
     },

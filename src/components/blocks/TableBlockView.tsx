@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { copyToClipboard } from "../../lib/copy";
 import type { TableBlock } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function TableBlockView({ block }: { block: TableBlock }) {
+  const { t } = useTranslation();
+
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
@@ -95,17 +98,17 @@ export function TableBlockView({ block }: { block: TableBlock }) {
         </table>
       </div>
       <div className="flex justify-between items-center mt-2 text-xs text-muted">
-        <span>{sortedRows.length} baris</span>
+        <span>{t("blocks.rows", { count: sortedRows.length })}</span>
         <div className="flex gap-2">
           <button
             onClick={copyTSV}
             className="hover:text-ink transition-colors">
-            Salin (TSV)
+            {t("blocks.copyTsv")}
           </button>
           <button
             onClick={downloadCSV}
             className="hover:text-ink transition-colors">
-            Unduh CSV
+            {t("blocks.downloadCsv")}
           </button>
         </div>
       </div>

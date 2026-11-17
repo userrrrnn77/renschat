@@ -14,8 +14,11 @@ import {
   FaqPage,
   ContactPage,
 } from "./pages/StaticPages";
+import { useTranslation } from "react-i18next";
 
 export default function App() {
+  const { t } = useTranslation();
+
   const { status, bootstrap } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
@@ -41,16 +44,12 @@ export default function App() {
   if (status === "offline") {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 text-center">
-        <h1 className="text-xl font-semibold mb-2">
-          Tidak bisa terhubung ke server
-        </h1>
-        <p className="text-muted text-sm mb-6">
-          Pastikan backend GenUI sudah berjalan di port 3000.
-        </p>
+        <h1 className="text-xl font-semibold mb-2">{t("app.offlineTitle")}</h1>
+        <p className="text-muted text-sm mb-6">{t("app.offlineDesc")}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-6 py-2 bg-accent text-accent-fg rounded-lg text-sm">
-          Coba lagi
+          {t("app.retry")}
         </button>
       </div>
     );

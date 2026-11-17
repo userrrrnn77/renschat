@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { SourcesList } from "./SourcesList";
 import type { StreamPhase, SourceRef } from "../../types";
+import { useTranslation } from "react-i18next";
 
 export function ThinkingPanel({
   phase,
@@ -20,6 +21,8 @@ export function ThinkingPanel({
   sources?: SourceRef[];
   isStreaming: boolean;
 }) {
+  const { t } = useTranslation();
+
   const [expanded, setExpanded] = useState(isStreaming);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -40,9 +43,9 @@ export function ThinkingPanel({
   if (!hasThinking && !hasSources) return null;
 
   const phaseSteps = [
-    { id: "clarifying", label: "Klarifikasi" },
-    { id: "retrieving", label: "Mencari dokumen" },
-    { id: "generating", label: "Menyusun jawaban" },
+    { id: "clarifying", label: t("chat.thinking.clarifying") },
+    { id: "retrieving", label: t("chat.thinking.searching") },
+    { id: "generating", label: t("chat.thinking.generating") },
   ];
 
   const currentPhaseIdx = phase
@@ -60,7 +63,7 @@ export function ThinkingPanel({
           ) : (
             <ChevronRight className="w-4 h-4" />
           )}
-          <span>Proses Berpikir</span>
+          <span>{t("chat.thinking.process")}</span>
           {durationMs !== undefined && (
             <span className="text-xs opacity-70">
               ({(durationMs / 1000).toFixed(1)} dtk)
@@ -115,7 +118,9 @@ export function ThinkingPanel({
           {/* Sources */}
           {hasSources && (
             <div>
-              <p className="text-xs font-semibold text-muted mb-2">Sumber:</p>
+              <p className="text-xs font-semibold text-muted mb-2">
+                {t("chat.thinking.sources")}
+              </p>
               <SourcesList sources={sources} />
             </div>
           )}

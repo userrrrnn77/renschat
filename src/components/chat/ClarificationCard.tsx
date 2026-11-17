@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { cn } from "../../lib/cn";
 import { useChatStore } from "../../store/chatStore";
 import type { PendingClarification } from "../../types";
+import { useTranslation } from "react-i18next";
 import { Spinner } from "../ui/Spinner";
 
 export function ClarificationCard({
@@ -12,6 +13,8 @@ export function ClarificationCard({
   sessionId: string;
   clarification: PendingClarification;
 }) {
+  const { t } = useTranslation();
+
   const respond = useChatStore((s) => s.respond);
 
   const [selected, setSelected] = useState<string[]>([]);
@@ -46,8 +49,8 @@ export function ClarificationCard({
     } catch (err) {
       setSubmitError(
         err instanceof Error
-          ? `Gagal mengirim jawaban: ${err.message}`
-          : "Gagal mengirim jawaban",
+          ? `${t("clarification.error", { message: err.message })}`
+          : `${t("clarification.error", { message: "" })}`,
       );
       setSubmitting(false);
     }
@@ -77,7 +80,7 @@ export function ClarificationCard({
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="font-semibold">{clarification.question}</p>
         <span className="text-[11px] text-muted shrink-0">
-          {Math.ceil(remainingMs / 1000)} dtk
+          {t("clarification.seconds", { count: Math.ceil(remainingMs / 1000) })}
         </span>
       </div>
 
@@ -109,7 +112,7 @@ export function ClarificationCard({
           disabled={disabled}
           onClick={() => setShowCustom(true)}
           className="mt-3 text-xs text-muted hover:text-ink underline underline-offset-2 disabled:opacity-50">
-          Lainnya…
+          {t("clarification.others")}
         </button>
       ) : (
         <div className="mt-3 flex gap-2">
@@ -118,7 +121,7 @@ export function ClarificationCard({
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             disabled={disabled}
-            placeholder="Ketik jawabanmu…"
+            placeholder={t("clarification.customPlaceholder")}
             className="flex-1 bg-bg border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent disabled:opacity-60"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -132,7 +135,7 @@ export function ClarificationCard({
             disabled={disabled || customText.trim().length === 0}
             onClick={handleCustomSubmit}
             className="px-3 py-2 bg-accent text-accent-fg rounded-lg text-sm font-medium hover:bg-accent-hover disabled:opacity-50 transition-colors">
-            Kirim
+            {t("clarification.send")}
           </button>
         </div>
       )}
@@ -143,14 +146,14 @@ export function ClarificationCard({
           disabled={disabled || selected.length === 0}
           onClick={() => void handleSubmit(selected)}
           className="mt-3 w-full py-2 bg-accent text-accent-fg rounded-lg text-sm font-medium hover:bg-accent-hover disabled:opacity-50 transition-colors">
-          Kirim Pilihan
+          {t("blocks.sendChoices")}
         </button>
       )}
 
       {submitting && (
         <div className="mt-3 flex items-center gap-2 text-xs text-muted">
           <Spinner className="w-3.5 h-3.5" />
-          <span>Mengirim…</span>
+          <span>{t("clarification.sending")}</span>
         </div>
       )}
 
@@ -162,7 +165,7 @@ export function ClarificationCard({
 
       {expired && !submitting && (
         <div className="mt-3 text-xs text-warning">
-          Waktu habis. Kirim pesan lagi untuk melanjutkan.
+          {t("clarification.timeout")}
         </div>
       )}
     </div>
