@@ -6,6 +6,7 @@ import { groupByDate } from "../lib/time";
 import { useChatStore } from "./chatStore";
 import { useComposerStore } from "./composerStore";
 import { useToastStore } from "./toastStore";
+import i18n from "../i18n";
 
 interface SessionsState {
   items: SessionItem[];
@@ -203,7 +204,14 @@ export const selectGroupedSessions = () => {
   const unpinned = filtered.filter((x) => !x.pinned);
 
   const groups: Record<string, SessionItem[]> = {};
-  const groupOrder = ["Hari Ini", "Kemarin", "7 Hari Terakhir", "Lebih Lama"];
+
+  // PAKAI i18n.t() BIAR SAMA KAYAK DI time.ts
+  const groupOrder = [
+    i18n.t("sidebar.today"),
+    i18n.t("sidebar.yesterday"),
+    i18n.t("sidebar.last7Days"),
+    i18n.t("sidebar.older"),
+  ];
 
   unpinned.forEach((item) => {
     const group = groupByDate(item.lastMessageAt);
@@ -212,7 +220,15 @@ export const selectGroupedSessions = () => {
   });
 
   const result = [];
-  if (pinned.length > 0) result.push({ title: "Disematkan", items: pinned });
+
+  // Ini juga ganti biar bahasanya dinamis
+  if (pinned.length > 0) {
+    result.push({
+      title: i18n.t("sidebar.pinned", "Disematkan"),
+      items: pinned,
+    });
+  }
+
   groupOrder.forEach((g) => {
     if (groups[g]?.length > 0) result.push({ title: g, items: groups[g] });
   });
