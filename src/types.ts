@@ -198,8 +198,22 @@ export interface Personality {
   note?: string;
 }
 
+export interface PersistedStyleProfile {
+  tone: "serious" | "casual" | "playful";
+  formality: "formal" | "neutral" | "informal";
+  pronouns: "gw-lu" | "aku-kamu" | "saya-anda" | "none";
+  slangRate: number;
+  emojiRate: number;
+  length: "short" | "medium" | "long";
+  language: "id" | "en" | "mixed";
+  confidence: number;
+  sampleCount: number;
+  lastUpdated?: string;
+}
+
 export interface Preferences {
   personality: Personality;
+  styleProfile?: PersistedStyleProfile | null;
 }
 
 export interface User {
@@ -337,4 +351,29 @@ export interface ChatMessage {
   usage?: Usage | null;
   sources?: SourceRef[];
   thinking?: { text: string; done: boolean; durationMs?: number };
+}
+
+export interface DailyUsage {
+  day: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  images: number;
+  videos: number;
+  requests: number;
+}
+
+export interface UsageReport {
+  timezone: string;
+  month: string;
+  windowDays: number;
+  total: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    images: number;
+    videos: number;
+    requests: number;
+  };
+  daily: DailyUsage[];
 }

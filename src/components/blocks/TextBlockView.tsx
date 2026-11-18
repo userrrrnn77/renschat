@@ -1,25 +1,21 @@
 // src/components/blocks/TextBlockView.tsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Markdown } from "../ui/Markdown";
 import type { TextBlock } from "../../types";
 import { useTranslation } from "react-i18next";
+import { sanitizeAssistantText } from "../../lib/sanitizeAssistantText";
 
-const MAX_LINES = 25;
-const MAX_CHARS = 1500;
+const MAX_LINES = 30;
+const MAX_CHARS = 2200;
 
 export function TextBlockView({ block }: { block: TextBlock }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
-  // Bersihin teks dari tag <tool_call> yang bocor dari model (Nemotron)
-  const cleanMarkdown = block.markdown
-    .replace(
-      /<tool_call>[\s\S]*?<\/tool_call>/gi,
-      `\n\n*${t("blocks.toolCallError")}*\n\n`,
-    )
-    .replace(/<function=[^>]+>[\s\S]*?<\/function>/gi, "")
-    .replace(/<parameter=[^>]+>[\s\S]*?<\/parameter>/gi, "")
-    .trim();
+  const cleanMarkdown = useMemo(
+    () => sanitizeAssistantText(block.markdown),
+    [block.markdown],
+  );
 
   if (!cleanMarkdown) return null;
 
@@ -28,18 +24,21 @@ export function TextBlockView({ block }: { block: TextBlock }) {
 
   const displayContent =
     !expanded && isLong
-      ? lines.slice(0, MAX_LINES).join("\n") + "\n\n..."
+      ? lines.slice(0, MAX_LINES).join("\n").trimEnd() + "\n\n…"
       : cleanMarkdown;
 
   return (
     <div className="relative">
       <Markdown>{displayContent}</Markdown>
       {isLong && (
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="mt-1 text-sm font-medium text-accent hover:underline">
-          {expanded ? t("blocks.collapse") : t("blocks.readMore")}
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="text-sm font-medium text-accent hover:text-accent-hover transition-colors">
+            {expanded ? t("blocks.collapse") : t("blocks.readMore")}
+          </button>
+        </div>
       )}
     </div>
   );

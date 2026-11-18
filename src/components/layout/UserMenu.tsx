@@ -1,3 +1,4 @@
+// src/components/layout/UserMenu.tsx
 import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
@@ -16,13 +17,16 @@ import {
   Coffee,
   FileText,
   UserCog,
+  BarChart3,
 } from "lucide-react";
 import { PersonalityDialog } from "./PersonalityDialog";
+import { UsageDialog } from "../usage/UsageDialog";
 import { cn } from "../../lib/cn";
 
 export function UserMenu() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [usageOpen, setUsageOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, setTheme, setPersonalityOpen } = useUIStore();
   const setDonateOpen = useMediaStore((s) => s.setDonateOpen);
@@ -108,6 +112,16 @@ export function UserMenu() {
             <button
               type="button"
               onClick={() => {
+                setUsageOpen(true);
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface2 text-ink rounded-lg transition-colors">
+              <BarChart3 className="w-4 h-4 text-muted" />{" "}
+              {t("usage.menuLabel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 setDonateOpen(true);
                 setOpen(false);
               }}
@@ -145,6 +159,7 @@ export function UserMenu() {
         </div>
       )}
       <PersonalityDialog />
+      <UsageDialog open={usageOpen} onClose={() => setUsageOpen(false)} />
     </div>
   );
 }

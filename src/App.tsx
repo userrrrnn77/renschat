@@ -1,10 +1,10 @@
-// src/App.tsx
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { useAuthStore } from "./store/authStore";
 import { AppShell } from "./components/layout/AppShell";
 import { ChatPage } from "./pages/ChatPage";
 import { LoginPage } from "./pages/LoginPage";
+import { LandingPage } from "./pages/LandingPage";
 import { SparkleLogo } from "./components/ui/Icons";
 import { Toaster } from "./components/ui/Toaster";
 import { ConfirmModal } from "./components/ui/ConfirmModal";
@@ -60,7 +60,24 @@ export default function App() {
       <Routes>
         <Route
           path="/login"
-          element={status === "authed" ? <Navigate to="/" /> : <LoginPage />}
+          element={
+            status === "authed" ? (
+              <Navigate to="/chat" replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+
+        <Route
+          path="/"
+          element={
+            status === "authed" ? (
+              <Navigate to="/chat" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
         />
 
         <Route path="/terms" element={<TermsPage />} />
@@ -68,15 +85,22 @@ export default function App() {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/contact" element={<ContactPage />} />
 
-        <Route
-          element={
-            status === "authed" ? <AppShell /> : <Navigate to="/login" />
-          }>
-          <Route path="/" element={<ChatPage />} />
-          <Route path="/chat/:id" element={<ChatPage />} />
-        </Route>
+        {status === "authed" ? (
+          <Route element={<AppShell />}>
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat/:id" element={<ChatPage />} />
+          </Route>
+        ) : (
+          <>
+            <Route path="/chat" element={<Navigate to="/login" replace />} />
+            <Route
+              path="/chat/:id"
+              element={<Navigate to="/login" replace />}
+            />
+          </>
+        )}
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
       <ConfirmModal />

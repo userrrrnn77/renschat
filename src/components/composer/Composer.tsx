@@ -10,7 +10,7 @@ import { GenerationToolbar } from "../media/GenerationToolbar";
 import { api } from "../../lib/api";
 import { AttachmentChip } from "./AttachmentChip";
 import { Spinner } from "../ui/Spinner";
-import { Plus, ArrowUp, Square, FileText, X } from "lucide-react";
+import { Plus, ArrowUp, Square, FileText, X, Pencil } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useTranslation } from "react-i18next";
 
@@ -42,6 +42,10 @@ export function Composer({
   } = useComposerStore();
 
   const { send, stop, bySession } = useChatStore();
+  const editing = useChatStore((s) =>
+    isNew ? undefined : s.editingBySession[sessionId],
+  );
+  const cancelEdit = useChatStore((s) => s.cancelEdit);
   const selection = useMediaStore((s) => s.selection);
   const resetSelection = useMediaStore((s) => s.resetSelection);
 
@@ -61,6 +65,11 @@ export function Composer({
         Math.min(textareaRef.current.scrollHeight, 200) + "px";
     }
   }, [draft.text]);
+
+  const handleCancelEdit = () => {
+    if (isNew) return;
+    cancelEdit(sessionId);
+  };
 
   const handleSend = async () => {
     const combinedText = [...draft.pastedTexts.map((p) => p.text), draft.text]
@@ -97,6 +106,7 @@ export function Composer({
     }));
 
     const generation = buildGeneration(selection);
+    const editOfMessageId = editing?.messageId;
 
     // File sudah "dipindahkan" ke message — jangan hapus dari server.
     clear(key, { keepServerFiles: true });
@@ -115,9 +125,10 @@ export function Composer({
       }
     }
 
-    await send(targetId, text, attachments, generation);
+    await send(targetId, text, attachments, generation, editOfMessageId);
     // §15.2: pilihan eksplisit tidak lengket — reset ke auto setelah kirim.
     if (generation !== undefined) resetSelection();
+    if (editOfMessageId) cancelEdit(targetId);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -129,7 +140,6 @@ export function Composer({
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const text = e.clipboardData.getData("text");
-    // Jika paste > 1000 karakter atau > 15 baris, jadikan chip.
     if (text.length > 1000 || text.split("\n").length > 15) {
       e.preventDefault();
       addPastedText(key, text);
@@ -160,6 +170,20 @@ export function Composer({
         composerKey={key}
         disabled={isStreaming || isUploading}
       />
+
+      {editing && (
+        <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-accent/10 border border-accent/30 rounded-lg text-xs text-ink">
+          <Pencil className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1">{t("composer.editingMessage")}</span>
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="p-1 hover:bg-surface2 rounded-md"
+            title={t("common.cancel")}>
+            <X className="w-3.5 h-3.5 text-muted" />
+          </button>
+        </div>
+      )}
 
       {draft.pastedTexts.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">

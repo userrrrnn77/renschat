@@ -1,24 +1,25 @@
 // src/pages/StaticPages.tsx
 import { Link, useNavigate } from "react-router";
-import { ArrowLeft, Mail, Bug } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { SparkleLogo } from "../components/ui/Icons";
 import { useTranslation } from "react-i18next";
+import { useSeo, defaultJsonLd } from "../lib/seo";
 
-function LegalLayout({
-  title,
-  contentHtml,
-}: {
+interface LegalLayoutProps {
   title: string;
   contentHtml: string;
-}) {
+  canonicalPath: string;
+}
+
+function LegalLayout({ title, contentHtml }: LegalLayoutProps) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="h-screen overflow-y-auto bg-bg">
       <nav className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-line">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link
-            to="/login"
+            to="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <SparkleLogo className="w-5 h-5 text-accent" />
             <span className="font-semibold text-ink">RensChat</span>
@@ -40,11 +41,7 @@ function LegalLayout({
           {t("static.updated")}{" "}
           {new Date().toLocaleDateString(
             i18n.language === "id" ? "id-ID" : "en-US",
-            {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            },
+            { day: "numeric", month: "long", year: "numeric" },
           )}
         </p>
         <div
@@ -57,37 +54,147 @@ function LegalLayout({
 }
 
 export function TermsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  useSeo({
+    title: `${t("static.terms.title")} · RensChat`,
+    description:
+      i18n.language === "id"
+        ? "Syarat dan ketentuan penggunaan RensChat: aturan layanan, batasan tanggung jawab, media AI, retensi 24 jam, dan donasi opsional."
+        : "RensChat terms of service: usage rules, limitations of liability, AI media, 24-hour retention, and optional donations.",
+    path: "/terms",
+    lang: i18n.language === "en" ? "en" : "id",
+  });
   return (
     <LegalLayout
       title={t("static.terms.title")}
       contentHtml={t("static.terms.content")}
+      canonicalPath="/terms"
     />
   );
 }
 
 export function PrivacyPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  useSeo({
+    title: `${t("static.privacy.title")} · RensChat`,
+    description:
+      i18n.language === "id"
+        ? "Kebijakan privasi RensChat: data yang dikumpulkan, penggunaan, keamanan, data donasi, dan cara menghapus data Anda."
+        : "RensChat privacy policy: collected data, usage, security, donation data, and how to delete your data.",
+    path: "/privacy",
+    lang: i18n.language === "en" ? "en" : "id",
+  });
   return (
     <LegalLayout
       title={t("static.privacy.title")}
       contentHtml={t("static.privacy.content")}
+      canonicalPath="/privacy"
     />
   );
 }
 
 export function FaqPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const faqGraph = defaultJsonLd()["@graph"] as unknown[];
+  const faqPage = {
+    "@type": "FAQPage",
+    "@id": "https://renschat.web.id/faq#faqpage",
+    inLanguage: i18n.language === "en" ? "en-US" : "id-ID",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is RensChat?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "RensChat is an AI assistant that not only replies with text but can also render interactive tables, charts, cards, create files, and generate images and videos directly within the chat.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is my data safe?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. RensChat uses secure JWT authentication and files are stored in private Cloudflare R2 storage. Chat history stays tied to your account only.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Are AI-generated images and videos free?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "FLUX.2 Klein images and Python-generated video animations are free with a daily limit. FLUX.3 Image Klein images and NVIDIA Cosmos3 Nano videos require credits from optional Ko-fi donations. Core features remain free without donation.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How long is generated media stored?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "All generated media is stored for a maximum of 24 hours from creation, then automatically deleted. Download any media you need before it expires.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is AI-generated media legal to use?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "FLUX.3 image models are subject to the FLUX Kommunity License v1.0, while Cosmos videos follow NVIDIA API Trial Terms. Cosmos video output includes a SynthID watermark that must not be removed.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How to claim donation credits?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Write the donation code RC-XXXXXX in the Ko-fi donation message so credits are added automatically. If forgotten, open the account menu, choose Donation, then Claim donation, and enter the email and Ko-fi transaction ID.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What file formats are supported?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "RensChat supports PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, and images (PNG, JPG). Generated media output is PNG/JPEG/WebP images and MP4 videos.",
+        },
+      },
+    ],
+  };
+
+  useSeo({
+    title: `${t("static.faq.title")} · RensChat`,
+    description:
+      i18n.language === "id"
+        ? "Jawaban singkat untuk pertanyaan umum tentang RensChat: fitur, keamanan, format file, media AI, donasi, dan cara kerja RAG."
+        : "Short answers to common questions about RensChat: features, security, file formats, AI media, donations, and how RAG works.",
+    path: "/faq",
+    lang: i18n.language === "en" ? "en" : "id",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@graph": [...faqGraph, faqPage],
+    },
+  });
+
   return (
     <LegalLayout
       title={t("static.faq.title")}
       contentHtml={t("static.faq.content")}
+      canonicalPath="/faq"
     />
   );
 }
 
 export function ContactPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  useSeo({
+    title: `${t("static.contact.title")} · RensChat`,
+    description:
+      i18n.language === "id"
+        ? "Hubungi tim RensChat untuk bantuan, masukan, atau laporan bug. Email support developer@renschat.web.id."
+        : "Contact the RensChat team for support, feedback, or bug reports. Email developer@renschat.web.id.",
+    path: "/contact",
+    lang: i18n.language === "en" ? "en" : "id",
+  });
   return (
     <LegalLayout
       title={t("static.contact.title")}
@@ -102,7 +209,7 @@ export function ContactPage() {
             ${t("static.contact.support")}
           </h3>
           <p class="text-sm text-muted mb-4">${t("static.contact.supportDesc")}</p>
-          <a href="mailto:developer@rensdev.my.id" class="text-sm font-medium text-accent hover:underline">developer@rensdev.my.id</a>
+          <a href="mailto:developer@renschat.web.id" class="text-sm font-medium text-accent hover:underline">developer@renschat.web.id</a>
         </div>
         <div class="p-6 bg-surface border border-line rounded-xl">
           <h3 class="font-semibold text-ink mb-2 flex items-center gap-2">
@@ -112,10 +219,11 @@ export function ContactPage() {
             ${t("static.contact.bug")}
           </h3>
           <p class="text-sm text-muted mb-4">${t("static.contact.bugDesc")}</p>
-          <a href="mailto:developer@rensdev.my.id" class="text-sm font-medium text-accent hover:underline">developer@rensdev.my.id</a>
+          <a href="mailto:developer@renschat.web.id" class="text-sm font-medium text-accent hover:underline">developer@renschat.web.id</a>
         </div>
       </div>
     `}
+      canonicalPath="/contact"
     />
   );
 }

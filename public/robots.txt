@@ -1,0 +1,28 @@
+# robots.txt — RensChat
+# Public pages are indexable. Chat, auth, and API are excluded.
+
+User-agent: *
+Allow: /
+Disallow: /chat
+Disallow: /api/
+Disallow: /login
+
+# AI crawlers (GEO): public marketing & legal pages only.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: CCBot
+User-agent: Applebot-Extended
+User-agent: Bytespider
+Allow: /$
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+Allow: /contact
+Disallow: /
+
+Sitemap: https://renschat.web.id/sitemap.xml

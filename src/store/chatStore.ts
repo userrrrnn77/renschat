@@ -11,6 +11,12 @@ import type {
   StreamPhase,
 } from "../types";
 import { useSessionsStore } from "./sessionsStore";
+import { useComposerStore } from "./composerStore";
+
+export interface EditingMessage {
+  messageId: string;
+  text: string;
+}
 
 interface ChatState {
   bySession: Record<
@@ -26,6 +32,7 @@ interface ChatState {
     }
   >;
   controllers: Record<string, AbortController>;
+  editingBySession: Record<string, EditingMessage | undefined>;
   open: (id: string) => Promise<void>;
   loadOlder: (id: string) => Promise<void>;
   send: (
@@ -39,19 +46,25 @@ interface ChatState {
       localUrl?: string;
     }>,
     generation?: GenerationInput,
+    editOfMessageId?: string,
   ) => Promise<void>;
+  regenerate: (id: string, messageId: string) => Promise<void>;
   stop: (id: string) => void;
   respond: (
     sessionId: string,
     questionId: string,
     answer: string[],
   ) => Promise<void>;
+  startEdit: (sessionId: string, messageId: string, text: string) => void;
+  cancelEdit: (sessionId: string) => void;
   reset: () => void;
 }
 
 type SetChatState = (
   partial: Partial<ChatState> | ((s: ChatState) => Partial<ChatState>),
 ) => void;
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 function mapServerMessage(m: ServerMessage): ChatMessage {
   return {
@@ -67,8 +80,8 @@ function mapServerMessage(m: ServerMessage): ChatMessage {
 export const useChatStore = create<ChatState>((set, get) => ({
   bySession: {},
   controllers: {},
+  editingBySession: {},
 
-  // REPLACE: open
   open: async (id) => {
     if (get().bySession[id]?.loaded) return;
 
@@ -151,51 +164,68 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  send: async (sessionId, text, attachments, generation) => {
+  send: async (sessionId, text, attachments, generation, editOfMessageId) => {
     const ac = new AbortController();
     const tempUserId = `tmp-u-${Date.now()}`;
     const tempAssistantId = `tmp-a-${Date.now()}`;
-    let currentAssistantId = tempAssistantId;
+    const assistantIdRef = { current: tempAssistantId };
 
-    set((s) => ({
-      controllers: { ...s.controllers, [sessionId]: ac },
-      bySession: {
-        ...s.bySession,
-        [sessionId]: {
-          ...(s.bySession[sessionId] || {
-            messages: [],
-            nextCursor: null,
-            loaded: true,
-            loading: false,
-          }),
-          streaming: true,
-          phase: null,
-          pendingClarification: null,
-          messages: [
-            ...(s.bySession[sessionId]?.messages || []),
-            {
-              id: tempUserId,
-              role: "user",
-              blocks: [{ type: "text", markdown: text }],
-              status: "done",
-              createdAt: new Date().toISOString(),
-              attachments,
-            },
-            {
-              id: tempAssistantId,
-              role: "assistant",
-              blocks: [],
-              status: "streaming",
-              createdAt: new Date().toISOString(),
-            },
-          ],
+    set((s) => {
+      const existing = s.bySession[sessionId];
+      const messages = [...(existing?.messages ?? [])];
+
+      if (editOfMessageId) {
+        const idx = messages.findIndex((m) => m.id === editOfMessageId);
+        if (idx >= 0) {
+          messages[idx] = {
+            ...messages[idx],
+            blocks: [{ type: "text", markdown: text }],
+            attachments,
+          };
+          messages.splice(idx + 1);
+        }
+      } else {
+        messages.push({
+          id: tempUserId,
+          role: "user",
+          blocks: [{ type: "text", markdown: text }],
+          status: "done",
+          createdAt: new Date().toISOString(),
+          attachments,
+        });
+      }
+
+      messages.push({
+        id: tempAssistantId,
+        role: "assistant",
+        blocks: [],
+        status: "streaming",
+        createdAt: new Date().toISOString(),
+      });
+
+      return {
+        controllers: { ...s.controllers, [sessionId]: ac },
+        bySession: {
+          ...s.bySession,
+          [sessionId]: {
+            ...(existing ?? {
+              messages: [],
+              nextCursor: null,
+              loaded: true,
+              loading: false,
+            }),
+            streaming: true,
+            phase: null,
+            pendingClarification: null,
+            messages,
+          },
         },
-      },
-    }));
+      };
+    });
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || ""}/api/sessions/${sessionId}/messages`,
+        `${API_BASE}/api/sessions/${sessionId}/messages`,
         {
           method: "POST",
           headers: {
@@ -206,6 +236,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             text,
             attachmentIds: attachments.map((a) => a.id),
             ...(generation !== undefined ? { generation } : {}),
+            ...(editOfMessageId !== undefined ? { editOfMessageId } : {}),
           }),
           credentials: "include",
           signal: ac.signal,
@@ -214,27 +245,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       if (!res.ok) throw new Error("HTTP error");
 
-      const stream = parseSse(res.body!);
-      for await (const chunk of stream) {
-        if (chunk.event === "message") continue;
-        const data = JSON.parse(chunk.data);
-
-        if (chunk.event === "message.start") {
-          const realId = data.messageId as string;
-          set((s) => renameMessage(s, sessionId, tempAssistantId, realId));
-          currentAssistantId = realId;
-          continue;
-        }
-
-        handleEvent(set, get, sessionId, currentAssistantId, chunk.event, data);
-      }
+      await consumeStream(set, get, sessionId, assistantIdRef, res.body!);
 
       const current = get().bySession[sessionId]?.messages.find(
-        (m) => m.id === currentAssistantId,
+        (m) => m.id === assistantIdRef.current,
       );
       if (current?.status === "streaming") {
         set((s) =>
-          updateAssistantMessage(s, sessionId, currentAssistantId, {
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
             status: "error",
             error: { code: "DISCONNECTED", message: "Koneksi terputus" },
           }),
@@ -245,40 +263,121 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
         set((s) =>
-          updateAssistantMessage(s, sessionId, currentAssistantId, {
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
             status: "aborted",
             error: undefined,
           }),
         );
       } else {
         set((s) =>
-          updateAssistantMessage(s, sessionId, currentAssistantId, {
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
             status: "error",
-            error: { code: "ERROR", message: "Gagal mengirim pesan" },
+            error: {
+              code: "NETWORK_ERROR",
+              message: "Koneksi terputus. Silakan coba kembali.",
+            },
           }),
         );
       }
     } finally {
-      set((s) => {
-        const nextControllers = { ...s.controllers };
-        delete nextControllers[sessionId];
-        const existing = s.bySession[sessionId];
-        if (!existing) {
-          return { controllers: nextControllers };
-        }
-        return {
-          controllers: nextControllers,
-          bySession: {
-            ...s.bySession,
-            [sessionId]: {
-              ...existing,
-              streaming: false,
-              phase: null,
-              pendingClarification: null,
-            },
-          },
-        };
+      finalizeStream(set, sessionId);
+      useSessionsStore.getState().bump(sessionId);
+    }
+  },
+
+  regenerate: async (sessionId, messageId) => {
+    const ac = new AbortController();
+    const tempAssistantId = `tmp-a-${Date.now()}`;
+    const assistantIdRef = { current: tempAssistantId };
+
+    set((s) => {
+      const existing = s.bySession[sessionId];
+      const messages = [...(existing?.messages ?? [])];
+
+      const idx = messages.findIndex((m) => m.id === messageId);
+      if (idx >= 0) {
+        messages.splice(idx);
+      }
+
+      messages.push({
+        id: tempAssistantId,
+        role: "assistant",
+        blocks: [],
+        status: "streaming",
+        createdAt: new Date().toISOString(),
       });
+
+      return {
+        controllers: { ...s.controllers, [sessionId]: ac },
+        bySession: {
+          ...s.bySession,
+          [sessionId]: {
+            ...(existing ?? {
+              messages: [],
+              nextCursor: null,
+              loaded: true,
+              loading: false,
+            }),
+            streaming: true,
+            phase: null,
+            pendingClarification: null,
+            messages,
+          },
+        },
+      };
+    });
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/sessions/${sessionId}/messages/${messageId}/regenerate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({}),
+          credentials: "include",
+          signal: ac.signal,
+        },
+      );
+
+      if (!res.ok) throw new Error("HTTP error");
+
+      await consumeStream(set, get, sessionId, assistantIdRef, res.body!);
+
+      const current = get().bySession[sessionId]?.messages.find(
+        (m) => m.id === assistantIdRef.current,
+      );
+      if (current?.status === "streaming") {
+        set((s) =>
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+            status: "error",
+            error: { code: "DISCONNECTED", message: "Koneksi terputus" },
+          }),
+        );
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        set((s) =>
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+            status: "aborted",
+            error: undefined,
+          }),
+        );
+      } else {
+        set((s) =>
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+            status: "error",
+            error: {
+              code: "NETWORK_ERROR",
+              message: "Koneksi terputus. Silakan coba kembali.",
+            },
+          }),
+        );
+      }
+    } finally {
+      finalizeStream(set, sessionId);
       useSessionsStore.getState().bump(sessionId);
     }
   },
@@ -294,6 +393,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
+  startEdit: (sessionId, messageId, text) => {
+    set((s) => ({
+      editingBySession: {
+        ...s.editingBySession,
+        [sessionId]: { messageId, text },
+      },
+    }));
+    useComposerStore.getState().setText(sessionId, text);
+  },
+
+  cancelEdit: (sessionId) => {
+    set((s) => {
+      const next = { ...s.editingBySession };
+      delete next[sessionId];
+      return { editingBySession: next };
+    });
+    useComposerStore.getState().setText(sessionId, "");
+  },
+
   reset: () => {
     const state = get();
     Object.values(state.controllers).forEach((ac) => {
@@ -303,9 +421,58 @@ export const useChatStore = create<ChatState>((set, get) => ({
         // ignore
       }
     });
-    set({ bySession: {}, controllers: {} });
+    set({ bySession: {}, controllers: {}, editingBySession: {} });
   },
 }));
+
+// ── Helpers ────────────────────────────────────────────────────────
+
+function finalizeStream(set: SetChatState, sessionId: string): void {
+  set((s) => {
+    const nextControllers = { ...s.controllers };
+    delete nextControllers[sessionId];
+    const existing = s.bySession[sessionId];
+    if (!existing) return { controllers: nextControllers };
+    return {
+      controllers: nextControllers,
+      bySession: {
+        ...s.bySession,
+        [sessionId]: {
+          ...existing,
+          streaming: false,
+          phase: null,
+          pendingClarification: null,
+        },
+      },
+    };
+  });
+}
+
+async function consumeStream(
+  set: SetChatState,
+  get: () => ChatState,
+  sessionId: string,
+  assistantIdRef: { current: string },
+  body: ReadableStream<Uint8Array>,
+): Promise<void> {
+  const stream = parseSse(body);
+  for await (const chunk of stream) {
+    if (chunk.event === "message") continue;
+    let data: unknown;
+    try {
+      data = JSON.parse(chunk.data);
+    } catch {
+      continue;
+    }
+    if (chunk.event === "message.start") {
+      const realId = (data as { messageId: string }).messageId;
+      set((s) => renameMessage(s, sessionId, assistantIdRef.current, realId));
+      assistantIdRef.current = realId;
+      continue;
+    }
+    handleEvent(set, get, sessionId, assistantIdRef.current, chunk.event, data);
+  }
+}
 
 function updateAssistantMessage(
   state: ChatState,
@@ -362,7 +529,7 @@ function handleEvent(
 
   const payload = data as Record<string, any>;
 
-  // ── Session-level events ──────────────────────────────────────────
+  // ── Session-level events ──────────────────────────────────────
   switch (event) {
     case "status":
       set((s) => ({
@@ -412,7 +579,7 @@ function handleEvent(
       return;
   }
 
-  // ── Message-level events ─────────────────────────────────────────
+  // ── Message-level events ─────────────────────────────────────
   const msg = session.messages.find((m) => m.id === assistantId);
   if (!msg) return;
 
@@ -494,8 +661,6 @@ function handleEvent(
       };
       break;
     case "media.progress": {
-      // §14.2: progres media generate, bukan block. Indikator ditampilkan
-      // pada pesan yang sedang streaming.
       const mp = payload as MediaProgress;
       updates = {
         mediaProgress: {

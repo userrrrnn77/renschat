@@ -60,7 +60,17 @@
     "errorOccurred": "An error occurred",
     "openDonation": "Open donation",
     "makingImage": "Creating image...",
-    "makingVideo": "Creating video..."
+    "makingVideo": "Creating video...",
+    "retry": "Try Again"
+  },
+  "errors": {
+    "network": "Connection lost. Please try again.",
+    "provider": "AI provider is busy. Try again in a few minutes.",
+    "rate": "Too many requests. Try again in a moment.",
+    "timeout": "The process is taking longer than usual. Please try again.",
+    "refused": "The AI provider refused the request. Try adjusting your prompt.",
+    "credits": "No credits left for this model. Open donation or use a free model.",
+    "unknown": "Something went wrong while processing the request."
   },
   "static": {
     "back": "Back",
@@ -248,5 +258,64 @@
     "toastSuccess": "Personality preferences saved",
     "toastError": "Failed to save preferences",
     "loadError": "Failed to load personality preferences"
+  },
+  "usage": {
+    "menuLabel": "Usage",
+    "title": "Usage & Statistics",
+    "tokens": "Tokens this month",
+    "requests": "Total requests",
+    "images": "Images",
+    "videos": "Videos",
+    "dailyTokens": "Daily tokens (30 days)",
+    "dailyMedia": "Daily media",
+    "period": "Period: {{month}} · {{tz}}",
+    "empty": "No usage this month yet.",
+    "loadError": "Failed to load usage statistics."
+  },
+  "landing": {
+    "badge": "Generative AI Assistant",
+    "heroTitle": "Chat with an AI that builds tables, charts, files, images, and videos",
+    "heroSubtitle": "RensChat combines chat, document retrieval (RAG), and media generation in one interface. Core features stay free.",
+    "ctaPrimary": "Start for free",
+    "ctaSecondary": "Explore features",
+    "ctaLogin": "Sign in",
+    "featuresTitle": "What it can do",
+    "features": {
+      "table": {
+        "title": "Interactive tables",
+        "desc": "Compare data, product specs, or survey results in clean tables."
+      },
+      "chart": {
+        "title": "Charts & graphs",
+        "desc": "Visualize numeric trends right in chat without a spreadsheet."
+      },
+      "file": {
+        "title": "Create & download files",
+        "desc": "Generate code, documents, or PDF reports without copy-paste."
+      },
+      "image": {
+        "title": "Image generation",
+        "desc": "Create images from a prompt. FLUX.2 Klein is free with a daily limit."
+      },
+      "video": {
+        "title": "Video generation",
+        "desc": "Python-rendered graphic animations (free) or Cosmos3 Nano videos via optional donation."
+      },
+      "rag": {
+        "title": "Document RAG",
+        "desc": "Upload PDF, DOCX, or images; RensChat answers from the relevant document."
+      }
+    },
+    "techTitle": "Under the hood",
+    "techDesc": "RensChat is built on large language models and media generation models via the NVIDIA API. Generated media is stored for up to 24 hours.",
+    "techFact1": "Language models: NVIDIA Nemotron (main LLM, vision, and safety).",
+    "techFact2": "Image models: FLUX.2 Klein (free, daily limit) and FLUX.3 Image Klein (donation credits).",
+    "techFact3": "Video models: NVIDIA Cosmos3 Nano (donation credits) and Python sandbox (free).",
+    "techFact4": "Media retention: 24 hours. Chat history stays tied to your account.",
+    "learnMore": "Learn more:",
+    "seo": {
+      "title": "RensChat — Generative AI Assistant with Tables, Charts, Files, Images & Video",
+      "description": "RensChat is a generative AI chat: tables, charts, code, PDFs, images, and video. Document RAG, adaptive personality, and free core features."
+    }
   }
 }

@@ -5,6 +5,7 @@ import type {
   MediaUrlResponse,
   User,
   Preferences,
+  UsageReport,
 } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
@@ -125,6 +126,7 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    usage: () => fetchApi<UsageReport>("/me/usage"),
   },
   jobs: {
     get: (id: string) => fetchApi<JobInfo>(`/jobs/${id}`),

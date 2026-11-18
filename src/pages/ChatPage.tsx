@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useSessionsStore } from "../store/sessionsStore";
 import { useChatStore } from "../store/chatStore";
 import { MessageList } from "../components/chat/MessageList";
@@ -9,10 +10,12 @@ import { useFileDrop } from "../hooks/useFileDrop";
 import { useComposerStore } from "../store/composerStore";
 import { DropOverlay } from "../components/composer/DropOverlay";
 import { api } from "../lib/api";
+import { useSeo } from "../lib/seo";
 
 export function ChatPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { open, bySession } = useChatStore();
   const { upsert } = useSessionsStore();
   const addFiles = useComposerStore((s) => s.addFiles);
@@ -20,6 +23,13 @@ export function ChatPage() {
   const session = bySession[id || ""];
   const isNew = !id;
   const isEmpty = !isNew && session?.loaded && session.messages.length === 0;
+
+  useSeo({
+    title: "RensChat",
+    description: t("landing.seo.description"),
+    path: id ? `/chat/${id}` : "/chat",
+    noindex: true,
+  });
 
   useEffect(() => {
     if (id) open(id);

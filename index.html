@@ -3,18 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>RensChat</title>
-    <link rel="icon" type="image/x-icon" href="public/favicon.ico" />
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <title>RensChat — Asisten AI Generatif</title>
+    <meta
+      name="description"
+      content="RensChat adalah asisten AI generatif yang bisa merender tabel, chart, file, gambar, dan video langsung di chat. Fitur inti gratis."
+    />
+    <meta
+      name="keywords"
+      content="AI chat, asisten AI, generative AI, RAG, tabel interaktif, chart, generate gambar, generate video, RensChat"
+    />
+    <meta name="author" content="RensChat" />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="description" content="RensChat — asisten AI generatif yang bisa merender tabel, chart, file, gambar, dan video langsung di chat." />
+    <link rel="canonical" href="https://renschat.web.id/" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RensChat" />
+    <meta property="og:title" content="RensChat — Asisten AI Generatif" />
+    <meta
+      property="og:description"
+      content="Asisten AI generatif dengan tabel, chart, file, gambar, dan video langsung di chat."
+    />
+    <meta property="og:url" content="https://renschat.web.id/" />
+    <meta property="og:image" content="https://renschat.web.id/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RensChat — Asisten AI Generatif" />
+    <meta
+      name="twitter:description"
+      content="Asisten AI generatif dengan tabel, chart, file, gambar, dan video."
+    />
+    <meta name="twitter:image" content="https://renschat.web.id/og-image.png" />
+
     <script>
       (function() {
         var theme = localStorage.getItem("theme") || "system";
-        var isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        var isDark =
+          theme === "dark" ||
+          (theme === "system" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.dataset.theme = isDark ? "dark" : "light";
       })();
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://renschat.web.id/#organization",
+          "name": "RensChat",
+          "url": "https://renschat.web.id/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://renschat.web.id/favicon.ico"
+          },
+          "email": "developer@renschat.web.id",
+          "description": "RensChat is a generative AI assistant that renders text, code, tables, charts, cards, files, images, and video directly in chat."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://renschat.web.id/#website",
+          "url": "https://renschat.web.id/",
+          "name": "RensChat",
+          "publisher": { "@id": "https://renschat.web.id/#organization" },
+          "inLanguage": ["id-ID", "en-US"]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://renschat.web.id/#software",
+          "name": "RensChat",
+          "applicationCategory": "ProductivityApplication",
+          "operatingSystem": "Web",
+          "url": "https://renschat.web.id/",
+          "image": "https://renschat.web.id/og-image.png",
+          "description": "Generative AI assistant with interactive tables, charts, files, image and video generation. Core features are free; optional donation unlocks heavier media models.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "publisher": { "@id": "https://renschat.web.id/#organization" },
+          "inLanguage": ["id-ID", "en-US"]
+        }
+      ]
+    }
     </script>
   </head>
   <body>

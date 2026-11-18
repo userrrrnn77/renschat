@@ -60,7 +60,17 @@
     "errorOccurred": "Terjadi kesalahan",
     "openDonation": "Buka donasi",
     "makingImage": "Membuat gambar…",
-    "makingVideo": "Membuat video…"
+    "makingVideo": "Membuat video…",
+    "retry": "Coba Lagi"
+  },
+  "errors": {
+    "network": "Koneksi terputus. Silakan coba kembali.",
+    "provider": "Penyedia AI sedang sibuk. Coba lagi beberapa menit lagi.",
+    "rate": "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.",
+    "timeout": "Proses membutuhkan waktu lebih lama dari biasanya. Coba lagi.",
+    "refused": "Permintaan ditolak oleh penyedia AI. Coba ubah permintaanmu.",
+    "credits": "Kredit habis untuk model ini. Buka donasi atau gunakan model gratis.",
+    "unknown": "Terjadi kesalahan saat memproses permintaan."
   },
   "static": {
     "back": "Kembali",
@@ -247,5 +257,64 @@
     "toastSuccess": "Preferensi personality disimpan",
     "toastError": "Gagal menyimpan preferensi",
     "loadError": "Gagal memuat preferensi personality"
+  },
+  "usage": {
+    "menuLabel": "Penggunaan",
+    "title": "Penggunaan & Statistik",
+    "tokens": "Token bulan ini",
+    "requests": "Total request",
+    "images": "Gambar",
+    "videos": "Video",
+    "dailyTokens": "Token harian (30 hari)",
+    "dailyMedia": "Media harian",
+    "period": "Periode: {{month}} · {{tz}}",
+    "empty": "Belum ada penggunaan bulan ini.",
+    "loadError": "Gagal memuat statistik penggunaan."
+  },
+  "landing": {
+    "badge": "Asisten AI Generatif",
+    "heroTitle": "Chat dengan AI yang bisa bikin tabel, grafik, file, gambar, dan video",
+    "heroSubtitle": "RensChat menggabungkan percakapan, retrieval dokumen (RAG), dan generasi media dalam satu antarmuka. Fitur inti tetap gratis.",
+    "ctaPrimary": "Mulai gratis",
+    "ctaSecondary": "Pelajari fitur",
+    "ctaLogin": "Masuk",
+    "featuresTitle": "Apa saja yang bisa dilakukan",
+    "features": {
+      "table": {
+        "title": "Tabel interaktif",
+        "desc": "Bandingkan data, spesifikasi produk, atau hasil survei dalam tabel yang rapi."
+      },
+      "chart": {
+        "title": "Grafik & chart",
+        "desc": "Visualisasikan tren angka langsung di chat tanpa perlu spreadsheet."
+      },
+      "file": {
+        "title": "Buat & unduh file",
+        "desc": "Bikin file kode, dokumen, atau laporan PDF tanpa copy-paste manual."
+      },
+      "image": {
+        "title": "Generate gambar",
+        "desc": "Buat gambar dari deskripsi singkat. Model FLUX.2 Klein gratis dengan limit harian."
+      },
+      "video": {
+        "title": "Generate video",
+        "desc": "Animasi grafis lewat kode Python (gratis), atau video Cosmos3 Nano lewat donasi opsional."
+      },
+      "rag": {
+        "title": "RAG dokumen",
+        "desc": "Unggah PDF, DOCX, atau gambar; RensChat menjawab dari dokumen yang relevan."
+      }
+    },
+    "techTitle": "Di balik layar",
+    "techDesc": "RensChat dibangun di atas model bahasa besar dan model generasi media via NVIDIA API. Semua media hasil generate disimpan maksimal 24 jam.",
+    "techFact1": "Model bahasa: NVIDIA Nemotron (LLM utama, vision, dan safety).",
+    "techFact2": "Model gambar: FLUX.2 Klein (gratis, limit harian) dan FLUX.3 Image Klein (kredit donasi).",
+    "techFact3": "Model video: NVIDIA Cosmos3 Nano (kredit donasi) dan Python sandbox (gratis).",
+    "techFact4": "Retensi media: 24 jam. Data dan riwayat chat terikat ke akun Anda.",
+    "learnMore": "Baca selengkapnya:",
+    "seo": {
+      "title": "RensChat — Asisten AI Generatif dengan Tabel, Grafik, File, Gambar & Video",
+      "description": "RensChat adalah asisten AI generatif untuk chat: tabel, grafik, kode, PDF, gambar, dan video. RAG dokumen, personality adaptif, dan fitur inti gratis."
+    }
   }
 }

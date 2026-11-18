@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { useChatStore } from "../../store/chatStore";
 import { UserMessage } from "./UserMessage";
 import { AssistantMessage } from "./AssistantMessage";
@@ -45,7 +45,7 @@ export function MessageList({ sessionId }: { sessionId: string }) {
         <div className="flex flex-col gap-6">
           {messages.map((msg, i) =>
             msg.role === "user" ? (
-              <UserMessage key={msg.id} message={msg} />
+              <UserMessage key={msg.id} message={msg} sessionId={sessionId} />
             ) : (
               <AssistantMessage
                 key={msg.id}
