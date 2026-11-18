@@ -30,6 +30,7 @@
     "older": "Older"
   },
   "chat": {
+    "edit": "Edit Chat",
     "loadOlder": "Load older messages",
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
