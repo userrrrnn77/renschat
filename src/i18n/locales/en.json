@@ -106,7 +106,8 @@
     "chars": "{{count}} chars",
     "attachFile": "Attach file",
     "dropTitle": "Drop file to attach",
-    "dropDesc": "PDF, image, document, or code · max {{mb}} MB"
+    "dropDesc": "PDF, image, document, or code · max {{mb}} MB",
+    "editingMessage": "Editing message..."
   },
   "upload": {
     "processing": "Processing",

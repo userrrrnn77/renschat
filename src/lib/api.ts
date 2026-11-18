@@ -36,6 +36,7 @@ export async function fetchApi<T>(
   const res = await fetch(url, {
     ...init,
     credentials: "include",
+    cache: "no-store",
     headers: {
       ...init?.headers,
       ...(init?.body ? { "Content-Type": "application/json" } : {}),

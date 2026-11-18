@@ -105,7 +105,8 @@
     "chars": "{{count}} karakter",
     "attachFile": "Lampirkan file",
     "dropTitle": "Lepas file untuk melampirkan",
-    "dropDesc": "PDF, gambar, dokumen, atau kode · maks {{mb}} MB"
+    "dropDesc": "PDF, gambar, dokumen, atau kode · maks {{mb}} MB",
+    "editingMessage": "Sedang mengubah pesan..."
   },
   "upload": {
     "processing": "Memproses",
