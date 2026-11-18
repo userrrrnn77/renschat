@@ -1,4 +1,5 @@
 import i18n from "../i18n";
+import type { TFunction } from "i18next";
 
 export const formatTime = (isoString: string) => {
   return new Date(isoString).toLocaleTimeString(
@@ -28,4 +29,21 @@ export const groupByDate = (isoString: string | null) => {
   if (diffDays === 1) return i18n.t("sidebar.yesterday");
   if (diffDays <= 7) return i18n.t("sidebar.last7Days");
   return i18n.t("sidebar.older");
+};
+
+export const formatDuration = (totalSeconds: number, t: TFunction) => {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = Math.floor(totalSeconds % 60);
+
+  if (mins > 0) {
+    if (secs > 0) {
+      // Contoh: 1 menit 9 detik
+      return t("common.minuteSecond", { m: mins, s: secs });
+    }
+    // Contoh: 1 menit
+    return t("common.minute", { count: mins });
+  }
+
+  // Contoh: 45 detik
+  return t("common.second", { count: secs });
 };

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { SparkleLogo } from "../ui/Icons";
 import type { StreamPhase } from "../../types";
 import { useTranslation } from "react-i18next";
+import { formatDuration } from "../../lib/time";
 
 export function ThinkingIndicator({ phase }: { phase: StreamPhase }) {
   const { t } = useTranslation();
@@ -29,7 +30,7 @@ export function ThinkingIndicator({ phase }: { phase: StreamPhase }) {
       <SparkleLogo className="w-4 h-4 text-accent" animate={true} />
       <span className="text-sm font-medium animate-pulse">
         {label}
-        {elapsed > 0 && ` · ${elapsed} dtk`}…
+        {elapsed > 0 && ` · ${formatDuration(elapsed, t)}`}…
       </span>
     </div>
   );

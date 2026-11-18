@@ -1,322 +1,374 @@
 {
-  "common": {
-    "cancel": "Batal",
-    "confirm": "Konfirmasi",
-    "delete": "Hapus",
-    "save": "Simpan",
-    "copy": "Salin",
-    "copied": "Tersalin",
-    "download": "Unduh",
-    "loading": "Memuat...",
-    "error": "Terjadi kesalahan",
-    "retry": "Ulangi",
-    "close": "Tutup"
-  },
   "app": {
-    "offlineTitle": "Tidak bisa terhubung ke server",
     "offlineDesc": "Pastikan backend RensChat sudah berjalan.",
+    "offlineTitle": "Tidak bisa terhubung ke server",
     "retry": "Coba lagi"
   },
-  "sidebar": {
-    "newChat": "Chat baru",
-    "searchPlaceholder": "Cari chat...",
-    "deleteTitle": "Hapus chat ini?",
-    "deleteDesc": "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
-    "loadOlder": "Muat pesan lama",
-    "pinned": "Disematkan",
-    "today": "Hari Ini",
-    "yesterday": "Kemarin",
-    "last7Days": "7 Hari Terakhir",
-    "older": "Lebih Lama"
+  "blocks": {
+    "collapse": "Ciutkan",
+    "copyPrompt": "Salin prompt",
+    "copyPromptError": "Gagal menyalin prompt",
+    "copyPromptSuccess": "Prompt gambar disalin",
+    "copyTsv": "Salin (TSV)",
+    "download": "Unduh",
+    "downloadCsv": "Unduh CSV",
+    "expand": "Tampilkan semua",
+    "imageExpiredDesc": "Gambar ini disimpan hanya 24 jam. Buat ulang bila masih diperlukan.",
+    "imageExpiredTitle": "Media sudah kedaluwarsa",
+    "imageLoadError": "Gagal memuat gambar",
+    "readMore": "Baca selengkapnya",
+    "regenerate": "Buat ulang",
+    "regenerateCopied": "Permintaan disalin, tempel di kolom chat",
+    "regenerateError": "Gagal menyalin permintaan",
+    "rows": "{{count}} baris",
+    "rows_other": "",
+    "sendChoices": "Kirim Pilihan",
+    "stored24h": "Disimpan 24 jam",
+    "toolCallError": "(Sistem mencoba memanggil tool, tetapi formatnya tidak dikenali.)",
+    "unsupportedChart": "Tipe grafik tidak didukung",
+    "unsupportedContent": "Tipe konten tidak didukung: {{type}}",
+    "videoExpiredDesc": "Video ini disimpan hanya 24 jam. Buat ulang bila masih diperlukan.",
+    "videoExpiredTitle": "Media sudah kedaluwarsa",
+    "videoLoadError": "Gagal memuat video"
   },
   "chat": {
     "edit": "Ubah Obrolan",
-    "loadOlder": "Muat pesan lama",
-    "greetingMorning": "Selamat pagi",
+    "emptyDesc": "RensChat adalah asisten AI generatif yang dapat membuat teks, kode, tabel, grafik, dan file langsung di chat.",
+    "errorOccurred": "Terjadi kesalahan",
     "greetingAfternoon": "Selamat siang",
     "greetingEvening": "Selamat sore",
+    "greetingMorning": "Selamat pagi",
     "greetingNight": "Selamat malam",
     "guest": "Kamu",
-    "emptyDesc": "RensChat adalah asisten AI generatif yang dapat membuat teks, kode, tabel, grafik, dan file langsung di chat.",
+    "loadOlder": "Muat pesan lama",
+    "makingImage": "Membuat gambar…",
+    "makingVideo": "Membuat video…",
+    "openDonation": "Buka donasi",
+    "regenerate": "Buat ulang",
+    "retry": "Coba Lagi",
+    "stopped": "Dihentikan",
     "suggestions": {
-      "tableLabel": "Buat tabel perbandingan",
-      "tablePrompt": "Tolong buatkan tabel perbandingan antara React, Vue, dan Angular beserta kelebihan dan kekurangannya.",
       "chartLabel": "Buat grafik dari data",
       "chartPrompt": "Tolong buatkan grafik batang dari data jumlah penduduk Indonesia 5 tahun terakhir.",
       "codeLabel": "Tulis kode",
       "codePrompt": "Tulis kode fungsi TypeScript untuk mencari bilangan prima dari 1 sampai 100.",
       "pdfLabel": "Buat laporan PDF",
-      "pdfPrompt": "Tolong buatkan laporan PDF singkat tentang pentingnya tidur yang cukup."
+      "pdfPrompt": "Tolong buatkan laporan PDF singkat tentang pentingnya tidur yang cukup.",
+      "tableLabel": "Buat tabel perbandingan",
+      "tablePrompt": "Tolong buatkan tabel perbandingan antara React, Vue, dan Angular beserta kelebihan dan kekurangannya."
     },
     "thinking": {
-      "waiting": "Menunggu jawabanmu",
-      "searching": "Mencari di dokumen",
-      "thinking": "Berpikir",
-      "process": "Proses Berpikir",
       "clarifying": "Klarifikasi",
       "generating": "Menyusun jawaban",
-      "sources": "Sumber:"
-    },
-    "stopped": "Dihentikan",
-    "errorOccurred": "Terjadi kesalahan",
-    "openDonation": "Buka donasi",
-    "makingImage": "Membuat gambar…",
-    "makingVideo": "Membuat video…",
-    "retry": "Coba Lagi"
+      "process": "Proses Berpikir",
+      "searching": "Mencari di dokumen",
+      "sources": "Sumber:",
+      "thinking": "Berpikir",
+      "waiting": "Menunggu jawabanmu"
+    }
+  },
+  "auth": {
+    "welcomeBackTitle": "Selamat datang kembali.",
+    "joinTitle": "Mari bergabung bersama RensChat.",
+    "welcomeBackDesc": "Senang melihatmu lagi. Lanjutkan percakapan, buat tabel, analisis dokumen, atau generate file bareng asisten AI.",
+    "joinDesc": "Tingkatkan produktivitasmu dengan asisten AI generatif yang bisa merender UI, dokumen, dan visualisasi data langsung di dalam chat.",
+    "featureUi": "Generative UI (Tabel, Chart, PDF)",
+    "featureRag": "Pemahaman dokumen (RAG Pipeline)",
+    "featureHarness": "Thinking Harness & Tool Calling",
+    "copyright": "© {{year}} RensChat. Dibuat untuk produktivitas.",
+    "tabLogin": "Masuk",
+    "tabRegister": "Daftar",
+    "loginTitle": "Masuk ke akunmu",
+    "registerTitle": "Buat akun baru",
+    "loginSubtitle": "Masukkan kredensial untuk melanjutkan.",
+    "registerSubtitle": "Isi data di bawah untuk mendaftar.",
+    "continueWithGoogle": "Lanjutkan dengan Google",
+    "or": "atau",
+    "nameLabel": "Nama Lengkap",
+    "namePlaceholder": "John Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nama@email.com",
+    "passwordLabel": "Password",
+    "submitLogin": "Masuk ke Akun",
+    "submitRegister": "Buat Akun Baru",
+    "errorGoogleFailed": "Gagal masuk dengan Google. Silakan coba lagi.",
+    "errorStateMissing": "Sesi OAuth tidak valid. Silakan coba lagi.",
+    "errorLoginGeneric": "Terjadi kesalahan saat login.",
+    "errorInvalidCredentials": "Email atau password salah",
+    "errorEmailRegistered": "Email sudah terdaftar",
+    "errorServer": "Terjadi kesalahan pada server"
+  },
+  "clarification": {
+    "customPlaceholder": "Ketik jawabanmu…",
+    "error": "Gagal mengirim jawaban: {{message}}",
+    "others": "Lainnya…",
+    "seconds": "{{count}} dtk",
+    "seconds_other": "",
+    "send": "Kirim",
+    "sending": "Mengirim…",
+    "timeout": "Waktu habis. Kirim pesan lagi untuk melanjutkan."
+  },
+  "common": {
+    "cancel": "Batal",
+    "close": "Tutup",
+    "confirm": "Konfirmasi",
+    "copied": "Tersalin",
+    "copy": "Salin",
+    "delete": "Hapus",
+    "download": "Unduh",
+    "error": "Terjadi kesalahan",
+    "loading": "Memuat...",
+    "retry": "Ulangi",
+    "save": "Simpan",
+    "minute": "{{count}} mnt",
+    "minuteSecond": "{{m}} mnt {{s}} dtk",
+    "second": "{{count}} dtk"
+  },
+  "composer": {
+    "attachFile": "Lampirkan file",
+    "chars": "{{count}} karakter",
+    "chars_other": "",
+    "disclaimer": "RensChat bisa salah. Periksa kembali informasi penting.",
+    "dropDesc": "PDF, gambar, dokumen, atau kode · maks {{mb}} MB",
+    "dropTitle": "Lepas file untuk melampirkan",
+    "editingMessage": "Sedang mengubah pesan...",
+    "pastedText": "Teks yang di-paste",
+    "placeholderNew": "Apa yang bisa dibantu hari ini?",
+    "placeholderReply": "Balas ke RensChat…"
+  },
+  "donation": {
+    "alreadyDonated": "Sudah donasi tapi kredit belum masuk? Klaim di sini",
+    "claimButton": "Klaim",
+    "claimDesc": "Masukkan email dan ID transaksi Ko-fi untuk mengaitkan donasi ke akun ini.",
+    "claimError": "Gagal mengklaim donasi",
+    "claiming": "Mengklaim…",
+    "claimNotFound": "Klaim donasi tidak ditemukan. Periksa email dan ID transaksi.",
+    "claimTitle": "Klaim donasi",
+    "codeCopied": "Kode donasi disalin",
+    "codeCopyError": "Gagal menyalin kode",
+    "codeDesc": "Tulis kode ini di pesan donasi supaya kredit masuk otomatis.",
+    "copyCode": "Salin kode donasi",
+    "creditsAdded": "Kredit masuk: +{{image}} gambar, +{{video}} video",
+    "desc": "Satu donasi (min. USD 3) langsung memberi <strong>+10 kredit gambar FLUX.3</strong> dan <strong>+4 kredit video Cosmos</strong> sekaligus.",
+    "donateOptional": "Donasi (opsional)",
+    "donorEmail": "Email donatur",
+    "freeNote": "Semua fitur tetap gratis. Donasi bersifat opsional.",
+    "kofiNotConfigured": "Halaman Ko-fi belum dikonfigurasi server.",
+    "loadingCode": "Memuat kode donasi…",
+    "openKofi": "Buka Ko-fi",
+    "title": "Buka fitur ekstra lewat donasi",
+    "txId": "ID transaksi Ko-fi (kofi_transaction_id)",
+    "txIdDesc": "Lihat di email konfirmasi Ko-fi atau di halaman Riwayat donasi.",
+    "yourCode": "Kode donasi kamu"
   },
   "errors": {
+    "credits": "Kredit habis untuk model ini. Buka donasi atau gunakan model gratis.",
     "network": "Koneksi terputus. Silakan coba kembali.",
     "provider": "Penyedia AI sedang sibuk. Coba lagi beberapa menit lagi.",
     "rate": "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.",
-    "timeout": "Proses membutuhkan waktu lebih lama dari biasanya. Coba lagi.",
     "refused": "Permintaan ditolak oleh penyedia AI. Coba ubah permintaanmu.",
-    "credits": "Kredit habis untuk model ini. Buka donasi atau gunakan model gratis.",
+    "timeout": "Proses membutuhkan waktu lebih lama dari biasanya. Coba lagi.",
     "unknown": "Terjadi kesalahan saat memproses permintaan."
-  },
-  "static": {
-    "back": "Kembali",
-    "updated": "Terakhir diperbarui:",
-    "terms": {
-      "title": "Syarat & Ketentuan",
-      "content": "<h2>1. Penerimaan Syarat</h2><p>Dengan mengakses dan menggunakan RensChat, kamu setuju untuk terikat dengan syarat dan ketentuan yang berlaku.</p><h2>2. Penggunaan Layanan</h2><p>RensChat adalah asisten AI generatif. Kamu dilarang menggunakan layanan ini untuk menghasilkan konten ilegal, melanggar hak cipta, atau merugikan pihak lain.</p><h2>3. Batasan Tanggung Jawab</h2><p>AI dapat membuat kesalahan. Selalu verifikasi informasi penting yang dihasilkan oleh sistem. Kami tidak bertanggung jawab atas kerugian yang timbul dari penggunaan hasil AI.</p><h2>4. Media yang Dibuat AI</h2><p>Gambar dan video yang dihasilkan oleh RensChat dibuat oleh model AI (FLUX.2 Klein, FLUX.3 Image Klein, NVIDIA Cosmos3 Nano, atau animasi grafis yang dihasilkan dari kode Python). Semua media dibuat AI dan dapat mengandung ketidakakuratan visual. Kamu bertanggung jawab penuh atas penggunaan hasil generate, termasuk kepatuhan terhadap lisensi model terkait.</p><p><strong>Watermark SynthID</strong> pada output Cosmos3 Nano tidak boleh dihapus. Watermark tersebut adalah penanda bahwa media dihasilkan AI.</p><h2>5. Masa Simpan Media (24 Jam)</h2><p>Media hasil generate (gambar dan video) disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis dari storage. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan kamu perlu membuat ulang.</p><h2>6. Donasi (Opsional)</h2><p>Semua fitur inti RensChat <strong>tetap gratis</strong>. Donasi lewat Ko-fi bersifat <strong>opsional</strong> dan berfungsi membuka model yang lebih berat (FLUX.3 Image Klein untuk gambar, NVIDIA Cosmos3 Nano untuk video). Satu donasi (minimal USD 3) memberi <strong>+10 kredit gambar FLUX.3</strong> dan <strong>+4 kredit video Cosmos</strong> sekaligus. Kredit menumpuk dan tidak kedaluwarsa; generate yang gagal akan mengembalikan kredit. Donasi bukan pembelian; kredit bukan alat tukar dan tidak dapat diuangkan kembali.</p><h2>7. Atribusi Model & Lisensi</h2><p>Gambar FLUX dihasilkan via NVIDIA API. FLUX.3 Image Klein tunduk pada <a href='https://blackforestlabs.ai/flux-1-kommunity-license/' target='_blank' rel='noreferrer'>FLUX Kommunity License v1.0</a>. Video Cosmos dihasilkan via NVIDIA API Trial Terms. Animasi video jalur gratis dihasilkan dari kode Python yang dijalankan di sandbox terisolasi dan dijahit via ffmpeg. Semua penggunaan tunduk pada syarat penyedia model masing-masing.</p><h2>8. Perubahan Layanan</h2><p>Kami berhak mengubah, menangguhkan, atau menghentikan layanan kapan saja tanpa pemberitahuan terlebih dahulu.</p>"
-    },
-    "privacy": {
-      "title": "Kebijakan Privasi",
-      "content": "<h2>1. Data yang Kami Kumpulkan</h2><p>Kami mengumpulkan alamat email, nama, dan riwayat percakapan (termasuk file yang kamu unggah) untuk memberikan layanan yang lebih baik. Untuk media yang dihasilkan AI, kami menyimpan metadata teknis (model, dimensi, durasi) tanpa menyimpan prompt lengkap di log.</p><h2>2. Penggunaan Data</h2><p>Datamu digunakan secara eksklusif untuk memproses permintaan AI, menyimpan riwayat chat, dan meningkatkan kualitas model. Kami TIDAK menjual datamu ke pihak ketiga.</p><h2>3. Data Donasi</h2><p>Untuk memetakan donasi ke akun, kami menyimpan hash email donatur (SHA-256) dan ID transaksi Ko-fi. Email mentah dan token verifikasi webhook <strong>tidak</strong> disimpan maupun di-log. Kamu juga dapat memilih mencocokkan donasi lewat kode donasi <code>RC-XXXXXX</code> yang ditulis di pesan donasi.</p><h2>4. Keamanan</h2><p>Semua data dienkripsi saat transit (HTTPS) dan disimpan di infrastruktur cloud yang aman (MongoDB & Cloudflare R2).</p><h2>5. Penghapusan Data</h2><p>Kamu dapat menghapus sesi chat kapan saja melalui antarmuka. Menghapus sesi akan menghapus riwayat pesan dan file terkait secara permanen dari server. Media hasil generate dihapus otomatis 24 jam setelah dibuat.</p>"
-    },
-    "faq": {
-      "title": "Frequently Asked Questions (FAQ)",
-      "content": "<h2>Apa itu RensChat?</h2><p>RensChat adalah asisten AI yang tidak hanya membalas dengan teks, tapi juga bisa merender tabel interaktif, grafik, kartu, membuat file, serta <strong>membuat gambar dan video</strong> secara langsung di dalam chat.</p><h2>Apakah dataku aman?</h2><p>Ya. Kami menggunakan otentikasi JWT yang aman dan file disimpan di storage pribadi (Cloudflare R2). Baca selengkapnya di <a href='/privacy'>Kebijakan Privasi</a>.</p><h2>Format file apa saja yang didukung?</h2><p>Saat ini kami mendukung PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, serta gambar (PNG, JPG). Untuk <strong>media yang dibuat</strong>, output berupa gambar (PNG/JPEG/WebP) dan video MP4.</p><h2>Apakah gambar dan video yang dibuat AI itu gratis?</h2><p>Gambar <strong>FLUX.2 Klein 4B</strong> dan <strong>video Python</strong> (animasi grafis yang dihasilkan dari kode) sepenuhnya gratis dengan limit harian. Gambar <strong>FLUX.3 Image Klein</strong> dan video <strong>NVIDIA Cosmos3 Nano</strong> membutuhkan kredit yang diperoleh lewat donasi Ko-fi <em>opsional</em>. Semua fitur inti tetap gratis tanpa donasi.</p><h2>Berapa lama media saya disimpan?</h2><p>Semua media hasil generate disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan perlu dibuat ulang.</p><h2>Apakah media buatan AI ini legal untuk dipakai?</h2><p>Model gambar FLUX.3 tunduk pada FLUX Kommunity License v1.0, sedangkan video Cosmos tunduk pada NVIDIA API Trial Terms. Output video Cosmos menyertakan watermark <strong>SynthID</strong> yang tidak boleh dihapus. Selalu periksa lisensi model sebelum pemakaian komersial. Detail di <a href='/terms'>Syarat & Ketentuan</a>.</p><h2>Bagaimana cara klaim kredit donasi?</h2><p>Setelah donasi, tulis kode donasi <code>RC-XXXXXX</code> (tersedia di menu akun) di pesan donasi Ko-fi — kredit masuk otomatis. Kalau lupa menulis kode, buka menu akun → <em>Donasi (opsional)</em> → <em>Klaim donasi</em> dan masukkan email + ID transaksi Ko-fi.</p><h2>Kenapa AI terkadang salah?</h2><p>Model bahasa besar (LLM) dapat berhalusinasi. Kami sudah menambahkan fitur RAG (Retrieval-Augmented Generation) untuk meminimalisir hal ini, tapi selalu cek ulang informasi kritis.</p>"
-    },
-    "contact": {
-      "title": "Hubungi Kami",
-      "desc": "Punya pertanyaan, masukan, atau menemukan bug? Kami siap membantu.",
-      "support": "Email Support",
-      "supportDesc": "Respon dalam 1x24 jam kerja.",
-      "bug": "Laporan Bug",
-      "bugDesc": "Laporkan error atau feedback UI."
-    }
-  },
-  "composer": {
-    "placeholderNew": "Apa yang bisa dibantu hari ini?",
-    "placeholderReply": "Balas ke RensChat…",
-    "disclaimer": "RensChat bisa salah. Periksa kembali informasi penting.",
-    "pastedText": "Teks yang di-paste",
-    "chars": "{{count}} karakter",
-    "attachFile": "Lampirkan file",
-    "dropTitle": "Lepas file untuk melampirkan",
-    "dropDesc": "PDF, gambar, dokumen, atau kode · maks {{mb}} MB",
-    "editingMessage": "Sedang mengubah pesan..."
-  },
-  "upload": {
-    "processing": "Memproses",
-    "uploading": "Mengunggah",
-    "retry": "Ulangi",
-    "cancelUpload": "Batal unggah",
-    "remove": "Hapus"
-  },
-  "tools": {
-    "render_table": "Membuat tabel…",
-    "render_chart": "Membuat grafik…",
-    "render_card": "Menyiapkan kartu…",
-    "render_choices": "Menyiapkan pilihan…",
-    "create_file": "Membuat file…",
-    "present_files": "Menampilkan file…",
-    "generate_pdf": "Membuat PDF…",
-    "read_attachment": "Membaca lampiran…",
-    "search_attachment": "Mencari di lampiran…",
-    "inspect_image": "Menganalisis gambar…",
-    "run_command": "Menjalankan perintah…",
-    "generate_image": "Membuat gambar…",
-    "generate_video_cosmos": "Membuat video (Cosmos3)…",
-    "generate_video_python": "Membuat video (Python)…",
-    "web_scrape": "Membaca halaman web…",
-    "generic": "Menjalankan {{name}}…"
-  },
-  "blocks": {
-    "unsupportedContent": "Tipe konten tidak didukung: {{type}}",
-    "unsupportedChart": "Tipe grafik tidak didukung",
-    "imageExpiredTitle": "Media sudah kedaluwarsa",
-    "imageExpiredDesc": "Gambar ini disimpan hanya 24 jam. Buat ulang bila masih diperlukan.",
-    "videoExpiredTitle": "Media sudah kedaluwarsa",
-    "videoExpiredDesc": "Video ini disimpan hanya 24 jam. Buat ulang bila masih diperlukan.",
-    "copyPrompt": "Salin prompt",
-    "copyPromptSuccess": "Prompt gambar disalin",
-    "copyPromptError": "Gagal menyalin prompt",
-    "regenerate": "Buat ulang",
-    "regenerateCopied": "Permintaan disalin, tempel di kolom chat",
-    "regenerateError": "Gagal menyalin permintaan",
-    "stored24h": "Disimpan 24 jam",
-    "imageLoadError": "Gagal memuat gambar",
-    "videoLoadError": "Gagal memuat video",
-    "rows": "{{count}} baris",
-    "copyTsv": "Salin (TSV)",
-    "downloadCsv": "Unduh CSV",
-    "collapse": "Ciutkan",
-    "readMore": "Baca selengkapnya",
-    "expand": "Tampilkan semua",
-    "download": "Unduh",
-    "sendChoices": "Kirim Pilihan",
-    "toolCallError": "(Sistem mencoba memanggil tool, tetapi formatnya tidak dikenali.)"
-  },
-  "clarification": {
-    "others": "Lainnya…",
-    "customPlaceholder": "Ketik jawabanmu…",
-    "send": "Kirim",
-    "sending": "Mengirim…",
-    "timeout": "Waktu habis. Kirim pesan lagi untuk melanjutkan.",
-    "error": "Gagal mengirim jawaban: {{message}}",
-    "seconds": "{{count}} dtk"
-  },
-  "media": {
-    "image": "Gambar",
-    "video": "Video",
-    "ratio": "Rasio",
-    "engine": "Engine",
-    "autoCosmos": "Otomatis (Cosmos3 — kredit)",
-    "auto": "Otomatis",
-    "pythonFree": "Python (gratis)",
-    "examples": "Contoh",
-    "videoOptions": "Opsi video",
-    "lockedTooltip": "Terbuka setelah traktir kopi di Ko-fi (opsional)",
-    "flux3Note": "FLUX.3 membuka akses model lebih berat. Semua fitur tetap gratis.",
-    "locked": "Terkunci"
-  },
-  "donation": {
-    "donateOptional": "Donasi (opsional)",
-    "title": "Buka fitur ekstra lewat donasi",
-    "desc": "Satu donasi (min. USD 3) langsung memberi <strong>+10 kredit gambar FLUX.3</strong> dan <strong>+4 kredit video Cosmos</strong> sekaligus.",
-    "yourCode": "Kode donasi kamu",
-    "copyCode": "Salin kode donasi",
-    "codeDesc": "Tulis kode ini di pesan donasi supaya kredit masuk otomatis.",
-    "loadingCode": "Memuat kode donasi…",
-    "openKofi": "Buka Ko-fi",
-    "kofiNotConfigured": "Halaman Ko-fi belum dikonfigurasi server.",
-    "alreadyDonated": "Sudah donasi tapi kredit belum masuk? Klaim di sini",
-    "freeNote": "Semua fitur tetap gratis. Donasi bersifat opsional.",
-    "codeCopied": "Kode donasi disalin",
-    "codeCopyError": "Gagal menyalin kode",
-    "claimTitle": "Klaim donasi",
-    "claimDesc": "Masukkan email dan ID transaksi Ko-fi untuk mengaitkan donasi ke akun ini.",
-    "donorEmail": "Email donatur",
-    "txId": "ID transaksi Ko-fi (kofi_transaction_id)",
-    "txIdDesc": "Lihat di email konfirmasi Ko-fi atau di halaman Riwayat donasi.",
-    "claimButton": "Klaim",
-    "claiming": "Mengklaim…",
-    "creditsAdded": "Kredit masuk: +{{image}} gambar, +{{video}} video",
-    "claimNotFound": "Klaim donasi tidak ditemukan. Periksa email dan ID transaksi.",
-    "claimError": "Gagal mengklaim donasi"
-  },
-  "preview": {
-    "binaryError": "File ini bertipe biner dan tidak bisa ditampilkan sebagai teks.",
-    "loadTextError": "Gagal memuat teks file.",
-    "loadImageError": "Gagal memuat gambar",
-    "loadPdfError": "Gagal memuat PDF",
-    "loadTextFail": "Gagal memuat teks",
-    "tabPreview": "Pratinjau",
-    "tabCode": "Kode",
-    "noPreview": "Pratinjau tidak tersedia untuk tipe file ini."
-  },
-  "theme": {
-    "label": "Tema",
-    "light": "Terang",
-    "dark": "Gelap",
-    "system": "Sistem"
-  },
-  "menu": {
-    "faq": "FAQ",
-    "terms": "Syarat & Ketentuan",
-    "privacy": "Privasi",
-    "help": "Bantuan",
-    "logout": "Keluar",
-    "rename": "Ganti nama",
-    "pin": "Sematkan",
-    "unpin": "Lepas sematan",
-    "delete": "Hapus"
-  },
-  "language": {
-    "label": "Bahasa",
-    "en": "Inggris",
-    "id": "Indonesia"
-  },
-  "personality": {
-    "menuLabel": "Personality AI",
-    "title": "Personality AI",
-    "desc": "Atur gaya bawaan RensChat saat menjawabmu.",
-    "auto": "Otomatis",
-    "autoDesc": "Menyesuaikan dengan gaya bahasamu.",
-    "serious": "Serius",
-    "seriousDesc": "Fokus, formal, dan lugas.",
-    "casual": "Santai",
-    "casualDesc": "Hangat, akrab, dan natural.",
-    "playful": "Bercanda",
-    "playfulDesc": "Boleh bercanda dan responsif.",
-    "noteLabel": "Catatan tambahan (opsional)",
-    "notePlaceholder": "Misal: panggil aku Rens, jawab singkat...",
-    "save": "Simpan",
-    "saving": "Menyimpan...",
-    "cancel": "Batal",
-    "toastSuccess": "Preferensi personality disimpan",
-    "toastError": "Gagal menyimpan preferensi",
-    "loadError": "Gagal memuat preferensi personality"
-  },
-  "usage": {
-    "menuLabel": "Penggunaan",
-    "title": "Penggunaan & Statistik",
-    "tokens": "Token bulan ini",
-    "requests": "Total request",
-    "images": "Gambar",
-    "videos": "Video",
-    "dailyTokens": "Token harian (30 hari)",
-    "dailyMedia": "Media harian",
-    "period": "Periode: {{month}} · {{tz}}",
-    "empty": "Belum ada penggunaan bulan ini.",
-    "loadError": "Gagal memuat statistik penggunaan."
   },
   "landing": {
     "badge": "Asisten AI Generatif",
-    "heroTitle": "Chat dengan AI yang bisa bikin tabel, grafik, file, gambar, dan video",
-    "heroSubtitle": "RensChat menggabungkan percakapan, retrieval dokumen (RAG), dan generasi media dalam satu antarmuka. Fitur inti tetap gratis.",
+    "ctaLogin": "Masuk",
     "ctaPrimary": "Mulai gratis",
     "ctaSecondary": "Pelajari fitur",
-    "ctaLogin": "Masuk",
-    "featuresTitle": "Apa saja yang bisa dilakukan",
     "features": {
-      "table": {
-        "title": "Tabel interaktif",
-        "desc": "Bandingkan data, spesifikasi produk, atau hasil survei dalam tabel yang rapi."
-      },
       "chart": {
-        "title": "Grafik & chart",
-        "desc": "Visualisasikan tren angka langsung di chat tanpa perlu spreadsheet."
+        "desc": "Visualisasikan tren angka langsung di chat tanpa perlu spreadsheet.",
+        "title": "Grafik & chart"
       },
       "file": {
-        "title": "Buat & unduh file",
-        "desc": "Bikin file kode, dokumen, atau laporan PDF tanpa copy-paste manual."
+        "desc": "Bikin file kode, dokumen, atau laporan PDF tanpa copy-paste manual.",
+        "title": "Buat & unduh file"
       },
       "image": {
-        "title": "Generate gambar",
-        "desc": "Buat gambar dari deskripsi singkat. Model FLUX.2 Klein gratis dengan limit harian."
-      },
-      "video": {
-        "title": "Generate video",
-        "desc": "Animasi grafis lewat kode Python (gratis), atau video Cosmos3 Nano lewat donasi opsional."
+        "desc": "Buat gambar dari deskripsi singkat. Model FLUX.2 Klein gratis dengan limit harian.",
+        "title": "Generate gambar"
       },
       "rag": {
-        "title": "RAG dokumen",
-        "desc": "Unggah PDF, DOCX, atau gambar; RensChat menjawab dari dokumen yang relevan."
+        "desc": "Unggah PDF, DOCX, atau gambar; RensChat menjawab dari dokumen yang relevan.",
+        "title": "RAG dokumen"
+      },
+      "table": {
+        "desc": "Bandingkan data, spesifikasi produk, atau hasil survei dalam tabel yang rapi.",
+        "title": "Tabel interaktif"
+      },
+      "video": {
+        "desc": "Animasi grafis lewat kode Python (gratis), atau video Cosmos3 Nano lewat donasi opsional.",
+        "title": "Generate video"
       }
     },
-    "techTitle": "Di balik layar",
+    "featuresTitle": "Apa saja yang bisa dilakukan",
+    "heroSubtitle": "RensChat menggabungkan percakapan, retrieval dokumen (RAG), dan generasi media dalam satu antarmuka. Fitur inti tetap gratis.",
+    "heroTitle": "Chat dengan AI yang bisa bikin tabel, grafik, file, gambar, dan video",
+    "learnMore": "Baca selengkapnya:",
+    "seo": {
+      "description": "RensChat adalah asisten AI generatif untuk chat: tabel, grafik, kode, PDF, gambar, dan video. RAG dokumen, personality adaptif, dan fitur inti gratis.",
+      "title": "RensChat — Asisten AI Generatif dengan Tabel, Grafik, File, Gambar & Video"
+    },
     "techDesc": "RensChat dibangun di atas model bahasa besar dan model generasi media via NVIDIA API. Semua media hasil generate disimpan maksimal 24 jam.",
     "techFact1": "Model bahasa: NVIDIA Nemotron (LLM utama, vision, dan safety).",
     "techFact2": "Model gambar: FLUX.2 Klein (gratis, limit harian) dan FLUX.3 Image Klein (kredit donasi).",
     "techFact3": "Model video: NVIDIA Cosmos3 Nano (kredit donasi) dan Python sandbox (gratis).",
     "techFact4": "Retensi media: 24 jam. Data dan riwayat chat terikat ke akun Anda.",
-    "learnMore": "Baca selengkapnya:",
-    "seo": {
-      "title": "RensChat — Asisten AI Generatif dengan Tabel, Grafik, File, Gambar & Video",
-      "description": "RensChat adalah asisten AI generatif untuk chat: tabel, grafik, kode, PDF, gambar, dan video. RAG dokumen, personality adaptif, dan fitur inti gratis."
-    }
+    "techTitle": "Di balik layar"
+  },
+  "language": {
+    "en": "Inggris",
+    "id": "Indonesia",
+    "label": "Bahasa"
+  },
+  "media": {
+    "auto": "Otomatis",
+    "autoCosmos": "Otomatis (Cosmos3 — kredit)",
+    "engine": "Engine",
+    "examples": "Contoh",
+    "flux3Note": "FLUX.3 membuka akses model lebih berat. Semua fitur tetap gratis.",
+    "image": "Gambar",
+    "locked": "Terkunci",
+    "lockedTooltip": "Terbuka setelah traktir kopi di Ko-fi (opsional)",
+    "pythonFree": "Python (gratis)",
+    "ratio": "Rasio",
+    "video": "Video",
+    "videoOptions": "Opsi video"
+  },
+  "menu": {
+    "delete": "Hapus",
+    "faq": "FAQ",
+    "help": "Bantuan",
+    "logout": "Keluar",
+    "pin": "Sematkan",
+    "privacy": "Privasi",
+    "rename": "Ganti nama",
+    "terms": "Syarat & Ketentuan",
+    "unpin": "Lepas sematan"
+  },
+  "personality": {
+    "auto": "Otomatis",
+    "autoDesc": "Menyesuaikan dengan gaya bahasamu.",
+    "cancel": "Batal",
+    "casual": "Santai",
+    "casualDesc": "Hangat, akrab, dan natural.",
+    "desc": "Atur gaya bawaan RensChat saat menjawabmu.",
+    "loadError": "Gagal memuat preferensi personality",
+    "menuLabel": "Personality AI",
+    "noteLabel": "Catatan tambahan (opsional)",
+    "notePlaceholder": "Misal: panggil aku Rens, jawab singkat...",
+    "playful": "Bercanda",
+    "playfulDesc": "Boleh bercanda dan responsif.",
+    "save": "Simpan",
+    "saving": "Menyimpan...",
+    "serious": "Serius",
+    "seriousDesc": "Fokus, formal, dan lugas.",
+    "title": "Personality AI",
+    "toastError": "Gagal menyimpan preferensi",
+    "toastSuccess": "Preferensi personality disimpan"
+  },
+  "preview": {
+    "binaryError": "File ini bertipe biner dan tidak bisa ditampilkan sebagai teks.",
+    "loadImageError": "Gagal memuat gambar",
+    "loadPdfError": "Gagal memuat PDF",
+    "loadTextError": "Gagal memuat teks file.",
+    "loadTextFail": "Gagal memuat teks",
+    "noPreview": "Pratinjau tidak tersedia untuk tipe file ini.",
+    "tabCode": "Kode",
+    "tabPreview": "Pratinjau"
+  },
+  "sidebar": {
+    "deleteDesc": "Chat, pesan, dan lampiran di dalamnya akan dihapus permanen dan tidak bisa dipulihkan.",
+    "deleteTitle": "Hapus chat ini?",
+    "last7Days": "7 Hari Terakhir",
+    "loadOlder": "Muat pesan lama",
+    "newChat": "Chat baru",
+    "older": "Lebih Lama",
+    "pinned": "Disematkan",
+    "searchPlaceholder": "Cari chat...",
+    "today": "Hari Ini",
+    "yesterday": "Kemarin"
+  },
+  "static": {
+    "back": "Kembali",
+    "contact": {
+      "bug": "Laporan Bug",
+      "bugDesc": "Laporkan error atau feedback UI.",
+      "desc": "Punya pertanyaan, masukan, atau menemukan bug? Kami siap membantu.",
+      "support": "Email Support",
+      "supportDesc": "Respon dalam 1x24 jam kerja.",
+      "title": "Hubungi Kami"
+    },
+    "faq": {
+      "content": "<h2>Apa itu RensChat?</h2><p>RensChat adalah asisten AI yang tidak hanya membalas dengan teks, tapi juga bisa merender tabel interaktif, grafik, kartu, membuat file, serta <strong>membuat gambar dan video</strong> secara langsung di dalam chat.</p><h2>Apakah dataku aman?</h2><p>Ya. Kami menggunakan otentikasi JWT yang aman dan file disimpan di storage pribadi (Cloudflare R2). Baca selengkapnya di <a href='/privacy'>Kebijakan Privasi</a>.</p><h2>Format file apa saja yang didukung?</h2><p>Saat ini kami mendukung PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, serta gambar (PNG, JPG). Untuk <strong>media yang dibuat</strong>, output berupa gambar (PNG/JPEG/WebP) dan video MP4.</p><h2>Apakah gambar dan video yang dibuat AI itu gratis?</h2><p>Gambar <strong>FLUX.2 Klein 4B</strong> dan <strong>video Python</strong> (animasi grafis yang dihasilkan dari kode) sepenuhnya gratis dengan limit harian. Gambar <strong>FLUX.3 Image Klein</strong> dan video <strong>NVIDIA Cosmos3 Nano</strong> membutuhkan kredit yang diperoleh lewat donasi Ko-fi <em>opsional</em>. Semua fitur inti tetap gratis tanpa donasi.</p><h2>Berapa lama media saya disimpan?</h2><p>Semua media hasil generate disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan perlu dibuat ulang.</p><h2>Apakah media buatan AI ini legal untuk dipakai?</h2><p>Model gambar FLUX.3 tunduk pada FLUX Kommunity License v1.0, sedangkan video Cosmos tunduk pada NVIDIA API Trial Terms. Output video Cosmos menyertakan watermark <strong>SynthID</strong> yang tidak boleh dihapus. Selalu periksa lisensi model sebelum pemakaian komersial. Detail di <a href='/terms'>Syarat & Ketentuan</a>.</p><h2>Bagaimana cara klaim kredit donasi?</h2><p>Setelah donasi, tulis kode donasi <code>RC-XXXXXX</code> (tersedia di menu akun) di pesan donasi Ko-fi — kredit masuk otomatis. Kalau lupa menulis kode, buka menu akun → <em>Donasi (opsional)</em> → <em>Klaim donasi</em> dan masukkan email + ID transaksi Ko-fi.</p><h2>Kenapa AI terkadang salah?</h2><p>Model bahasa besar (LLM) dapat berhalusinasi. Kami sudah menambahkan fitur RAG (Retrieval-Augmented Generation) untuk meminimalisir hal ini, tapi selalu cek ulang informasi kritis.</p>",
+      "title": "Frequently Asked Questions (FAQ)"
+    },
+    "privacy": {
+      "content": "<h2>1. Data yang Kami Kumpulkan</h2><p>Kami mengumpulkan alamat email, nama, dan riwayat percakapan (termasuk file yang kamu unggah) untuk memberikan layanan yang lebih baik. Untuk media yang dihasilkan AI, kami menyimpan metadata teknis (model, dimensi, durasi) tanpa menyimpan prompt lengkap di log.</p><h2>2. Penggunaan Data</h2><p>Datamu digunakan secara eksklusif untuk memproses permintaan AI, menyimpan riwayat chat, dan meningkatkan kualitas model. Kami TIDAK menjual datamu ke pihak ketiga.</p><h2>3. Data Donasi</h2><p>Untuk memetakan donasi ke akun, kami menyimpan hash email donatur (SHA-256) dan ID transaksi Ko-fi. Email mentah dan token verifikasi webhook <strong>tidak</strong> disimpan maupun di-log. Kamu juga dapat memilih mencocokkan donasi lewat kode donasi <code>RC-XXXXXX</code> yang ditulis di pesan donasi.</p><h2>4. Keamanan</h2><p>Semua data dienkripsi saat transit (HTTPS) dan disimpan di infrastruktur cloud yang aman (MongoDB & Cloudflare R2).</p><h2>5. Penghapusan Data</h2><p>Kamu dapat menghapus sesi chat kapan saja melalui antarmuka. Menghapus sesi akan menghapus riwayat pesan dan file terkait secara permanen dari server. Media hasil generate dihapus otomatis 24 jam setelah dibuat.</p>",
+      "title": "Kebijakan Privasi"
+    },
+    "terms": {
+      "content": "<h2>1. Penerimaan Syarat</h2><p>Dengan mengakses dan menggunakan RensChat, kamu setuju untuk terikat dengan syarat dan ketentuan yang berlaku.</p><h2>2. Penggunaan Layanan</h2><p>RensChat adalah asisten AI generatif. Kamu dilarang menggunakan layanan ini untuk menghasilkan konten ilegal, melanggar hak cipta, atau merugikan pihak lain.</p><h2>3. Batasan Tanggung Jawab</h2><p>AI dapat membuat kesalahan. Selalu verifikasi informasi penting yang dihasilkan oleh sistem. Kami tidak bertanggung jawab atas kerugian yang timbul dari penggunaan hasil AI.</p><h2>4. Media yang Dibuat AI</h2><p>Gambar dan video yang dihasilkan oleh RensChat dibuat oleh model AI (FLUX.2 Klein, FLUX.3 Image Klein, NVIDIA Cosmos3 Nano, atau animasi grafis yang dihasilkan dari kode Python). Semua media dibuat AI dan dapat mengandung ketidakakuratan visual. Kamu bertanggung jawab penuh atas penggunaan hasil generate, termasuk kepatuhan terhadap lisensi model terkait.</p><p><strong>Watermark SynthID</strong> pada output Cosmos3 Nano tidak boleh dihapus. Watermark tersebut adalah penanda bahwa media dihasilkan AI.</p><h2>5. Masa Simpan Media (24 Jam)</h2><p>Media hasil generate (gambar dan video) disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis dari storage. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan kamu perlu membuat ulang.</p><h2>6. Donasi (Opsional)</h2><p>Semua fitur inti RensChat <strong>tetap gratis</strong>. Donasi lewat Ko-fi bersifat <strong>opsional</strong> dan berfungsi membuka model yang lebih berat (FLUX.3 Image Klein untuk gambar, NVIDIA Cosmos3 Nano untuk video). Satu donasi (minimal USD 3) memberi <strong>+10 kredit gambar FLUX.3</strong> dan <strong>+4 kredit video Cosmos</strong> sekaligus. Kredit menumpuk dan tidak kedaluwarsa; generate yang gagal akan mengembalikan kredit. Donasi bukan pembelian; kredit bukan alat tukar dan tidak dapat diuangkan kembali.</p><h2>7. Atribusi Model & Lisensi</h2><p>Gambar FLUX dihasilkan via NVIDIA API. FLUX.3 Image Klein tunduk pada <a href='https://blackforestlabs.ai/flux-1-kommunity-license/' target='_blank' rel='noreferrer'>FLUX Kommunity License v1.0</a>. Video Cosmos dihasilkan via NVIDIA API Trial Terms. Animasi video jalur gratis dihasilkan dari kode Python yang dijalankan di sandbox terisolasi dan dijahit via ffmpeg. Semua penggunaan tunduk pada syarat penyedia model masing-masing.</p><h2>8. Perubahan Layanan</h2><p>Kami berhak mengubah, menangguhkan, atau menghentikan layanan kapan saja tanpa pemberitahuan terlebih dahulu.</p>",
+      "title": "Syarat & Ketentuan"
+    },
+    "updated": "Terakhir diperbarui:"
+  },
+  "theme": {
+    "dark": "Gelap",
+    "label": "Tema",
+    "light": "Terang",
+    "system": "Sistem"
+  },
+  "tools": {
+    "create_file": "Membuat file…",
+    "generate_image": "Membuat gambar…",
+    "generate_pdf": "Membuat PDF…",
+    "generate_video_cosmos": "Membuat video (Cosmos3)…",
+    "generate_video_python": "Membuat video (Python)…",
+    "generic": "Menjalankan {{name}}…",
+    "inspect_image": "Menganalisis gambar…",
+    "present_files": "Menampilkan file…",
+    "read_attachment": "Membaca lampiran…",
+    "render_card": "Menyiapkan kartu…",
+    "render_chart": "Membuat grafik…",
+    "render_choices": "Menyiapkan pilihan…",
+    "render_table": "Membuat tabel…",
+    "run_command": "Menjalankan perintah…",
+    "search_attachment": "Mencari di lampiran…",
+    "web_scrape": "Membaca halaman web…"
+  },
+  "upload": {
+    "cancelUpload": "Batal unggah",
+    "processing": "Memproses",
+    "remove": "Hapus",
+    "retry": "Ulangi",
+    "uploading": "Mengunggah"
+  },
+  "usage": {
+    "dailyMedia": "Media harian",
+    "dailyTokens": "Token harian (30 hari)",
+    "empty": "Belum ada penggunaan bulan ini.",
+    "images": "Gambar",
+    "loadError": "Gagal memuat statistik penggunaan.",
+    "menuLabel": "Penggunaan",
+    "period": "Periode: {{month}} · {{tz}}",
+    "requests": "Total request",
+    "title": "Penggunaan & Statistik",
+    "tokens": "Token bulan ini",
+    "videos": "Video"
+  },
+  "settings": {
+    "menuLabel": "Pengaturan",
+    "title": "Pengaturan",
+    "preferences": "Preferensi",
+    "general": "Umum",
+    "personality": "Kepribadian AI",
+    "usage": "Penggunaan",
+    "theme": "Tema",
+    "language": "Bahasa",
+    "themeDesc": "Sesuaikan tampilan antarmuka RensChat.",
+    "languageDesc": "Pilih bahasa yang digunakan untuk antarmuka.",
+    "personalityDesc": "Atur gaya bawaan RensChat saat menjawabmu.",
+    "usageDesc": "Lihat statistik penggunaan token dan media kamu."
   }
 }

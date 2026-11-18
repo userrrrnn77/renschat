@@ -66,6 +66,26 @@ export function Composer({
     }
   }, [draft.text]);
 
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    let targetId = sessionId;
+    // Kalau lagi di halaman New Chat, bikin sesi dulu
+    if (isNew) {
+      try {
+        const newSession = await api.sessions.create();
+        upsertSession(newSession);
+        targetId = newSession.id;
+        navigate(`/chat/${targetId}`, { replace: true });
+      } catch (err) {
+        console.error("Gagal membuat sesi baru", err);
+        return;
+      }
+    }
+    // Jalankan upload presigned
+    addFiles(targetId, files, targetId);
+  };
+
   const handleCancelEdit = () => {
     if (isNew) return;
     cancelEdit(sessionId);
@@ -73,7 +93,7 @@ export function Composer({
 
   const handleSend = async () => {
     const combinedText = [...draft.pastedTexts.map((p) => p.text), draft.text]
-      .filter((t) => t.trim().length > 0)
+      .filter((val) => val.trim().length > 0)
       .join("\n\n");
 
     if (!combinedText && draft.attachments.length === 0) return;
@@ -139,16 +159,56 @@ export function Composer({
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    const imageFiles: File[] = [];
+
+    // 1. Cek Gambar
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const extension = file.type.split("/")[1] || "png";
+          const renamedFile = new File(
+            [file],
+            `pasted-image-${Date.now()}.${extension}`,
+            { type: file.type },
+          );
+          imageFiles.push(renamedFile);
+        }
+      }
+    }
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      void processFiles(imageFiles);
+      return;
+    }
+
+    // 2. Cek Teks Panjang (Turunin threshold biar lebih responsif)
     const text = e.clipboardData.getData("text");
-    if (text.length > 1000 || text.split("\n").length > 15) {
+    if (text.length > 500 || text.split("\n").length > 10) {
       e.preventDefault();
       addPastedText(key, text);
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    // Kalau tiba-tiba panjang banget dan banyak baris, anggap ini paste yang lolos
+    if (
+      val.length > 800 &&
+      val.split("\n").length > 15 &&
+      !val.includes(draft.text)
+    ) {
+      setText(key, ""); // Bersihin textarea
+      addPastedText(key, val); // Pindahin ke chip
+      return;
+    }
+    setText(key, val);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0 && !isNew) {
-      addFiles(sessionId, Array.from(e.target.files), sessionId);
+    if (e.target.files && e.target.files.length > 0) {
+      void processFiles(Array.from(e.target.files));
     }
     e.target.value = "";
   };
@@ -187,13 +247,17 @@ export function Composer({
 
       {draft.pastedTexts.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
-          {draft.pastedTexts.map((p) => (
+          {draft.pastedTexts.map((p, idx) => (
             <div
               key={p.localId}
-              className="flex items-center gap-2 border border-line rounded-lg px-3 py-1.5 text-xs bg-surface">
-              <FileText className="w-4 h-4 text-muted" />
-              <div className="flex flex-col">
-                <span className="font-medium">{t("composer.pastedText")}</span>
+              className="flex items-center gap-2 border border-line rounded-lg px-3 py-1.5 text-xs bg-surface hover:border-accent/30 transition-colors">
+              <div className="p-1.5 bg-accent/10 rounded-md">
+                <FileText className="w-4 h-4 text-accent" />
+              </div>
+              <div className="flex flex-col max-w-50">
+                <span className="font-medium truncate">
+                  pasted_text_{idx + 1}.txt
+                </span>
                 <span className="text-muted">
                   {t("composer.chars", { count: p.text.length })}
                 </span>
@@ -241,7 +305,7 @@ export function Composer({
         <textarea
           ref={textareaRef}
           value={draft.text}
-          onChange={(e) => setText(key, e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)}
           onPaste={handlePaste}

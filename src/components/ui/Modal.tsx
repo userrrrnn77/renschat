@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -5,10 +6,12 @@ export function Modal({
   open,
   onClose,
   children,
+  className,
 }: {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -25,7 +28,11 @@ export function Modal({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md bg-surface rounded-xl shadow-lg border border-line p-6 animate-in fade-in zoom-in-95">
+      <div
+        className={cn(
+          "relative bg-surface border border-line rounded-2xl shadow-xl w-full animate-in zoom-in-95",
+          className,
+        )}>
         {children}
       </div>
     </div>,

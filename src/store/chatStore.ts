@@ -254,7 +254,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set((s) =>
           updateAssistantMessage(s, sessionId, assistantIdRef.current, {
             status: "error",
-            error: { code: "DISCONNECTED", message: "Koneksi terputus" },
+            error: { code: "DISCONNECTED", message: "Connection lost" },
           }),
         );
       } else if (current?.status === "done") {
@@ -274,7 +274,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             status: "error",
             error: {
               code: "NETWORK_ERROR",
-              message: "Koneksi terputus. Silakan coba kembali.",
+              message: "Connection lost. Please try again.",
             },
           }),
         );

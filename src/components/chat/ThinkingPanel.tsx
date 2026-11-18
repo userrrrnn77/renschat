@@ -5,6 +5,7 @@ import { cn } from "../../lib/cn";
 import { SourcesList } from "./SourcesList";
 import type { StreamPhase, SourceRef } from "../../types";
 import { useTranslation } from "react-i18next";
+import { formatDuration } from "../../lib/time";
 
 export function ThinkingPanel({
   phase,
@@ -66,7 +67,7 @@ export function ThinkingPanel({
           <span>{t("chat.thinking.process")}</span>
           {durationMs !== undefined && (
             <span className="text-xs opacity-70">
-              ({(durationMs / 1000).toFixed(1)} dtk)
+              ({formatDuration(Math.floor(durationMs / 1000), t)})
             </span>
           )}
         </div>

@@ -68,9 +68,9 @@ export function ClarificationCard({
   };
 
   const handleCustomSubmit = (): void => {
-    const t = customText.trim();
-    if (!t) return;
-    void handleSubmit([t]);
+    const val = customText.trim();
+    if (!val) return;
+    void handleSubmit([val]);
   };
 
   const disabled = submitting || expired;

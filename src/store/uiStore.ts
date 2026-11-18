@@ -16,6 +16,8 @@ interface UIState {
   closePreview: () => void;
   setLightbox: (url: string | null) => void;
   setPersonalityOpen: (open: boolean) => void;
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => {
@@ -50,5 +52,7 @@ export const useUIStore = create<UIState>((set) => {
     setLightbox: (url) => set({ lightbox: url }),
     personalityOpen: false,
     setPersonalityOpen: (open) => set({ personalityOpen: open }),
+    settingsOpen: false,
+    setSettingsOpen: (open) => set({ settingsOpen: open }),
   };
 });
