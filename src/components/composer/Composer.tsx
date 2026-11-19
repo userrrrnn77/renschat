@@ -10,7 +10,9 @@ import { GenerationToolbar } from "../media/GenerationToolbar";
 import { api } from "../../lib/api";
 import { AttachmentChip } from "./AttachmentChip";
 import { Spinner } from "../ui/Spinner";
-import { Plus, ArrowUp, Square, FileText, X, Pencil } from "lucide-react";
+import { Plus, ArrowUp, Square, X, Pencil } from "lucide-react";
+import { PastedTextBubble } from "../chat/PastedTextBubble";
+import { encodeUserTurn } from "../../lib/userTurn";
 import { cn } from "../../lib/cn";
 import { useTranslation } from "react-i18next";
 
@@ -25,7 +27,11 @@ export function Composer({
 
   const key = isNew ? "new" : sessionId;
 
-  const draft = useComposerStore((s) => s.drafts[key]) || {
+  const savedDraft = useComposerStore((s) => s.drafts[key]);
+  const reply = savedDraft?.reply;
+  const setReply = useComposerStore((s) => s.setReply);
+
+  const draft = savedDraft ?? {
     text: "",
     attachments: [],
     pastedTexts: [],
@@ -92,11 +98,30 @@ export function Composer({
   };
 
   const handleSend = async () => {
-    const combinedText = [...draft.pastedTexts.map((p) => p.text), draft.text]
-      .filter((val) => val.trim().length > 0)
-      .join("\n\n");
+    if (isStreaming) return;
 
-    if (!combinedText && draft.attachments.length === 0) return;
+    if (
+      !draft.text.trim() &&
+      draft.pastedTexts.length === 0 &&
+      draft.attachments.length === 0
+    ) {
+      return;
+    }
+
+    const combinedText = encodeUserTurn({
+      text: draft.text,
+      pastes: draft.pastedTexts.map((p) => p.text),
+      ...(reply ? { reply } : {}),
+    });
+
+    if (combinedText.length > 100_000) {
+      textareaRef.current?.setCustomValidity(
+        "Total pesan, kutipan, dan lampiran teks melebihi 100.000 karakter.",
+      );
+      textareaRef.current?.reportValidity();
+      textareaRef.current?.setCustomValidity("");
+      return;
+    }
 
     if (
       draft.attachments.some(
@@ -128,9 +153,6 @@ export function Composer({
     const generation = buildGeneration(selection);
     const editOfMessageId = editing?.messageId;
 
-    // File sudah "dipindahkan" ke message — jangan hapus dari server.
-    clear(key, { keepServerFiles: true });
-
     let targetId = sessionId;
 
     if (isNew) {
@@ -145,6 +167,7 @@ export function Composer({
       }
     }
 
+    clear(key, { keepServerFiles: true });
     await send(targetId, text, attachments, generation, editOfMessageId);
     // §15.2: pilihan eksplisit tidak lengket — reset ke auto setelah kirim.
     if (generation !== undefined) resetSelection();
@@ -245,30 +268,34 @@ export function Composer({
         </div>
       )}
 
+      {reply && (
+        <div className="mb-2 flex items-start gap-3 rounded-xl border border-line bg-surface px-3 py-2">
+          <div className="min-w-0 flex-1 border-l-2 border-accent pl-3">
+            <p className="text-xs font-medium text-accent">Membalas RensChat</p>
+            <p className="mt-1 line-clamp-2 whitespace-pre-wrap wrap-break-word text-sm text-muted">
+              {reply.text}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Batalkan kutipan"
+            onClick={() => setReply(key, null)}
+            className="rounded p-1 text-muted hover:bg-surface2 hover:text-ink">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {draft.pastedTexts.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {draft.pastedTexts.map((p, idx) => (
-            <div
-              key={p.localId}
-              className="flex items-center gap-2 border border-line rounded-lg px-3 py-1.5 text-xs bg-surface hover:border-accent/30 transition-colors">
-              <div className="p-1.5 bg-accent/10 rounded-md">
-                <FileText className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex flex-col max-w-50">
-                <span className="font-medium truncate">
-                  pasted_text_{idx + 1}.txt
-                </span>
-                <span className="text-muted">
-                  {t("composer.chars", { count: p.text.length })}
-                </span>
-              </div>
-              <button
-                onClick={() => removePastedText(key, p.localId)}
-                className="p-1 hover:bg-surface2 rounded-md ml-1"
-                title={t("common.delete")}>
-                <X className="w-3.5 h-3.5 text-muted" />
-              </button>
-            </div>
+        <div className="mb-2 flex flex-col items-start gap-2">
+          {draft.pastedTexts.map((paste, index) => (
+            <PastedTextBubble
+              key={paste.localId}
+              index={index}
+              text={paste.text}
+              onRemove={() => removePastedText(key, paste.localId)}
+            />
           ))}
         </div>
       )}
@@ -303,6 +330,7 @@ export function Composer({
         />
 
         <textarea
+          id={`composer-${key}`}
           ref={textareaRef}
           value={draft.text}
           onChange={handleChange}

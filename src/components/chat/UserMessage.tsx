@@ -7,6 +7,8 @@ import { copyToClipboard } from "../../lib/copy";
 import { useTranslation } from "react-i18next";
 import { useChatStore } from "../../store/chatStore";
 import { cn } from "../../lib/cn";
+import { decodeUserTurn } from "../../lib/userTurn";
+import { PastedTextBubble } from "./PastedTextBubble";
 
 const MAX_LINES = 10;
 const MAX_CHARS = 500;
@@ -27,10 +29,13 @@ export function UserMessage({
   );
   const startEdit = useChatStore((s) => s.startEdit);
 
-  const text = message.blocks
+  const rawText = message.blocks
     .filter((b) => b.type === "text")
     .map((b) => (b as { markdown: string }).markdown)
     .join("\n");
+
+  const turn = decodeUserTurn(rawText);
+  const text = turn.text;
 
   // Deteksi apakah pesan ini kepanjangan
   const lines = text.split("\n");
@@ -43,14 +48,20 @@ export function UserMessage({
       : text;
 
   const handleCopy = (): void => {
-    copyToClipboard(text);
+    const content = [
+      ...(turn.reply ? [turn.reply.text] : []),
+      ...turn.pastes,
+      turn.text,
+    ].filter(Boolean);
+
+    copyToClipboard(content.join("\n\n"));
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
 
   const handleEdit = (): void => {
     if (isStreaming) return;
-    startEdit(sessionId, message.id, text);
+    startEdit(sessionId, message.id, rawText);
   };
 
   const canEdit = !isStreaming && message.status === "done";
@@ -64,49 +75,74 @@ export function UserMessage({
             <div
               key={a.id}
               className="flex items-center gap-2 px-3 py-1.5 bg-surface2 border border-line rounded-lg text-xs">
-              <span className="truncate max-w-37.5 font-medium">
-                {a.name}
-              </span>
+              <span className="truncate max-w-37.5 font-medium">{a.name}</span>
               <span className="text-muted">{formatBytes(a.size)}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* BUBBLE TEXT DENGAN FITUR EXPAND */}
-      <div className="max-w-[85%] flex flex-col items-end">
-        <div
-          className={cn(
-            "bg-surface2 rounded-2xl px-5 py-3 text-[15px] whitespace-pre-wrap relative",
-            isLong && !expanded && "max-h-48 overflow-hidden",
-          )}>
-          {displayText}
+      {turn.reply && (
+        <blockquote className="max-w-[85%] rounded-xl border border-line bg-surface px-3 py-2">
+          <div className="border-l-2 border-accent pl-3">
+            <p className="text-xs font-medium text-accent">Membalas RensChat</p>
+            <details>
+              <summary className="cursor-pointer list-none whitespace-pre-wrap wrap-break-word text-sm text-muted">
+                {turn.reply.text.length > 180
+                  ? `${turn.reply.text.slice(0, 180)}…`
+                  : turn.reply.text}
+              </summary>
+              {turn.reply.text.length > 180 && (
+                <p className="mt-2 max-h-52 overflow-auto whitespace-pre-wrap wrap-break-word text-sm text-ink">
+                  {turn.reply.text}
+                </p>
+              )}
+            </details>
+          </div>
+        </blockquote>
+      )}
 
-          {/* Gradient fade di bawah kalau teksnya kepanjangan */}
-          {isLong && !expanded && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-surface2 to-transparent pointer-events-none rounded-b-2xl" />
+      {turn.pastes.map((paste, index) => (
+        <div key={index} className="min-w-0 max-w-[85%]">
+          <PastedTextBubble text={paste} index={index} />
+        </div>
+      ))}
+
+      {text.length > 0 && (
+        <div className="max-w-[85%] flex flex-col items-end">
+          <div
+            className={cn(
+              "bg-surface2 rounded-2xl px-5 py-3 text-[15px] whitespace-pre-wrap relative",
+              isLong && !expanded && "max-h-48 overflow-hidden",
+            )}>
+            {displayText}
+
+            {/* Gradient fade di bawah kalau teksnya kepanjangan */}
+            {isLong && !expanded && (
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-surface2 to-transparent pointer-events-none rounded-b-2xl" />
+            )}
+          </div>
+
+          {/* Tombol Expand/Collapse */}
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="flex items-center gap-1 mt-1 text-xs font-medium text-muted hover:text-ink transition-colors pr-2">
+              {expanded ? (
+                <>
+                  {" "}
+                  {t("blocks.collapse")} <ChevronUp className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  {" "}
+                  {t("blocks.readMore")} <ChevronDown className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
           )}
         </div>
-
-        {/* Tombol Expand/Collapse */}
-        {isLong && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 mt-1 text-xs font-medium text-muted hover:text-ink transition-colors pr-2">
-            {expanded ? (
-              <>
-                {" "}
-                {t("blocks.collapse")} <ChevronUp className="w-3.5 h-3.5" />
-              </>
-            ) : (
-              <>
-                {" "}
-                {t("blocks.readMore")} <ChevronDown className="w-3.5 h-3.5" />
-              </>
-            )}
-          </button>
-        )}
-      </div>
+      )}
 
       {/* ACTION BUTTONS */}
       <div className="flex items-center gap-2 pr-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">

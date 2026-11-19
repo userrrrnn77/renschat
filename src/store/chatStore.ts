@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import { useSessionsStore } from "./sessionsStore";
 import { useComposerStore } from "./composerStore";
+import { decodeUserTurn } from "../lib/userTurn";
 
 export interface EditingMessage {
   messageId: string;
@@ -74,6 +75,7 @@ function mapServerMessage(m: ServerMessage): ChatMessage {
     status: m.status,
     createdAt: m.createdAt,
     ...(m.sources !== undefined ? { sources: m.sources } : {}),
+    ...(m.truncated ? { truncated: true } : {}),
   };
 }
 
@@ -165,6 +167,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   send: async (sessionId, text, attachments, generation, editOfMessageId) => {
+    if (get().controllers[sessionId]) return;
     const ac = new AbortController();
     const tempUserId = `tmp-u-${Date.now()}`;
     const tempAssistantId = `tmp-a-${Date.now()}`;
@@ -245,7 +248,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       if (!res.ok) throw new Error("HTTP error");
 
-      await consumeStream(set, get, sessionId, assistantIdRef, res.body!);
+      await consumeStream(
+        set,
+        get,
+        sessionId,
+        assistantIdRef,
+        res.body!,
+        editOfMessageId ?? tempUserId,
+      );
 
       const current = get().bySession[sessionId]?.messages.find(
         (m) => m.id === assistantIdRef.current,
@@ -280,12 +290,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
       }
     } finally {
-      finalizeStream(set, sessionId);
-      useSessionsStore.getState().bump(sessionId);
+      if (get().controllers[sessionId] === ac) {
+        finalizeStream(set, sessionId);
+        useSessionsStore.getState().bump(sessionId);
+      }
     }
   },
 
   regenerate: async (sessionId, messageId) => {
+    if (get().controllers[sessionId]) return;
     const ac = new AbortController();
     const tempAssistantId = `tmp-a-${Date.now()}`;
     const assistantIdRef = { current: tempAssistantId };
@@ -377,8 +390,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
         );
       }
     } finally {
-      finalizeStream(set, sessionId);
-      useSessionsStore.getState().bump(sessionId);
+      if (get().controllers[sessionId] === ac) {
+        finalizeStream(set, sessionId);
+        useSessionsStore.getState().bump(sessionId);
+      }
     }
   },
 
@@ -400,7 +415,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         [sessionId]: { messageId, text },
       },
     }));
-    useComposerStore.getState().setText(sessionId, text);
+    const turn = decodeUserTurn(text);
+    const composer = useComposerStore.getState();
+
+    composer.setText(sessionId, turn.text);
+    composer.setMessageContext(sessionId, turn.pastes, turn.reply);
   },
 
   cancelEdit: (sessionId) => {
@@ -409,7 +428,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       delete next[sessionId];
       return { editingBySession: next };
     });
-    useComposerStore.getState().setText(sessionId, "");
+    const composer = useComposerStore.getState();
+    composer.setText(sessionId, "");
+    composer.setMessageContext(sessionId, []);
   },
 
   reset: () => {
@@ -454,6 +475,7 @@ async function consumeStream(
   sessionId: string,
   assistantIdRef: { current: string },
   body: ReadableStream<Uint8Array>,
+  localUserId?: string,
 ): Promise<void> {
   const stream = parseSse(body);
   for await (const chunk of stream) {
@@ -465,9 +487,23 @@ async function consumeStream(
       continue;
     }
     if (chunk.event === "message.start") {
-      const realId = (data as { messageId: string }).messageId;
-      set((s) => renameMessage(s, sessionId, assistantIdRef.current, realId));
-      assistantIdRef.current = realId;
+      const { messageId, userMessageId } = data as {
+        messageId: string;
+        userMessageId?: string;
+      };
+
+      if (
+        localUserId &&
+        typeof userMessageId === "string" &&
+        localUserId !== userMessageId
+      ) {
+        set((s) => renameMessage(s, sessionId, localUserId, userMessageId));
+      }
+
+      set((s) =>
+        renameMessage(s, sessionId, assistantIdRef.current, messageId),
+      );
+      assistantIdRef.current = messageId;
       continue;
     }
     handleEvent(set, get, sessionId, assistantIdRef.current, chunk.event, data);
@@ -695,6 +731,9 @@ function handleEvent(
                       ...m,
                       status: payload.status,
                       usage: payload.usage,
+                      ...(payload.truncated === true
+                        ? { truncated: true }
+                        : {}),
                       ...(payload.status === "done" ||
                       payload.status === "aborted"
                         ? { error: undefined }

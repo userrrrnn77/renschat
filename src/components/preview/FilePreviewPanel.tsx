@@ -1,162 +1,172 @@
-import { useEffect, useState } from "react";
-import { useUIStore } from "../../store/uiStore";
-import { useAuthedBlobUrl } from "../../hooks/useAuthedBlobUrl";
-import { getExt } from "../../lib/files";
-import { X, Download, Copy, Check } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Copy, Download, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { FileBlock } from "../../types";
+import { useFilePreview } from "../../hooks/useFilePreview";
 import { copyToClipboard } from "../../lib/copy";
-import { Skeleton } from "../ui/Skeleton";
+import { getExt } from "../../lib/files";
 import { highlightCode } from "../../lib/highlight";
 import { Markdown } from "../ui/Markdown";
-import { useTranslation } from "react-i18next";
+import { Skeleton } from "../ui/Skeleton";
 
-export function FilePreviewPanel() {
+interface Props {
+  file: FileBlock;
+  onClose: () => void;
+}
+
+const ERROR_KEYS = {
+  expired: "preview.expired",
+  missing: "preview.missing",
+  binary: "preview.binaryError",
+  load: "preview.loadError",
+} as const;
+
+export function FilePreviewPanel({ file, onClose }: Props) {
   const { t } = useTranslation();
-
-  const { preview, closePreview } = useUIStore();
-  const [textContent, setTextContent] = useState<string | null>(null);
-  const [loadingText, setLoadingText] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const state = useFilePreview(file);
   const [showRaw, setShowRaw] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const { url, loading: loadingBlob } = useAuthedBlobUrl(preview?.fileId || "");
+  const ext = getExt(file.name).toLowerCase();
+  const isMarkdown = ext === "md" || ext === "markdown";
+  const text = state.kind === "text" ? state.text : null;
 
-  useEffect(() => {
-    if (!preview) return;
-    if (preview.preview === "text" || preview.preview === "code") {
-      setLoadingText(true);
-      fetch(
-        `${import.meta.env.VITE_API_BASE_URL || ""}/api/files/${preview.fileId}/content`,
-        { credentials: "include" },
-      )
-        .then(async (res) => {
-          if (!res.ok) {
-            if (res.status === 415) {
-              setTextContent(t("preview.binaryError"));
-              return;
-            }
-            throw new Error("fetch failed");
-          }
-          const data = await res.json();
-          if (data.text) setTextContent(data.text);
-        })
-        .catch((err) => {
-          console.error(err);
-          setTextContent(t("preview.loadTextError"));
-        })
-        .finally(() => setLoadingText(false));
-    }
-  }, [preview]);
+  const highlighted = useMemo(() => {
+    if (!text || file.preview !== "code" || isMarkdown) return null;
+    return highlightCode(text, ext);
+  }, [text, ext, file.preview, isMarkdown]);
 
-  if (!preview) return null;
+  const unavailable =
+    state.kind === "error" &&
+    (state.reason === "expired" || state.reason === "missing");
 
-  const handleCopy = () => {
-    if (textContent) {
-      copyToClipboard(textContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
+  const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || ""}/api/files/${file.fileId}/download`;
+
+  async function handleCopy() {
+    if (text === null) return;
+    setCopied(await copyToClipboard(text));
+  }
 
   return (
-    <div className="flex flex-col h-full bg-surface border-l border-line animate-in slide-in-from-right-8">
-      <div className="h-14 flex items-center justify-between px-4 border-b border-line shrink-0">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <span className="font-medium text-sm truncate">{preview.name}</span>
-          {preview.version > 1 && (
-            <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full font-semibold shrink-0">
-              v{preview.version}
+    <div className="flex h-full min-h-0 flex-col bg-surface">
+      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-sm font-medium">{file.name}</span>
+          {file.version > 1 && (
+            <span className="shrink-0 rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
+              v{file.version}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {(preview.preview === "text" || preview.preview === "code") && (
+
+        <div className="flex shrink-0 items-center gap-2">
+          {text !== null && text.length > 0 && (
             <button
+              type="button"
               onClick={handleCopy}
-              className="p-1.5 text-muted hover:text-ink rounded-md transition-colors">
-              {copied ? (
-                <Check className="w-4 h-4 text-success" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
+              aria-label={t(copied ? "common.copied" : "common.copy")}
+              className="rounded-md p-2 text-muted hover:bg-surface2">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
           )}
-          <a
-            href={`${import.meta.env.VITE_API_BASE_URL || ""}/api/files/${preview.fileId}/download`}
-            download
-            className="p-1.5 text-muted hover:text-ink rounded-md transition-colors">
-            <Download className="w-4 h-4" />
-          </a>
+
+          {!unavailable && (
+            <a
+              href={downloadUrl}
+              download
+              aria-label={t("common.download")}
+              className="rounded-md p-2 text-muted hover:bg-surface2">
+              <Download size={16} />
+            </a>
+          )}
+
           <button
-            onClick={closePreview}
-            className="p-1.5 text-muted hover:text-ink rounded-md transition-colors">
-            <X className="w-4 h-4" />
+            type="button"
+            onClick={onClose}
+            aria-label={t("common.close")}
+            className="rounded-md p-2 text-muted hover:bg-surface2">
+            <X size={16} />
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-auto p-4 bg-bg">
-        {preview.preview === "image" &&
-          (loadingBlob ? (
-            <Skeleton className="w-full h-64" />
-          ) : url ? (
-            <img src={url} className="max-w-full rounded-lg" />
-          ) : (
-            <div className="text-danger">{t("preview.loadImageError")}</div>
-          ))}
+      <div className="min-h-0 flex-1 overflow-auto bg-bg p-4">
+        {state.kind === "loading" && <Skeleton className="h-56 w-full" />}
 
-        {preview.preview === "pdf" &&
-          (loadingBlob ? (
-            <Skeleton className="w-full h-full" />
-          ) : url ? (
-            <iframe
-              src={url}
-              className="w-full h-full min-h-125 rounded-lg border border-line"
-            />
-          ) : (
-            <div className="text-danger">{t("preview.loadPdfError")}</div>
-          ))}
+        {state.kind === "error" && (
+          <p role="status" className="text-sm text-muted">
+            {t(ERROR_KEYS[state.reason])}
+          </p>
+        )}
 
-        {(preview.preview === "text" || preview.preview === "code") &&
-          (loadingText ? (
-            <Skeleton className="w-full h-64" />
-          ) : textContent ? (
-            <div className="h-full flex flex-col">
-              {getExt(preview.name) === "md" && (
-                <div className="flex gap-2 mb-4 bg-surface2 p-1 rounded-lg w-fit">
-                  <button
-                    onClick={() => setShowRaw(false)}
-                    className={`px-3 py-1 text-xs rounded-md ${!showRaw ? "bg-surface shadow-sm" : "text-muted"}`}>
-                    {t("preview.tabPreview")}
-                  </button>
-                  <button
-                    onClick={() => setShowRaw(true)}
-                    className={`px-3 py-1 text-xs rounded-md ${showRaw ? "bg-surface shadow-sm" : "text-muted"}`}>
-                    {t("preview.tabCode")}
-                  </button>
-                </div>
-              )}
-              {!showRaw && getExt(preview.name) === "md" ? (
-                <Markdown>{textContent}</Markdown>
-              ) : (
-                <pre
-                  className="text-[13px] font-mono whitespace-pre-wrap flex-1"
-                  dangerouslySetInnerHTML={{
-                    __html: highlightCode(textContent, getExt(preview.name)),
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="text-muted">{t("preview.loadTextFail")}</div>
-          ))}
+        {state.kind === "none" && (
+          <p className="text-sm text-muted">{t("preview.noPreview")}</p>
+        )}
 
-        {preview.preview === "none" && (
-          <div className="flex flex-col items-center justify-center h-full text-muted gap-4">
-            <div className="w-20 h-20 bg-surface2 rounded-xl flex items-center justify-center text-3xl font-bold uppercase">
-              {getExt(preview.name)}
-            </div>
-            <p>{t("preview.noPreview")}</p>
-          </div>
+        {state.kind === "blob" && file.preview === "image" && (
+          <img
+            src={state.url}
+            alt={file.name}
+            className="max-w-full rounded-lg"
+          />
+        )}
+
+        {state.kind === "blob" && file.preview === "pdf" && (
+          <iframe
+            src={state.url}
+            title={file.name}
+            className="h-full min-h-96 w-full rounded-lg border border-line"
+          />
+        )}
+
+        {state.kind === "text" && (
+          <>
+            {state.truncated && (
+              <p className="mb-3 rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
+                {t("preview.partial")}
+              </p>
+            )}
+
+            {state.text.length === 0 ? (
+              <p className="text-sm text-muted">{t("preview.empty")}</p>
+            ) : (
+              <>
+                {isMarkdown && (
+                  <div className="mb-4 inline-flex gap-1 rounded-lg bg-surface2 p-1">
+                    {[
+                      { raw: false, label: "preview.tabPreview" },
+                      { raw: true, label: "preview.tabCode" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.label}
+                        type="button"
+                        aria-pressed={showRaw === tab.raw}
+                        onClick={() => setShowRaw(tab.raw)}
+                        className={`rounded-md px-3 py-1 text-xs ${
+                          showRaw === tab.raw
+                            ? "bg-surface text-ink"
+                            : "text-muted"
+                        }`}>
+                        {t(tab.label)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {isMarkdown && !showRaw ? (
+                  <Markdown>{state.text}</Markdown>
+                ) : highlighted !== null ? (
+                  <pre className="overflow-x-auto whitespace-pre font-mono text-[13px]">
+                    <code dangerouslySetInnerHTML={{ __html: highlighted }} />
+                  </pre>
+                ) : (
+                  <pre className="whitespace-pre-wrap wrap-break-word font-mono text-[13px]">
+                    {state.text}
+                  </pre>
+                )}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -5,6 +5,7 @@ import { AssistantMessage } from "./AssistantMessage";
 import { Skeleton } from "../ui/Skeleton";
 import { useStickToBottom } from "../../hooks/useStickToBottom";
 import { useTranslation } from "react-i18next";
+import { SelectionReplyButton } from "./SelectionReplyButton";
 
 export function MessageList({ sessionId }: { sessionId: string }) {
   const { t } = useTranslation();
@@ -31,6 +32,12 @@ export function MessageList({ sessionId }: { sessionId: string }) {
     <div
       ref={containerRef}
       className="flex-1 overflow-y-auto px-4 md:px-8 py-6 scroll-smooth">
+      <SelectionReplyButton
+        key={sessionId}
+        sessionId={sessionId}
+        containerRef={containerRef}
+      />
+
       <div className="max-w-3xl mx-auto w-full">
         {session.nextCursor && (
           <div className="flex justify-center mb-6">

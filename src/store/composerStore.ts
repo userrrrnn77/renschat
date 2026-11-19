@@ -8,6 +8,7 @@ import {
   type UploadState,
 } from "../lib/upload";
 import type { IndexStatus } from "../types";
+import type { ReplyQuote } from "../lib/userTurn";
 import { api } from "../lib/api";
 
 export interface PastedText {
@@ -22,10 +23,17 @@ interface ComposerState {
       text: string;
       attachments: AttachmentUpload[];
       pastedTexts: PastedText[];
+      reply?: ReplyQuote;
     }
   >;
   uploadControllers: Record<string, AbortController>;
   setText: (key: string, text: string) => void;
+  setReply: (key: string, reply: ReplyQuote | null) => void;
+  setMessageContext: (
+    key: string,
+    pastes: string[],
+    reply?: ReplyQuote,
+  ) => void;
   addFiles: (key: string, files: File[], sessionId: string) => void;
   addPastedText: (key: string, text: string) => void;
   removeAttachment: (key: string, localId: string) => void;
@@ -154,12 +162,51 @@ export const useComposerStore = create<ComposerState>((set, get) => {
           drafts: {
             ...s.drafts,
             [key]: {
+              ...existing,
               attachments: existing?.attachments ?? [],
               pastedTexts: existing?.pastedTexts ?? [],
               text,
             },
           },
         };
+      }),
+
+    setReply: (key, reply) =>
+      set((s) => {
+        const current = s.drafts[key] ?? {
+          text: "",
+          attachments: [],
+          pastedTexts: [],
+        };
+
+        const next = { ...current };
+
+        if (reply) next.reply = reply;
+        else delete next.reply;
+
+        return { drafts: { ...s.drafts, [key]: next } };
+      }),
+
+    setMessageContext: (key, pastes, reply) =>
+      set((s) => {
+        const current = s.drafts[key] ?? {
+          text: "",
+          attachments: [],
+          pastedTexts: [],
+        };
+
+        const next = {
+          ...current,
+          pastedTexts: pastes.map((text) => ({
+            localId: makeLocalId(),
+            text,
+          })),
+        };
+
+        if (reply) next.reply = reply;
+        else delete next.reply;
+
+        return { drafts: { ...s.drafts, [key]: next } };
       }),
 
     addFiles: (key, files, sessionId) => {

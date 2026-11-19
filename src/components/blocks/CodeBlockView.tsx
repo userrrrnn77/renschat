@@ -1,26 +1,34 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { highlightCode } from "../../lib/highlight";
 import { copyToClipboard } from "../../lib/copy";
 import { cn } from "../../lib/cn";
 import { useTranslation } from "react-i18next";
 import type { CodeBlock } from "../../types";
 
-export function CodeBlockView({ block }: { block: CodeBlock }) {
+export function CodeBlockView({
+  block,
+  isStreaming = false,
+}: {
+  block: CodeBlock;
+  isStreaming?: boolean;
+}) {
   const { t } = useTranslation();
 
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [html, setHtml] = useState("");
+  const lines = useMemo(
+    () => (isStreaming ? [] : block.content.split("\n")),
+    [isStreaming, block.content],
+  );
 
-  const lines = block.content.split("\n");
   const isLong = lines.length > 40;
   const displayContent =
     !expanded && isLong ? lines.slice(0, 20).join("\n") : block.content;
 
-  useEffect(() => {
-    // Only highlight when not streaming (simplified check: no "streaming" prop, we assume block is final if it has content)
-    setHtml(highlightCode(displayContent, block.language));
-  }, [displayContent, block.language]);
+  const html = useMemo(
+    () => (isStreaming ? null : highlightCode(displayContent, block.language)),
+    [isStreaming, displayContent, block.language],
+  );
 
   const handleCopy = async () => {
     if (await copyToClipboard(block.content)) {
@@ -64,7 +72,11 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
           !expanded && isLong && "max-h-100 overflow-y-hidden",
         )}>
         <pre>
-          <code dangerouslySetInnerHTML={{ __html: html }} />
+          {html === null ? (
+            <code>{displayContent}</code>
+          ) : (
+            <code dangerouslySetInnerHTML={{ __html: html }} />
+          )}
         </pre>
         {!expanded && isLong && (
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-codebg to-transparent" />

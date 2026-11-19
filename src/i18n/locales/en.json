@@ -33,6 +33,14 @@
     "videoLoadError": "Failed to load video"
   },
   "chat": {
+    "fileActionIncomplete": "The file request did not complete. Check the available cards or specify the file name.",
+    "quoteSelection": "Reply to selection",
+    "replyingToAssistant": "Replying to RensChat",
+    "cancelQuote": "Remove quote",
+    "pasteFilename": "pasted_text_{{index}}.txt",
+    "pasteContents": "Contents of {{filename}}",
+    "removePaste": "Remove {{filename}}",
+    "messageTooLong": "Your message, quote, and pasted text exceed the {{limit}}-character limit.",
     "edit": "Edit Chat",
     "emptyDesc": "RensChat is a generative AI assistant that can create text, code, tables, charts, and files right in the chat.",
     "errorOccurred": "An error occurred",
@@ -271,6 +279,12 @@
     "toastSuccess": "Personality preferences saved"
   },
   "preview": {
+    "openFile": "Preview {{name}}",
+    "empty": "This file is empty.",
+    "partial": "Only part of this file is shown. Download it to view the full contents.",
+    "expired": "This file has expired.",
+    "missing": "This file is no longer available.",
+    "loadError": "Could not load the preview.",
     "binaryError": "This file is binary and cannot be displayed as text.",
     "loadImageError": "Failed to load image",
     "loadPdfError": "Failed to load PDF",

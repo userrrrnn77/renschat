@@ -32,6 +32,14 @@
     "videoLoadError": "Gagal memuat video"
   },
   "chat": {
+    "fileActionIncomplete": "Permintaan file belum selesai. Periksa kartu yang tersedia atau sebutkan nama file yang kamu maksud.",
+    "quoteSelection": "Balas kutipan",
+    "replyingToAssistant": "Membalas RensChat",
+    "cancelQuote": "Batalkan kutipan",
+    "pasteFilename": "pasted_text_{{index}}.txt",
+    "pasteContents": "Isi {{filename}}",
+    "removePaste": "Hapus {{filename}}",
+    "messageTooLong": "Total pesan, kutipan, dan lampiran teks melebihi batas {{limit}} karakter.",
     "edit": "Ubah Obrolan",
     "emptyDesc": "RensChat adalah asisten AI generatif yang dapat membuat teks, kode, tabel, grafik, dan file langsung di chat.",
     "errorOccurred": "Terjadi kesalahan",
@@ -268,6 +276,12 @@
     "toastSuccess": "Preferensi personality disimpan"
   },
   "preview": {
+    "openFile": "Buka pratinjau {{name}}",
+    "empty": "File ini kosong.",
+    "partial": "Hanya sebagian isi yang ditampilkan. Unduh file untuk melihat isi lengkap.",
+    "expired": "File ini sudah kedaluwarsa.",
+    "missing": "File ini sudah tidak tersedia.",
+    "loadError": "Pratinjau gagal dimuat.",
     "binaryError": "File ini bertipe biner dan tidak bisa ditampilkan sebagai teks.",
     "loadImageError": "Gagal memuat gambar",
     "loadPdfError": "Gagal memuat PDF",

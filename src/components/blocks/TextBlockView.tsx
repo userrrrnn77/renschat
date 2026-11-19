@@ -8,7 +8,13 @@ import { sanitizeAssistantText } from "../../lib/sanitizeAssistantText";
 const MAX_LINES = 30;
 const MAX_CHARS = 2200;
 
-export function TextBlockView({ block }: { block: TextBlock }) {
+export function TextBlockView({
+  block,
+  isStreaming,
+}: {
+  block: TextBlock;
+  isStreaming: boolean;
+}) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
@@ -22,15 +28,17 @@ export function TextBlockView({ block }: { block: TextBlock }) {
   const lines = cleanMarkdown.split("\n");
   const isLong = lines.length > MAX_LINES || cleanMarkdown.length > MAX_CHARS;
 
+  const canCollapse = isLong && !isStreaming;
   const displayContent =
-    !expanded && isLong
-      ? lines.slice(0, MAX_LINES).join("\n").trimEnd() + "\n\n…"
+    canCollapse && !expanded
+      ? lines.slice(0, MAX_LINES).join("\n").slice(0, MAX_CHARS).trimEnd() +
+        "\n\n…"
       : cleanMarkdown;
 
   return (
     <div className="relative">
       <Markdown>{displayContent}</Markdown>
-      {isLong && (
+      {canCollapse && (
         <div className="mt-2 flex items-center gap-2">
           <button
             type="button"

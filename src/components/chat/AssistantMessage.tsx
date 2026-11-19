@@ -1,9 +1,9 @@
 // src/components/chat/AssistantMessage.tsx
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useComposerStore } from "../../store/composerStore";
 import { useChatStore } from "../../store/chatStore";
 import { useMediaStore } from "../../store/mediaStore";
 import { BlockRenderer } from "../blocks/BlockRenderer";
-import { ToolChip } from "./ToolChip";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ClarificationCard } from "./ClarificationCard";
 import { ThinkingPanel } from "./ThinkingPanel";
@@ -30,6 +30,7 @@ export function AssistantMessage({
   const { t } = useTranslation();
 
   const [copied, setCopied] = useState(false);
+
   const isStreaming = message.status === "streaming";
   const setDonateOpen = useMediaStore((s) => s.setDonateOpen);
   const regenerate = useChatStore((s) => s.regenerate);
@@ -43,6 +44,10 @@ export function AssistantMessage({
   const localizedError = useMemo(() => {
     if (!message.error) return null;
     const fallback = redactForUser(message.error.message);
+
+    if (message.error.code === "FILE_ACTION_INCOMPLETE") {
+      return t("chat.fileActionIncomplete");
+    }
     const key = errorI18nKey(message.error.code);
     const translated = t(key);
     return translated && translated !== key ? translated : fallback;
@@ -69,9 +74,6 @@ export function AssistantMessage({
     void regenerate(sessionId, message.id);
   };
 
-  const toolsBefore = (index: number) =>
-    (message.tools || []).filter((t) => t.beforeIndex === index);
-
   const mp = message.mediaProgress;
   const showMediaProgress =
     isStreaming &&
@@ -91,7 +93,7 @@ export function AssistantMessage({
     isLast &&
     !globalStreaming &&
     !isStreaming &&
-    message.status !== "error" &&
+    (message.status !== "error" || message.truncated === true) &&
     message.blocks.length > 0;
 
   return (
@@ -112,20 +114,20 @@ export function AssistantMessage({
         />
       ) : null}
 
-      {message.blocks.map((block, i) => (
-        <div key={i}>
-          {toolsBefore(i).map((tool) => (
-            <ToolChip key={tool.callId} tool={tool} />
-          ))}
-          <BlockRenderer block={block} sessionId={sessionId} isLast={isLast} />
-        </div>
-      ))}
-
-      {(message.tools || [])
-        .filter((tool) => tool.beforeIndex >= message.blocks.length)
-        .map((tool) => (
-          <ToolChip key={tool.callId} tool={tool} />
+      <div
+        data-reply-source={message.id}
+        className="flex min-w-0 flex-col gap-4">
+        {message.blocks.map((block, i) => (
+          <div key={i}>
+            <BlockRenderer
+              block={block}
+              sessionId={sessionId}
+              isLast={isLast}
+              isStreaming={isStreaming}
+            />
+          </div>
         ))}
+      </div>
 
       {showMediaProgress && (
         <div
@@ -143,7 +145,7 @@ export function AssistantMessage({
         />
       )}
 
-      {localizedError && (
+      {localizedError && message.error?.code !== "OUTPUT_TRUNCATED" && (
         <div className="text-sm text-danger bg-danger/10 border border-danger/20 p-3 rounded-lg">
           <p className="whitespace-pre-wrap wrap-break-word">
             {localizedError}

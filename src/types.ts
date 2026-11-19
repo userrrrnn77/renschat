@@ -22,6 +22,10 @@ export interface FileBlock {
   version: number;
   preview: "code" | "text" | "image" | "pdf" | "none";
   note?: string;
+  appearance?: {
+    icon?: string;
+    accent?: string;
+  };
 }
 
 export interface ImageBlock {
@@ -242,6 +246,7 @@ export interface ServerMessage {
   role: "user" | "assistant" | "tool";
   blocks: Block[];
   status: MessageStatus;
+  truncated?: boolean;
   createdAt: string;
   attachmentIds?: string[];
   sources?: SourceRef[];
@@ -338,6 +343,7 @@ export interface AttachmentRef {
 }
 
 export interface ChatMessage {
+  truncated?: boolean;
   id: string;
   role: "user" | "assistant";
   blocks: Block[];

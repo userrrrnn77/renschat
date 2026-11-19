@@ -14,18 +14,20 @@ export function BlockRenderer({
   block,
   sessionId,
   isLast,
+  isStreaming,
 }: {
   block: Block;
   sessionId: string;
   isLast: boolean;
+  isStreaming: boolean;
 }) {
   const { t } = useTranslation();
 
   switch (block.type) {
     case "text":
-      return <TextBlockView block={block} />;
+      return <TextBlockView block={block} isStreaming={isStreaming} />;
     case "code":
-      return <CodeBlockView block={block} />;
+      return <CodeBlockView block={block} isStreaming={isStreaming} />;
     case "table":
       return <TableBlockView block={block} />;
     case "chart":
