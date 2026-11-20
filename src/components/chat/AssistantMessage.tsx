@@ -45,6 +45,10 @@ export function AssistantMessage({
     if (!message.error) return null;
     const fallback = redactForUser(message.error.message);
 
+    if (message.error.code === "COMMAND_NOT_EXECUTED") {
+      return t("chat.commandNotExecuted");
+    }
+
     if (message.error.code === "FILE_ACTION_INCOMPLETE") {
       return t("chat.fileActionIncomplete");
     }

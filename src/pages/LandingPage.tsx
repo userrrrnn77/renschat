@@ -1,17 +1,25 @@
-// src/pages/LandingPage.tsx
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import {
-  Sparkles,
-  Table as TableIcon,
-  BarChart3,
-  FileText,
-  Image as ImageIcon,
-  Video,
-  ShieldCheck,
-} from "lucide-react";
 import { SparkleLogo } from "../components/ui/Icons";
 import { useSeo } from "../lib/seo";
+
+const originalCode = `const qty = 0;
+const display = qty || "N/A";`;
+
+const fixedCode = `const display = qty ?? "N/A";`;
+
+const footerLinks = [
+  { to: "/faq", label: "menu.faq" },
+  { to: "/contact", label: "static.contact.title" },
+  { to: "/terms", label: "menu.terms" },
+  { to: "/privacy", label: "menu.privacy" },
+] as const;
+
+const textLink =
+  "inline-flex min-h-10 items-center rounded-sm underline-offset-4 hover:underline active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent";
+
+const codeBlock =
+  "my-5 whitespace-pre-wrap wrap-anywhere font-mono text-sm leading-7 sm:text-base";
 
 export function LandingPage() {
   const { t, i18n } = useTranslation();
@@ -21,153 +29,127 @@ export function LandingPage() {
     description: t("landing.seo.description"),
     path: "/",
     type: "website",
-    lang: i18n.language === "en" ? "en" : "id",
+    lang: i18n.resolvedLanguage ?? i18n.language,
   });
 
-  const features = [
-    { icon: TableIcon, key: "table" },
-    { icon: BarChart3, key: "chart" },
-    { icon: FileText, key: "file" },
-    { icon: ImageIcon, key: "image" },
-    { icon: Video, key: "video" },
-    { icon: ShieldCheck, key: "rag" },
-  ] as const;
-
   return (
-    <div className="h-screen overflow-y-auto bg-bg text-ink">
-      <header className="sticky top-0 z-40 bg-bg/80 backdrop-blur-xl border-b border-line">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <SparkleLogo className="w-5 h-5 text-accent" />
-            <span className="font-semibold">RensChat</span>
+    <div className="h-dvh overflow-y-auto bg-bg text-ink">
+      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 lg:px-12">
+        <header className="flex items-center justify-between gap-4 border-b border-line py-3">
+          <Link
+            to="/"
+            className={`${textLink} gap-2 font-semibold tracking-tight`}>
+            <span aria-hidden="true">
+              <SparkleLogo className="size-5" />
+            </span>
+            {t("landing.brand")}
           </Link>
-          <nav className="flex items-center gap-4 text-sm">
-            <Link
-              to="/faq"
-              className="text-muted hover:text-ink transition-colors">
-              {t("menu.faq")}
-            </Link>
-            <Link
-              to="/contact"
-              className="hidden sm:inline text-muted hover:text-ink transition-colors">
-              {t("static.contact.title")}
-            </Link>
-            <Link
-              to="/login"
-              className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-hover transition-colors">
-              {t("landing.ctaLogin")}
-            </Link>
-          </nav>
-        </div>
-      </header>
 
-      <main>
-        <section className="max-w-6xl mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent rounded-full text-xs font-medium mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            {t("landing.badge")}
-          </div>
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-4 max-w-3xl mx-auto">
-            {t("landing.heroTitle")}
-          </h1>
-          <p className="text-muted md:text-lg max-w-2xl mx-auto mb-8">
-            {t("landing.heroSubtitle")}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/login"
-              className="px-6 py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-hover transition-colors">
-              {t("landing.ctaPrimary")}
-            </Link>
-            <Link
-              to="/faq"
-              className="px-6 py-3 border border-line rounded-lg font-medium text-ink hover:bg-surface2 transition-colors">
-              {t("landing.ctaSecondary")}
-            </Link>
-          </div>
-        </section>
+          <Link to="/login" className={`${textLink} text-sm font-medium`}>
+            {t("landing.ctaLogin")}
+          </Link>
+        </header>
 
-        <section className="max-w-6xl mx-auto px-4 md:px-6 py-12">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
-            {t("landing.featuresTitle")}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {features.map(({ icon: Icon, key }) => (
-              <article
-                key={key}
-                className="p-5 bg-surface border border-line rounded-xl">
-                <Icon className="w-5 h-5 text-accent mb-3" aria-hidden="true" />
-                <h3 className="font-medium mb-1">
-                  {t(`landing.features.${key}.title`)}
-                </h3>
-                <p className="text-sm text-muted">
-                  {t(`landing.features.${key}.desc`)}
+        <main>
+          <section
+            aria-labelledby="landing-title"
+            className="grid items-center gap-9 py-12 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-28">
+            <div className="min-w-0">
+              <h1
+                id="landing-title"
+                className="max-w-[12ch] text-balance text-5xl leading-[1.03] font-semibold tracking-tighter sm:text-6xl lg:text-7xl">
+                {t("landing.heroTitle")}
+              </h1>
+
+              <p className="mt-5 max-w-[42ch] text-base leading-7 text-muted sm:text-lg sm:leading-8">
+                {t("landing.heroSubtitle")}
+              </p>
+
+              <Link
+                to="/login"
+                className="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-ink px-5 py-2.5 text-sm font-semibold text-bg underline-offset-4 hover:underline active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
+                {t("landing.ctaPrimary")}
+              </Link>
+            </div>
+
+            <figure className="min-w-0 border-s-[3px] border-accent bg-surface2 p-5 sm:p-7">
+              <figcaption className="text-sm font-medium">
+                {t("landing.example.caption")}
+              </figcaption>
+
+              <pre className={codeBlock}>
+                <code>{originalCode}</code>
+              </pre>
+
+              <p className="text-sm leading-6">{t("landing.example.result")}</p>
+
+              <details className="mt-5 border-t border-line">
+                <summary className="cursor-pointer rounded-sm py-3 text-sm font-semibold underline-offset-4 hover:underline active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  {t("landing.example.showFix")}
+                </summary>
+
+                <pre className={codeBlock}>
+                  <code>{fixedCode}</code>
+                </pre>
+
+                <p className="text-sm leading-6">
+                  {t("landing.example.explanation")}
                 </p>
-              </article>
+              </details>
+            </figure>
+          </section>
+
+          <section
+            aria-labelledby="landing-work-title"
+            className="grid gap-7 border-t border-line py-10 sm:py-14 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+            <div>
+              <h2
+                id="landing-work-title"
+                className="max-w-[18ch] text-balance text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+                {t("landing.work.title")}
+              </h2>
+
+              <p className="mt-3 max-w-[40ch] leading-7 text-muted">
+                {t("landing.work.description")}
+              </p>
+            </div>
+
+            <dl className="divide-y divide-line">
+              {(["finance", "reports", "meetings"] as const).map((key) => (
+                <div key={key} className="py-4 first:pt-0 last:pb-0">
+                  <dt className="font-semibold">
+                    {t(`landing.work.${key}.title`)}
+                  </dt>
+                  <dd className="mt-1 max-w-[58ch] text-sm leading-6 text-muted">
+                    {t(`landing.work.${key}.example`)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <aside className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-y border-line py-4 text-sm leading-6">
+            <strong className="font-medium">{t("landing.video.status")}</strong>
+            <span className="text-muted">{t("landing.video.formats")}</span>
+          </aside>
+        </main>
+
+        <footer className="flex flex-col gap-2 py-5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <span>
+            {t("landing.copyright", { year: new Date().getFullYear() })}
+          </span>
+
+          <nav
+            aria-label={t("landing.footerNav")}
+            className="flex flex-wrap items-center gap-x-5">
+            {footerLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className={textLink}>
+                {t(label)}
+              </Link>
             ))}
-          </div>
-        </section>
-
-        <section className="max-w-6xl mx-auto px-4 md:px-6 py-12">
-          <div className="bg-surface border border-line rounded-2xl p-6 md:p-10">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-3">
-              {t("landing.techTitle")}
-            </h2>
-            <p className="text-muted mb-4 max-w-3xl">{t("landing.techDesc")}</p>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted">
-              <li>• {t("landing.techFact1")}</li>
-              <li>• {t("landing.techFact2")}</li>
-              <li>• {t("landing.techFact3")}</li>
-              <li>• {t("landing.techFact4")}</li>
-            </ul>
-          </div>
-        </section>
-
-        <section className="max-w-6xl mx-auto px-4 md:px-6 py-12 text-center">
-          <p className="text-sm text-muted">
-            {t("landing.learnMore")}{" "}
-            <Link to="/faq" className="text-accent hover:underline">
-              {t("menu.faq")}
-            </Link>
-            {", "}
-            <Link to="/terms" className="text-accent hover:underline">
-              {t("menu.terms")}
-            </Link>
-            {", "}
-            <Link to="/privacy" className="text-accent hover:underline">
-              {t("menu.privacy")}
-            </Link>
-            {", "}
-            <Link to="/contact" className="text-accent hover:underline">
-              {t("static.contact.title")}
-            </Link>
-            .
-          </p>
-        </section>
-      </main>
-
-      <footer className="border-t border-line">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted">
-          <div className="flex items-center gap-2">
-            <SparkleLogo className="w-4 h-4 text-accent" />
-            <span>© {new Date().getFullYear()} RensChat</span>
-          </div>
-          <nav className="flex flex-wrap gap-4">
-            <Link to="/terms" className="hover:text-ink">
-              {t("menu.terms")}
-            </Link>
-            <Link to="/privacy" className="hover:text-ink">
-              {t("menu.privacy")}
-            </Link>
-            <Link to="/faq" className="hover:text-ink">
-              {t("menu.faq")}
-            </Link>
-            <Link to="/contact" className="hover:text-ink">
-              {t("static.contact.title")}
-            </Link>
           </nav>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }

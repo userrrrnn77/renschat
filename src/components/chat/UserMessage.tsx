@@ -1,6 +1,6 @@
 // src/components/chat/UserMessage.tsx
 import { useState } from "react";
-import { formatBytes } from "../../lib/files";
+import { AttachmentCard } from "../preview/AttachmentCard";
 import type { ChatMessage } from "../../types";
 import { Copy, Check, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import { copyToClipboard } from "../../lib/copy";
@@ -70,14 +70,15 @@ export function UserMessage({
     <div className="flex flex-col items-end gap-1.5 group">
       {/* ATTACHMENTS (File yang diupload user) */}
       {message.attachments && message.attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 justify-end">
+        <div className="flex max-w-full flex-wrap items-start justify-end gap-2">
           {message.attachments.map((a) => (
-            <div
+            <AttachmentCard
               key={a.id}
-              className="flex items-center gap-2 px-3 py-1.5 bg-surface2 border border-line rounded-lg text-xs">
-              <span className="truncate max-w-37.5 font-medium">{a.name}</span>
-              <span className="text-muted">{formatBytes(a.size)}</span>
-            </div>
+              id={a.id}
+              name={a.name}
+              mime={a.mime}
+              size={a.size}
+            />
           ))}
         </div>
       )}
@@ -85,7 +86,7 @@ export function UserMessage({
       {turn.reply && (
         <blockquote className="max-w-[85%] rounded-xl border border-line bg-surface px-3 py-2">
           <div className="border-l-2 border-accent pl-3">
-            <p className="text-xs font-medium text-accent">Membalas RensChat</p>
+            <p className="text-xs font-medium text-accent">{t("chat.replyingToAssistant")}</p>
             <details>
               <summary className="cursor-pointer list-none whitespace-pre-wrap wrap-break-word text-sm text-muted">
                 {turn.reply.text.length > 180

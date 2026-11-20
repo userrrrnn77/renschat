@@ -11,8 +11,8 @@ type PreviewState =
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 export function useFilePreview(file: FileBlock): PreviewState {
-  const { fileId, preview } = file;
-  const requestKey = `${fileId}:${preview}`;
+  const { fileId, preview, localFile } = file;
+  const requestKey = `${localFile ? "draft" : "saved"}:${fileId}:${preview}`;
 
   const [result, setResult] = useState<{
     key: string;
@@ -36,6 +36,29 @@ export function useFilePreview(file: FileBlock): PreviewState {
       const endpoint = isText ? "content" : "download";
 
       try {
+        if (localFile) {
+          if (isText) {
+            const limit = 200 * 1024;
+            const text = await localFile.slice(0, limit).text();
+
+            publish({
+              kind: "text",
+              text,
+              truncated: localFile.size > limit,
+            });
+          } else {
+            const blob =
+              preview === "pdf"
+                ? localFile.slice(0, localFile.size, "application/pdf")
+                : localFile;
+
+            objectUrl = URL.createObjectURL(blob);
+            publish({ kind: "blob", url: objectUrl });
+          }
+
+          return;
+        }
+
         const response = await fetch(
           `${API_BASE}/api/files/${encodeURIComponent(fileId)}/${endpoint}`,
           {
@@ -92,7 +115,7 @@ export function useFilePreview(file: FileBlock): PreviewState {
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [fileId, preview, requestKey]);
+  }, [fileId, preview, requestKey, localFile]);
 
   if (preview === "none") return { kind: "none" };
   if (result?.key !== requestKey) return { kind: "loading" };

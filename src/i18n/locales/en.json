@@ -33,9 +33,11 @@
     "videoLoadError": "Failed to load video"
   },
   "chat": {
+    "commandNotExecuted": "The requested command did not run. Try sending it again.",
     "fileActionIncomplete": "The file request did not complete. Check the available cards or specify the file name.",
     "quoteSelection": "Reply to selection",
     "replyingToAssistant": "Replying to RensChat",
+    "moreSources": "+{{count}} more",
     "cancelQuote": "Remove quote",
     "pasteFilename": "pasted_text_{{index}}.txt",
     "pasteContents": "Contents of {{filename}}",
@@ -173,6 +175,9 @@
     "yourCode": "Your donation code"
   },
   "errors": {
+    "commandInvalidInput": "Invalid command input. Check the arguments or expression.",
+    "commandNotAllowed": "This command is unavailable in RensChat.",
+    "commandFailed": "The command could not be processed.",
     "credits": "No credits left for this model. Open donation or use a free model.",
     "network": "Connection lost. Please try again.",
     "provider": "AI provider is busy. Try again in a few minutes.",
@@ -182,50 +187,43 @@
     "unknown": "Something went wrong while processing the request."
   },
   "landing": {
-    "badge": "Generative AI Assistant",
+    "brand": "RensChat",
     "ctaLogin": "Sign in",
-    "ctaPrimary": "Start for free",
-    "ctaSecondary": "Explore features",
-    "features": {
-      "chart": {
-        "desc": "Visualize numeric trends right in chat without a spreadsheet.",
-        "title": "Charts & graphs"
+    "ctaPrimary": "Debug my code",
+    "heroTitle": "Where did the zero go?",
+    "heroSubtitle": "Bring a snippet or a stack trace to RensChat. Trace the cause, compare the fix, and check the result in your project.",
+    "example": {
+      "caption": "Worked example · TypeScript",
+      "result": "Stock is 0, but the page displays “N/A”.",
+      "showFix": "Compare the fix",
+      "explanation": "The || operator uses the fallback when qty is 0. The ?? operator only uses the fallback when qty is null or undefined, so a stock count of 0 stays visible."
+    },
+    "work": {
+      "title": "Up next: everyday office work",
+      "description": "RensChat focuses on coding today. These are the workflows we plan to support next.",
+      "finance": {
+        "title": "Finance and accounting",
+        "example": "Turn a transaction CSV into an income and expense summary with figures you can trace back to the source rows."
       },
-      "file": {
-        "desc": "Generate code, documents, or PDF reports without copy-paste.",
-        "title": "Create & download files"
+      "reports": {
+        "title": "Work reports",
+        "example": "Turn daily notes into a weekly report covering progress, blockers, and decisions needed."
       },
-      "image": {
-        "desc": "Create images from a prompt. FLUX.2 Klein is free with a daily limit.",
-        "title": "Image generation"
-      },
-      "rag": {
-        "desc": "Upload PDF, DOCX, or images; RensChat answers from the relevant document.",
-        "title": "Document RAG"
-      },
-      "table": {
-        "desc": "Compare data, product specs, or survey results in clean tables.",
-        "title": "Interactive tables"
-      },
-      "video": {
-        "desc": "Python-rendered graphic animations (free) or Cosmos3 Nano videos via optional donation.",
-        "title": "Video generation"
+      "meetings": {
+        "title": "Meetings and coordination",
+        "example": "Turn meeting notes into a list of decisions, tasks, owners, and deadlines."
       }
     },
-    "featuresTitle": "What it can do",
-    "heroSubtitle": "RensChat combines chat, document retrieval (RAG), and media generation in one interface. Core features stay free.",
-    "heroTitle": "Chat with an AI that builds tables, charts, files, images, and videos",
-    "learnMore": "Learn more:",
-    "seo": {
-      "description": "RensChat is a generative AI chat: tables, charts, code, PDFs, images, and video. Document RAG, adaptive personality, and free core features.",
-      "title": "RensChat — Generative AI Assistant with Tables, Charts, Files, Images & Video"
+    "video": {
+      "status": "Coming soon",
+      "formats": "Text-to-video (T2V) and video-to-video (V2V)"
     },
-    "techDesc": "RensChat is built on large language models and media generation models via the NVIDIA API. Generated media is stored for up to 24 hours.",
-    "techFact1": "Language models: NVIDIA Nemotron (main LLM, vision, and safety).",
-    "techFact2": "Image models: FLUX.2 Klein (free, daily limit) and FLUX.3 Image Klein (donation credits).",
-    "techFact3": "Video models: NVIDIA Cosmos3 Nano (donation credits) and Python sandbox (free).",
-    "techFact4": "Media retention: 24 hours. Chat history stays tied to your account.",
-    "techTitle": "Under the hood"
+    "footerNav": "RensChat information",
+    "copyright": "© {{year}} RensChat",
+    "seo": {
+      "title": "RensChat | Debug your code",
+      "description": "Work through code and stack traces with RensChat. Find the cause of an error, compare code changes, and check the result in your project."
+    }
   },
   "language": {
     "en": "English",
@@ -279,6 +277,7 @@
     "toastSuccess": "Personality preferences saved"
   },
   "preview": {
+    "imageAlt": "Image preview",
     "openFile": "Preview {{name}}",
     "empty": "This file is empty.",
     "partial": "Only part of this file is shown. Download it to view the full contents.",

@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import { useUIStore } from "../store/uiStore";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useSessionsStore } from "../store/sessionsStore";
 import { useChatStore } from "../store/chatStore";
 import { MessageList } from "../components/chat/MessageList";
 import { Composer } from "../components/composer/Composer";
-import { EmptyState } from "../components/chat/EmptyState";
+import { EmptyState, StarterPrompts } from "../components/chat/EmptyState";
 import { useFileDrop } from "../hooks/useFileDrop";
 import { useComposerStore } from "../store/composerStore";
 import { DropOverlay } from "../components/composer/DropOverlay";
@@ -14,15 +15,27 @@ import { useSeo } from "../lib/seo";
 
 export function ChatPage() {
   const { id } = useParams();
+  const closePreview = useUIStore((s) => s.closePreview);
+
+  useLayoutEffect(() => {
+    return () => {
+      closePreview();
+    };
+  }, [id, closePreview]);
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { open, bySession } = useChatStore();
-  const { upsert } = useSessionsStore();
+
+  const open = useChatStore((s) => s.open);
+  const upsert = useSessionsStore((s) => s.upsert);
   const addFiles = useComposerStore((s) => s.addFiles);
 
-  const session = bySession[id || ""];
-  const isNew = !id;
-  const isEmpty = !isNew && session?.loaded && session.messages.length === 0;
+  const sessionId = id ?? "new";
+
+  const showWelcome = useChatStore((s) => {
+    if (!id) return true;
+    const session = s.bySession[id];
+    return Boolean(session?.loaded && session.messages.length === 0);
+  });
 
   useSeo({
     title: "RensChat",
@@ -37,6 +50,7 @@ export function ChatPage() {
 
   const handleFiles = async (files: File[]) => {
     let targetId = id;
+
     if (!targetId) {
       try {
         const newSession = await api.sessions.create();
@@ -47,35 +61,33 @@ export function ChatPage() {
         return;
       }
     }
+
     if (targetId) addFiles(targetId, files, targetId);
   };
 
   const isDragging = useFileDrop(handleFiles);
+  const composer = <Composer sessionId={sessionId} isNew={!id} />;
 
   return (
-    <div className="flex flex-col h-full relative">
+    <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
       <DropOverlay isVisible={isDragging} />
 
-      {isNew ? (
-        <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full px-4">
-          <EmptyState />
-          <div className="mt-8">
-            <Composer sessionId="new" isNew />
-          </div>
-        </div>
-      ) : isEmpty ? (
-        <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full px-4">
-          <EmptyState sessionId={id} />
-          <div className="mt-8">
-            <Composer sessionId={id} />
-          </div>
+      {showWelcome ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 sm:px-6">
+          <section className="mx-auto my-auto grid w-full max-w-3xl gap-5 py-8 md:gap-6 md:py-14">
+            <EmptyState />
+            {composer}
+            <StarterPrompts sessionId={sessionId} />
+          </section>
         </div>
       ) : (
         <>
-          <MessageList sessionId={id || ""} />
-          <Composer sessionId={id || ""} />
+          <MessageList key={sessionId} sessionId={sessionId} />
+          <div className="shrink-0 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+            {composer}
+          </div>
         </>
       )}
-    </div>
+    </main>
   );
 }

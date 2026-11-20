@@ -72,7 +72,18 @@ export function FilePreviewPanel({ file, onClose }: Props) {
 
           {!unavailable && (
             <a
-              href={downloadUrl}
+              onClick={(event) => {
+                if (!file.localFile) return;
+                event.preventDefault();
+
+                const url = URL.createObjectURL(file.localFile);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = file.name;
+                link.click();
+                window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }}
+              href={file.localFile ? "#" : downloadUrl}
               download
               aria-label={t("common.download")}
               className="rounded-md p-2 text-muted hover:bg-surface2">

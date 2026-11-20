@@ -1,5 +1,8 @@
 // src/store/chatStore.ts
+
 import { create } from "zustand";
+import { matchPath } from "react-router";
+import { useUIStore } from "./uiStore";
 import { fetchApi } from "../lib/api";
 import { parseSse } from "../lib/sse";
 import type {
@@ -13,6 +16,34 @@ import type {
 import { useSessionsStore } from "./sessionsStore";
 import { useComposerStore } from "./composerStore";
 import { decodeUserTurn } from "../lib/userTurn";
+
+async function readChatHttpError(
+  res: Response,
+): Promise<{ code: string; message: string }> {
+  const fallback = {
+    code: `HTTP_${res.status}`,
+    message: `Permintaan chat gagal (HTTP ${res.status}).`,
+  };
+
+  try {
+    const payload = await res.json();
+    const error = payload?.error;
+
+    return {
+      code:
+        typeof error?.code === "string" && error.code.trim()
+          ? error.code
+          : fallback.code,
+      message:
+        typeof error?.message === "string" && error.message.trim()
+          ? error.message
+          : fallback.message,
+    };
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") throw err;
+    return fallback;
+  }
+}
 
 export interface EditingMessage {
   messageId: string;
@@ -73,6 +104,9 @@ function mapServerMessage(m: ServerMessage): ChatMessage {
     role: m.role === "user" ? "user" : "assistant",
     blocks: m.blocks,
     status: m.status,
+    ...(m.status === "error" && m.errorCode
+      ? { error: { code: m.errorCode, message: m.errorCode } }
+      : {}),
     createdAt: m.createdAt,
     ...(m.sources !== undefined ? { sources: m.sources } : {}),
     ...(m.truncated ? { truncated: true } : {}),
@@ -246,7 +280,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
       );
 
-      if (!res.ok) throw new Error("HTTP error");
+      if (!res.ok) {
+        const error = await readChatHttpError(res);
+        set((s) =>
+          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+            status: "error",
+            error,
+          }),
+        );
+        return;
+      }
 
       await consumeStream(
         set,
@@ -477,6 +520,7 @@ async function consumeStream(
   body: ReadableStream<Uint8Array>,
   localUserId?: string,
 ): Promise<void> {
+  let autoOpened = false;
   const stream = parseSse(body);
   for await (const chunk of stream) {
     if (chunk.event === "message") continue;
@@ -507,6 +551,29 @@ async function consumeStream(
       continue;
     }
     handleEvent(set, get, sessionId, assistantIdRef.current, chunk.event, data);
+
+    if (autoOpened || chunk.event !== "tool.end") continue;
+
+    const activeChat = matchPath("/chat/:id", window.location.pathname);
+    if (activeChat?.params.id !== sessionId) continue;
+
+    const { callId } = data as { callId: string };
+    const message = get().bySession[sessionId]?.messages.find(
+      (item) => item.id === assistantIdRef.current,
+    );
+
+    const tool = message?.tools?.find((item) => item.callId === callId);
+    if (!message || tool?.status !== "ok") continue;
+    if (tool.name !== "present_files" && tool.name !== "create_file") continue;
+
+    const file = message.blocks
+      .slice(tool.beforeIndex)
+      .find((block) => block?.type === "file" && block.preview !== "none");
+
+    if (file?.type !== "file") continue;
+
+    autoOpened = true;
+    useUIStore.getState().openPreview(file);
   }
 }
 

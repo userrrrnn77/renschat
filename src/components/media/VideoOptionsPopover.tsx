@@ -50,7 +50,11 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-surface2 hover:bg-line border border-line text-ink transition-colors"
         aria-haspopup="dialog"
         aria-expanded={open}>
-        <span>{selection.videoAspect}</span>
+        <span>
+          {selection.videoAspect === "auto"
+            ? "Rasio otomatis"
+            : selection.videoAspect}
+        </span>
         <span className="text-muted">·</span>
         <span className="text-muted">
           {engine === "auto"
@@ -80,7 +84,7 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
                 {t("media.ratio")}
               </p>
               <div className="flex gap-2">
-                {(["16:9", "9:16"] as const).map((aspect) => (
+                {(["auto", "16:9", "9:16"] as const).map((aspect) => (
                   <button
                     key={aspect}
                     type="button"
@@ -91,13 +95,18 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
                         ? "border-accent bg-accent/10"
                         : "border-line hover:bg-surface2",
                     )}>
-                    <span
-                      className={cn(
-                        "border border-muted/50 rounded-sm",
-                        aspect === "16:9" ? "w-10 h-6" : "w-6 h-10",
-                      )}
-                    />
-                    <span className="text-xs">{aspect}</span>
+                    {aspect !== "auto" && (
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "border border-muted/50 rounded-sm",
+                          aspect === "16:9" ? "w-10 h-6" : "w-6 h-10",
+                        )}
+                      />
+                    )}
+                    <span className="text-xs">
+                      {aspect === "auto" ? "Otomatis" : aspect}
+                    </span>
                   </button>
                 ))}
               </div>

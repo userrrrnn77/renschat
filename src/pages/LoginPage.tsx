@@ -82,7 +82,9 @@ export function LoginPage() {
           <div className="absolute top-0 right-0 w-100 h-100 bg-white/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
           <div className="absolute bottom-0 left-0 w-75 h-75 bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
 
-          <div className="relative z-10 flex items-center gap-3">
+          <div
+            className="relative z-10 flex items-center gap-3 cursor-pointer"
+            onClick={() => navigate("/")}>
             <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
               <SparkleLogo className="w-5 h-5 text-white" animate />
             </div>

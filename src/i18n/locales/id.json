@@ -32,9 +32,11 @@
     "videoLoadError": "Gagal memuat video"
   },
   "chat": {
+    "commandNotExecuted": "Perintah yang diminta belum dijalankan. Coba kirim ulang.",
     "fileActionIncomplete": "Permintaan file belum selesai. Periksa kartu yang tersedia atau sebutkan nama file yang kamu maksud.",
     "quoteSelection": "Balas kutipan",
     "replyingToAssistant": "Membalas RensChat",
+    "moreSources": "+{{count}} lagi",
     "cancelQuote": "Batalkan kutipan",
     "pasteFilename": "pasted_text_{{index}}.txt",
     "pasteContents": "Isi {{filename}}",
@@ -170,6 +172,9 @@
     "yourCode": "Kode donasi kamu"
   },
   "errors": {
+    "commandInvalidInput": "Input perintah tidak valid. Periksa argumen atau ekspresinya.",
+    "commandNotAllowed": "Perintah ini tidak tersedia di RensChat.",
+    "commandFailed": "Perintah gagal diproses.",
     "credits": "Kredit habis untuk model ini. Buka donasi atau gunakan model gratis.",
     "network": "Koneksi terputus. Silakan coba kembali.",
     "provider": "Penyedia AI sedang sibuk. Coba lagi beberapa menit lagi.",
@@ -179,50 +184,43 @@
     "unknown": "Terjadi kesalahan saat memproses permintaan."
   },
   "landing": {
-    "badge": "Asisten AI Generatif",
+    "brand": "RensChat",
     "ctaLogin": "Masuk",
-    "ctaPrimary": "Mulai gratis",
-    "ctaSecondary": "Pelajari fitur",
-    "features": {
-      "chart": {
-        "desc": "Visualisasikan tren angka langsung di chat tanpa perlu spreadsheet.",
-        "title": "Grafik & chart"
+    "ctaPrimary": "Bahas kode gue",
+    "heroTitle": "Kok angka nolnya hilang?",
+    "heroSubtitle": "Bawa potongan kode atau stack trace ke RensChat. Telusuri penyebabnya, bandingkan perbaikannya, lalu cek hasilnya di project lu.",
+    "example": {
+      "caption": "Contoh debugging · TypeScript",
+      "result": "Stoknya 0, tapi yang tampil malah “N/A”.",
+      "showFix": "Lihat perbaikannya",
+      "explanation": "Operator || memakai nilai pengganti saat qty bernilai 0. Operator ?? hanya memakai nilai pengganti saat qty bernilai null atau undefined. Stok 0 tetap tampil sebagai 0."
+    },
+    "work": {
+      "title": "Berikutnya, pekerjaan kantoran",
+      "description": "Saat ini RensChat fokus membantu coding. Berikut beberapa pekerjaan yang ingin kami dukung selanjutnya.",
+      "finance": {
+        "title": "Keuangan dan akuntansi",
+        "example": "Dari CSV transaksi ke rekap pemasukan dan pengeluaran yang bisa ditelusuri kembali ke baris sumber."
       },
-      "file": {
-        "desc": "Bikin file kode, dokumen, atau laporan PDF tanpa copy-paste manual.",
-        "title": "Buat & unduh file"
+      "reports": {
+        "title": "Laporan kerja",
+        "example": "Dari catatan harian ke laporan mingguan berisi progres, kendala, dan keputusan yang dibutuhkan."
       },
-      "image": {
-        "desc": "Buat gambar dari deskripsi singkat. Model FLUX.2 Klein gratis dengan limit harian.",
-        "title": "Generate gambar"
-      },
-      "rag": {
-        "desc": "Unggah PDF, DOCX, atau gambar; RensChat menjawab dari dokumen yang relevan.",
-        "title": "RAG dokumen"
-      },
-      "table": {
-        "desc": "Bandingkan data, spesifikasi produk, atau hasil survei dalam tabel yang rapi.",
-        "title": "Tabel interaktif"
-      },
-      "video": {
-        "desc": "Animasi grafis lewat kode Python (gratis), atau video Cosmos3 Nano lewat donasi opsional.",
-        "title": "Generate video"
+      "meetings": {
+        "title": "Rapat dan koordinasi",
+        "example": "Dari catatan rapat ke daftar keputusan, tugas, penanggung jawab, dan tenggat."
       }
     },
-    "featuresTitle": "Apa saja yang bisa dilakukan",
-    "heroSubtitle": "RensChat menggabungkan percakapan, retrieval dokumen (RAG), dan generasi media dalam satu antarmuka. Fitur inti tetap gratis.",
-    "heroTitle": "Chat dengan AI yang bisa bikin tabel, grafik, file, gambar, dan video",
-    "learnMore": "Baca selengkapnya:",
-    "seo": {
-      "description": "RensChat adalah asisten AI generatif untuk chat: tabel, grafik, kode, PDF, gambar, dan video. RAG dokumen, personality adaptif, dan fitur inti gratis.",
-      "title": "RensChat — Asisten AI Generatif dengan Tabel, Grafik, File, Gambar & Video"
+    "video": {
+      "status": "Coming soon",
+      "formats": "Text-to-video (T2V) dan video-to-video (V2V)"
     },
-    "techDesc": "RensChat dibangun di atas model bahasa besar dan model generasi media via NVIDIA API. Semua media hasil generate disimpan maksimal 24 jam.",
-    "techFact1": "Model bahasa: NVIDIA Nemotron (LLM utama, vision, dan safety).",
-    "techFact2": "Model gambar: FLUX.2 Klein (gratis, limit harian) dan FLUX.3 Image Klein (kredit donasi).",
-    "techFact3": "Model video: NVIDIA Cosmos3 Nano (kredit donasi) dan Python sandbox (gratis).",
-    "techFact4": "Retensi media: 24 jam. Data dan riwayat chat terikat ke akun Anda.",
-    "techTitle": "Di balik layar"
+    "footerNav": "Informasi RensChat",
+    "copyright": "© {{year}} RensChat",
+    "seo": {
+      "title": "RensChat | Teman debugging",
+      "description": "Bahas kode dan stack trace bersama RensChat. Temukan penyebab error, bandingkan perubahan kode, dan cek hasilnya di project lu."
+    }
   },
   "language": {
     "en": "Inggris",
@@ -276,6 +274,7 @@
     "toastSuccess": "Preferensi personality disimpan"
   },
   "preview": {
+    "imageAlt": "Pratinjau gambar",
     "openFile": "Buka pratinjau {{name}}",
     "empty": "File ini kosong.",
     "partial": "Hanya sebagian isi yang ditampilkan. Unduh file untuk melihat isi lengkap.",

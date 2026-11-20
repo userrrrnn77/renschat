@@ -1,5 +1,6 @@
 // REPLACE: seluruh komponen
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useUIStore } from "../../store/uiStore";
 import type { SourceRef } from "../../types";
 import { api } from "../../lib/api";
@@ -8,6 +9,7 @@ import { Spinner } from "../ui/Spinner";
 const MAX_VISIBLE = 6;
 
 export function SourcesList({ sources }: { sources: SourceRef[] }) {
+  const { t } = useTranslation();
   const openPreview = useUIStore((s) => s.openPreview);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -81,7 +83,9 @@ export function SourcesList({ sources }: { sources: SourceRef[] }) {
         </button>
       ))}
       {overflow > 0 && (
-        <span className="text-xs text-muted px-2 py-1">+{overflow} lagi</span>
+        <span className="text-xs text-muted px-2 py-1">
+          {t("chat.moreSources", { count: overflow })}
+        </span>
       )}
     </div>
   );

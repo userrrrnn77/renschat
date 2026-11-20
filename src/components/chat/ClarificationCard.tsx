@@ -6,6 +6,40 @@ import type { PendingClarification } from "../../types";
 import { useTranslation } from "react-i18next";
 import { Spinner } from "../ui/Spinner";
 
+function RatioPreview({ ratio }: { ratio: string }) {
+  const width = ratio === "16:9" ? 112 : ratio === "9:16" ? 45 : 76;
+  const height = ratio === "16:9" ? 63 : ratio === "9:16" ? 80 : 76;
+
+  return (
+    <span
+      aria-hidden="true"
+      className="mb-2 flex h-20 items-center justify-center">
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 160 100"
+        preserveAspectRatio="xMidYMid slice"
+        className="rounded-md border border-line"
+        focusable="false">
+        <rect width="160" height="100" fill="#afd6e3" />
+        <circle cx="91" cy="25" r="10" fill="#ffda87" />
+        <path
+          d="M0 62 32 34 58 56 86 31 121 57 145 40 160 53V80H0Z"
+          fill="#759795"
+        />
+        <path
+          d="M0 70 36 49 62 65 83 47 113 67 140 55 160 66V81H0Z"
+          fill="#416e70"
+        />
+        <rect y="73" width="160" height="27" fill="#669da5" />
+        <path d="M68 78H91L87 82H73Z" fill="#68473e" />
+        <path d="M80 56V76H69Z" fill="#fff2d8" />
+        <path d="M82 61 90 76H82Z" fill="#d68161" />
+      </svg>
+    </span>
+  );
+}
+
 export function ClarificationCard({
   sessionId,
   clarification,
@@ -13,9 +47,31 @@ export function ClarificationCard({
   sessionId: string;
   clarification: PendingClarification;
 }) {
-  const { t } = useTranslation();
+  return (
+    <Question
+      key={clarification.questionId}
+      sessionId={sessionId}
+      clarification={clarification}
+    />
+  );
+}
 
+function Question({
+  sessionId,
+  clarification,
+}: {
+  sessionId: string;
+  clarification: PendingClarification;
+}) {
+  const { t } = useTranslation();
   const respond = useChatStore((s) => s.respond);
+
+  const isRatioPicker =
+    !clarification.multi &&
+    clarification.options.length >= 2 &&
+    clarification.options.every((option) =>
+      /^(1:1|16:9|9:16)$/.test(option.value ?? ""),
+    );
 
   const [selected, setSelected] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -84,7 +140,13 @@ export function ClarificationCard({
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div
+        className={cn(
+          "gap-2",
+          isRatioPicker
+            ? "grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(7rem,1fr))]"
+            : "flex flex-col",
+        )}>
         {clarification.options.map((opt, i) => {
           const val = opt.value ?? opt.label;
           const isSelected = selected.includes(val);
@@ -100,6 +162,7 @@ export function ClarificationCard({
                   : "border-line hover:bg-surface2",
                 disabled && "opacity-60 cursor-not-allowed",
               )}>
+              {isRatioPicker && <RatioPreview ratio={val} />}
               {opt.label}
             </button>
           );

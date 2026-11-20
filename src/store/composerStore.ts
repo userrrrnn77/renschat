@@ -132,6 +132,7 @@ export const useComposerStore = create<ComposerState>((set, get) => {
         set((s) => ({
           drafts: patchAttachment(s.drafts, key, upload.localId, {
             fileId: ref.id,
+            mime: ref.mime,
             state: "ready" as UploadState,
             progress: 100,
           }),

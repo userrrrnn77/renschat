@@ -1,15 +1,14 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useChatStore } from "../../store/chatStore";
 import { UserMessage } from "./UserMessage";
 import { AssistantMessage } from "./AssistantMessage";
 import { Skeleton } from "../ui/Skeleton";
 import { useStickToBottom } from "../../hooks/useStickToBottom";
-import { useTranslation } from "react-i18next";
 import { SelectionReplyButton } from "./SelectionReplyButton";
 
 export function MessageList({ sessionId }: { sessionId: string }) {
   const { t } = useTranslation();
-
   const session = useChatStore((s) => s.bySession[sessionId]);
   const loadOlder = useChatStore((s) => s.loadOlder);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,7 +19,7 @@ export function MessageList({ sessionId }: { sessionId: string }) {
 
   if (!session?.loaded) {
     return (
-      <div className="flex-1 p-8 space-y-6 max-w-3xl mx-auto w-full">
+      <div className="min-h-0 overflow-hidden flex-1 p-8 space-y-6 max-w-3xl mx-auto w-full">
         <Skeleton className="h-20 w-2/3 ml-auto" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-20 w-1/2 ml-auto" />
@@ -31,7 +30,7 @@ export function MessageList({ sessionId }: { sessionId: string }) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 md:px-8 py-6 scroll-smooth">
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 md:py-10">
       <SelectionReplyButton
         key={sessionId}
         sessionId={sessionId}
@@ -49,7 +48,7 @@ export function MessageList({ sessionId }: { sessionId: string }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-8 md:gap-10">
           {messages.map((msg, i) =>
             msg.role === "user" ? (
               <UserMessage key={msg.id} message={msg} sessionId={sessionId} />

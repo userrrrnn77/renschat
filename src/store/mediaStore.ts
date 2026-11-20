@@ -11,14 +11,14 @@ export type MediaVideoEngine = "auto" | "cosmos" | "python";
 export interface MediaSelection {
   mode: MediaMode;
   imageModel: MediaImageModel;
-  videoAspect: MediaVideoAspect;
+  videoAspect: MediaVideoAspect | "auto";
   videoEngine: MediaVideoEngine;
 }
 
 const DEFAULT_SELECTION: MediaSelection = {
   mode: "auto",
   imageModel: "flux2-klein",
-  videoAspect: "16:9",
+  videoAspect: "auto",
   videoEngine: "auto",
 };
 
@@ -77,7 +77,7 @@ export function buildGeneration(
 ): GenerationInput | undefined {
   const imageExplicit = selection.imageModel === "flux3-klein";
   const videoExplicit =
-    selection.videoEngine !== "auto" || selection.videoAspect !== "16:9";
+    selection.videoEngine !== "auto" || selection.videoAspect !== "auto";
 
   if (selection.mode === "auto" && !imageExplicit && !videoExplicit) {
     return undefined;
@@ -87,7 +87,9 @@ export function buildGeneration(
   if (imageExplicit) gen.imageModel = selection.imageModel;
   if (videoExplicit) {
     gen.video = {
-      aspect: selection.videoAspect,
+      ...(selection.videoAspect === "auto"
+        ? {}
+        : { aspect: selection.videoAspect }),
       engine: selection.videoEngine,
     };
   }

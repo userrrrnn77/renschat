@@ -26,19 +26,13 @@ export interface AttachmentUpload {
 }
 
 export const resolveMime = (file: File): string => {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  if (
-    ["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "pdf"].includes(ext)
-  ) {
-    return file.type || (ext === "pdf" ? "application/pdf" : `image/${ext}`);
-  }
-  if (["docx", "xlsx", "pptx", "odt", "odp"].includes(ext)) {
-    return file.type || `application/vnd.openxmlformats-officedocument.${ext}`;
-  }
-  if (ext === "md" || ext === "markdown") return "text/markdown";
-  if (ext === "csv") return "text/csv";
-  if (ext === "json") return "application/json";
-  return "text/plain";
+  const ext = file.name.split(".").pop()?.toLowerCase();
+
+  // Sebagian OS memberi file source TypeScript MIME video/mp2t.
+  // Backend tetap memeriksa isinya untuk membedakan source dan video.
+  if (ext === "ts" || ext === "tsx") return "text/plain";
+
+  return file.type || "application/octet-stream";
 };
 
 export const uploadFile = async (
@@ -73,6 +67,16 @@ export const uploadFile = async (
 
     throwIfAborted();
     onState("uploading", 0);
+
+    const payload = await file.arrayBuffer();
+    throwIfAborted();
+
+    if (payload.byteLength !== file.size) {
+      throw new Error(
+        `File read failed: expected ${file.size} bytes, read ${payload.byteLength}`,
+      );
+    }
+
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadUrl);
@@ -96,12 +100,27 @@ export const uploadFile = async (
       const onAbort = (): void => xhr.abort();
       if (signal) signal.addEventListener("abort", onAbort, { once: true });
 
-      xhr.send(file);
+      xhr.send(payload);
     });
 
     throwIfAborted();
     onState("completing", 100);
-    await api.files.complete(fileId, signal);
+    const completed = (await api.files.complete(fileId, signal)) as Pick<
+      FileMeta,
+      "mime" | "status" | "indexStatus"
+    >;
+
+    const attachment: AttachmentRef = {
+      id: fileId,
+      name: file.name,
+      mime: completed.mime,
+      size: file.size,
+    };
+
+    if (completed.status === "ready") {
+      onState("ready", 100, undefined, completed.indexStatus ?? null);
+      return attachment;
+    }
 
     throwIfAborted();
     onState("processing", 100);
@@ -131,7 +150,7 @@ export const uploadFile = async (
     }
 
     onState("ready", 100, undefined, finalIndexStatus);
-    return { id: fileId, name: file.name, mime, size: file.size };
+    return attachment;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Upload gagal";
     onState("failed", 0, message);

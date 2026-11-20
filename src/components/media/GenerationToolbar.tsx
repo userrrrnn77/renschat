@@ -1,22 +1,18 @@
-// src/components/media/GenerationToolbar.tsx
 import { useEffect } from "react";
-import { Image, Video } from "lucide-react";
-import { useMediaStore } from "../../store/mediaStore";
-import { ImageModelDropdown } from "./ImageModelDropdown";
-import { VideoOptionsPopover } from "./VideoOptionsPopover";
-import { CreditBadge } from "./CreditBadge";
-import { cn } from "../../lib/cn";
+import { Image } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { cn } from "../../lib/cn";
+import { useMediaStore } from "../../store/mediaStore";
+import { CreditBadge } from "./CreditBadge";
+import { ImageModelDropdown } from "./ImageModelDropdown";
 
-export function GenerationToolbar({
-  composerKey,
-  disabled,
-}: {
+type GenerationToolbarProps = {
   composerKey: string;
   disabled: boolean;
-}) {
-  const { t } = useTranslation();
+};
 
+export function GenerationToolbar({ disabled }: GenerationToolbarProps) {
+  const { t } = useTranslation();
   const mode = useMediaStore((s) => s.selection.mode);
   const setMode = useMediaStore((s) => s.setMode);
   const entitlements = useMediaStore((s) => s.entitlements);
@@ -26,46 +22,33 @@ export function GenerationToolbar({
     if (entitlements === null) void fetchEntitlements();
   }, [entitlements, fetchEntitlements]);
 
-  // Media kill switch dimatikan → sembunyikan toolbar.
+  useEffect(() => {
+    if (mode === "video") setMode("auto");
+  }, [mode, setMode]);
+
   if (entitlements !== null && !entitlements.mediaEnabled) return null;
 
+  const imageSelected = mode === "image";
+
   return (
-    <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+    <div className="flex min-h-9 flex-wrap items-center gap-1.5">
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setMode(mode === "image" ? "auto" : "image")}
-        aria-pressed={mode === "image"}
+        aria-pressed={imageSelected}
+        onClick={() => setMode(imageSelected ? "auto" : "image")}
         className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors",
-          mode === "image"
-            ? "bg-accent/10 border-accent text-ink"
-            : "bg-surface2 border-line text-muted hover:text-ink",
-          disabled && "opacity-50 cursor-not-allowed",
+          "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+          imageSelected
+            ? "border-accent bg-accent/10 text-ink"
+            : "border-line bg-surface2 text-muted hover:text-ink",
+          disabled && "cursor-not-allowed opacity-50",
         )}>
-        <Image className="w-3.5 h-3.5" />
+        <Image className="h-3.5 w-3.5" />
         {t("media.image")}
       </button>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setMode(mode === "video" ? "auto" : "video")}
-        aria-pressed={mode === "video"}
-        className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors",
-          mode === "video"
-            ? "bg-accent/10 border-accent text-ink"
-            : "bg-surface2 border-line text-muted hover:text-ink",
-          disabled && "opacity-50 cursor-not-allowed",
-        )}>
-        <Video className="w-3.5 h-3.5" />
-        {t("media.video")}
-      </button>
 
-      {mode === "image" && <ImageModelDropdown />}
-      {mode === "video" && <VideoOptionsPopover composerKey={composerKey} />}
-      {mode === "auto" && <ImageModelDropdown />}
-
+      <ImageModelDropdown />
       <CreditBadge />
     </div>
   );

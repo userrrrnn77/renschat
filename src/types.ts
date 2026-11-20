@@ -16,6 +16,7 @@ export interface CodeBlock {
 export interface FileBlock {
   type: "file";
   fileId: string;
+  localFile?: File;
   name: string;
   mime: string;
   size: number;
@@ -247,6 +248,7 @@ export interface ServerMessage {
   blocks: Block[];
   status: MessageStatus;
   truncated?: boolean;
+  errorCode?: string;
   createdAt: string;
   attachmentIds?: string[];
   sources?: SourceRef[];

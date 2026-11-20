@@ -15,8 +15,10 @@ export function errorKind(code: string | undefined): ErrorKind {
     case "DISCONNECTED":
       return "network";
     case "RATE_LIMITED":
+    case "COMMAND_RATE_LIMIT":
       return "rate";
     case "JOB_TIMEOUT":
+    case "COMMAND_TIMEOUT":
       return "timeout";
     case "PROVIDER_REFUSED":
       return "refused";
@@ -44,5 +46,14 @@ export function isRetryable(code: string | undefined): boolean {
 }
 
 export function errorI18nKey(code: string | undefined): string {
-  return `errors.${errorKind(code)}`;
+  switch (code) {
+    case "COMMAND_INVALID_INPUT":
+      return "errors.commandInvalidInput";
+    case "COMMAND_NOT_ALLOWED":
+      return "errors.commandNotAllowed";
+    case "COMMAND_FAILED":
+      return "errors.commandFailed";
+    default:
+      return `errors.${errorKind(code)}`;
+  }
 }
