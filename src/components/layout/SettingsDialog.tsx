@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { Personality, UsageReport } from "../../types";
+import { createPortal } from "react-dom";
 
 type Tab = "general" | "personality" | "usage";
 
@@ -95,7 +96,7 @@ export function SettingsDialog() {
 
   if (!settingsOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-start">
       {" "}
       {/* FIX: justify-end */}
@@ -427,6 +428,7 @@ export function SettingsDialog() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
