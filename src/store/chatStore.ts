@@ -3,7 +3,8 @@
 import { create } from "zustand";
 import { matchPath } from "react-router";
 import { useUIStore } from "./uiStore";
-import { fetchApi } from "../lib/api";
+import { useToastStore } from "./toastStore";
+import { ApiError, fetchApi } from "../lib/api";
 import { parseSse } from "../lib/sse";
 import type {
   ChatMessage,
@@ -58,6 +59,7 @@ interface ChatState {
       nextCursor: string | null;
       loaded: boolean;
       loading: boolean;
+      olderRequest?: symbol | null;
       streaming: boolean;
       phase: StreamPhase;
       pendingClarification: PendingClarification | null;
@@ -113,6 +115,162 @@ function mapServerMessage(m: ServerMessage): ChatMessage {
   };
 }
 
+type Ticket = { request: string; user: string; assistant: string };
+const tickets = new Map<string, Ticket>();
+const storageKey = (id: string) => "renschat.turn." + id;
+function ticket(id: string): Ticket | undefined {
+  if (tickets.has(id)) return tickets.get(id);
+  try {
+    return (
+      JSON.parse(sessionStorage.getItem(storageKey(id)) ?? "null") ?? undefined
+    );
+  } catch {
+    return undefined;
+  }
+}
+function remember(id: string, value?: Ticket) {
+  if (value) tickets.set(id, value);
+  else tickets.delete(id);
+  try {
+    if (value) sessionStorage.setItem(storageKey(id), JSON.stringify(value));
+    else sessionStorage.removeItem(storageKey(id));
+  } catch {
+    /* private browsing still supports in-memory recovery */
+  }
+}
+type Snapshot = {
+  state: string;
+  messageId: string;
+  userMessageId: string;
+  question:
+    | (Omit<PendingClarification, "timeoutMs" | "receivedAt"> & {
+        expiresAt: string;
+      })
+    | null;
+};
+async function recover(
+  set: SetChatState,
+  get: () => ChatState,
+  id: string,
+  item: Ticket,
+  ac: AbortController,
+) {
+  const pause = () => new Promise((resolve) => setTimeout(resolve, 1500));
+  let missing = 0;
+  while (!ac.signal.aborted && get().controllers[id] === ac) {
+    try {
+      const run = await fetchApi<Snapshot>(
+        `/sessions/${id}/turns/${item.request}`,
+        { signal: ac.signal },
+      );
+      const terminal = ["done", "error", "aborted", "interrupted"].includes(
+        run.state,
+      );
+      const pair = terminal
+        ? await fetchApi<{ messages: ServerMessage[] }>(
+            `/sessions/${id}?pair=${run.userMessageId},${run.messageId}`,
+            { signal: ac.signal },
+          )
+        : null;
+      if (ac.signal.aborted || get().controllers[id] !== ac) return;
+      const history = pair?.messages.map(mapServerMessage) ?? [];
+      set((s) => {
+        const session = s.bySession[id];
+        if (!session) return {};
+        const messages = session.messages.filter(
+          (m) =>
+            ![
+              item.assistant,
+              run.messageId,
+              item.user,
+              run.userMessageId,
+            ].includes(m.id),
+        );
+        const oldUser = session.messages.find(
+          (m) => m.id === item.user || m.id === run.userMessageId,
+        );
+        const oldAssistant = session.messages.find(
+          (m) => m.id === item.assistant || m.id === run.messageId,
+        );
+        const user = history.find((m) => m.role === "user") ?? oldUser;
+        if (user) messages.push({ ...user, id: run.userMessageId });
+        const assistant: ChatMessage = history.find(
+          (m) => m.role === "assistant",
+        ) ?? {
+          ...oldAssistant,
+          id: run.messageId,
+          role: "assistant",
+          blocks: oldAssistant?.blocks ?? [],
+          createdAt: oldAssistant?.createdAt ?? new Date().toISOString(),
+          status: terminal
+            ? run.state === "aborted"
+              ? "aborted"
+              : "error"
+            : "streaming",
+          ...(terminal && run.state !== "aborted"
+            ? { error: { code: "DISCONNECTED", message: "Jawaban terputus." } }
+            : {}),
+        };
+        messages.push(assistant);
+        if (pair)
+          messages.sort(
+            (left, right) =>
+              Date.parse(left.createdAt) - Date.parse(right.createdAt),
+          );
+        const now = Date.now();
+        return {
+          bySession: {
+            ...s.bySession,
+            [id]: {
+              ...session,
+              messages,
+              streaming: !terminal,
+              pendingClarification: run.question
+                ? {
+                    ...run.question,
+                    receivedAt: now,
+                    timeoutMs: Math.max(
+                      0,
+                      Date.parse(run.question.expiresAt) - now,
+                    ),
+                  }
+                : null,
+            },
+          },
+        };
+      });
+      if (terminal) {
+        remember(id);
+        return;
+      }
+    } catch (err) {
+      if (ac.signal.aborted) return;
+      if (
+        err instanceof ApiError &&
+        (err.status === 401 ||
+          err.status === 403 ||
+          (err.status === 404 && ++missing >= 4))
+      ) {
+        remember(id);
+        set((s) =>
+          updateAssistantMessage(s, id, item.assistant, {
+            status: "error",
+            error: {
+              code: "DISCONNECTED",
+              message: "Status jawaban tidak tersedia.",
+            },
+          }),
+        );
+        useToastStore
+          .getState()
+          .push("error", "Status jawaban tidak tersedia.");
+        return;
+      }
+    }
+    await pause();
+  }
+}
+
 export const useChatStore = create<ChatState>((set, get) => ({
   bySession: {},
   controllers: {},
@@ -157,6 +315,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
           },
         },
       }));
+      const pending = ticket(id);
+      if (pending && !get().controllers[id]) {
+        const ac = new AbortController();
+        set((s) => ({ controllers: { ...s.controllers, [id]: ac } }));
+        try {
+          await recover(set, get, id, pending, ac);
+        } finally {
+          if (get().controllers[id] === ac) finalizeStream(set, id);
+        }
+      }
     } catch {
       set((s) => ({
         bySession: {
@@ -169,34 +337,58 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   loadOlder: async (id) => {
     const session = get().bySession[id];
-    if (!session || !session.nextCursor || session.loading) return;
+    if (!session?.nextCursor || session.loading) return;
+
+    const request = Symbol();
+    const cursor = session.nextCursor;
 
     set((s) => ({
-      bySession: { ...s.bySession, [id]: { ...session, loading: true } },
+      bySession: {
+        ...s.bySession,
+        [id]: { ...session, loading: true, olderRequest: request },
+      },
     }));
 
     try {
       const data = await fetchApi<{
         messages: ServerMessage[];
         nextCursor: string | null;
-      }>(`/sessions/${id}?limit=50&cursor=${session.nextCursor}`);
-      const mappedMessages: ChatMessage[] = data.messages.map(mapServerMessage);
+      }>(`/sessions/${id}?limit=50&cursor=${encodeURIComponent(cursor)}`);
 
-      set((s) => ({
-        bySession: {
-          ...s.bySession,
-          [id]: {
-            ...s.bySession[id],
-            messages: [...mappedMessages, ...s.bySession[id].messages],
-            nextCursor: data.nextCursor,
-            loading: false,
+      const older = data.messages.map(mapServerMessage);
+
+      set((s) => {
+        const current = s.bySession[id];
+        if (current?.olderRequest !== request) return s;
+
+        const existingIds = new Set(current.messages.map((m) => m.id));
+        const missing = older.filter((m) => !existingIds.has(m.id));
+
+        return {
+          bySession: {
+            ...s.bySession,
+            [id]: {
+              ...current,
+              messages: [...missing, ...current.messages],
+              nextCursor: data.nextCursor,
+              loading: false,
+              olderRequest: null,
+            },
           },
-        },
-      }));
+        };
+      });
     } catch {
-      set((s) => ({
-        bySession: { ...s.bySession, [id]: { ...session, loading: false } },
-      }));
+      set((s) => {
+        const current = s.bySession[id];
+        if (current?.olderRequest !== request) return s;
+
+        return {
+          bySession: {
+            ...s.bySession,
+            [id]: { ...current, loading: false, olderRequest: null },
+          },
+        };
+      });
     }
   },
 
@@ -260,45 +452,112 @@ export const useChatStore = create<ChatState>((set, get) => ({
       };
     });
 
+    const requestId = editOfMessageId ? undefined : crypto.randomUUID();
+    const pending = requestId
+      ? { request: requestId, user: tempUserId, assistant: tempAssistantId }
+      : undefined;
+    if (pending) remember(sessionId, pending);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/sessions/${sessionId}/messages`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-          },
-          body: JSON.stringify({
-            text,
-            attachmentIds: attachments.map((a) => a.id),
-            ...(generation !== undefined ? { generation } : {}),
-            ...(editOfMessageId !== undefined ? { editOfMessageId } : {}),
-          }),
-          credentials: "include",
-          signal: ac.signal,
-        },
-      );
+      const body = JSON.stringify({
+        text,
+        attachmentIds: attachments.map((a) => a.id),
+        generation,
+        editOfMessageId,
+        requestId,
+        detachable: Boolean(requestId),
+      });
 
-      if (!res.ok) {
-        const error = await readChatHttpError(res);
-        set((s) =>
-          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
-            status: "error",
-            error,
-          }),
+      const deliver = async (): Promise<boolean> => {
+        const res = await fetch(
+          `${API_BASE}/api/sessions/${sessionId}/messages`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "text/event-stream, application/json",
+            },
+            credentials: "include",
+            body,
+            signal: ac.signal,
+          },
         );
-        return;
+
+        if (!res.ok) {
+          const error = await readChatHttpError(res);
+          if (pending && res.status < 500) remember(sessionId);
+          set((s) =>
+            updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+              status: "error",
+              error,
+            }),
+          );
+          return true;
+        }
+
+        if (
+          res.status === 202 &&
+          res.headers.get("content-type")?.includes("application/json")
+        ) {
+          const receipt = await res.json();
+          if (
+            !requestId ||
+            receipt.requestId !== requestId ||
+            receipt.sessionId !== sessionId ||
+            !/^[a-f0-9]{24}$/.test(receipt.userMessageId) ||
+            !/^[a-f0-9]{24}$/.test(receipt.messageId)
+          ) {
+            throw new Error("Invalid turn receipt");
+          }
+          // The existing run owns this request; recover from its persisted status.
+          return true;
+        }
+
+        if (!res.body) throw new Error("Missing stream");
+        await consumeStream(
+          set,
+          get,
+          sessionId,
+          assistantIdRef,
+          res.body,
+          editOfMessageId ?? tempUserId,
+        );
+        return false;
+      };
+
+      let handled: boolean;
+      try {
+        handled = await deliver();
+      } catch (err) {
+        if (
+          !requestId ||
+          ac.signal.aborted ||
+          assistantIdRef.current !== tempAssistantId
+        )
+          throw err;
+        handled = false;
       }
 
-      await consumeStream(
-        set,
-        get,
-        sessionId,
-        assistantIdRef,
-        res.body!,
-        editOfMessageId ?? tempUserId,
-      );
+      if (
+        !handled &&
+        requestId &&
+        !ac.signal.aborted &&
+        assistantIdRef.current === tempAssistantId
+      ) {
+        // One retry before message.start. Both POSTs carry the exact same body.
+        handled = await deliver();
+      }
+      if (pending && ticket(sessionId) && !ac.signal.aborted) {
+        const last = get().bySession[sessionId]?.messages.find(
+          (m) => m.id === assistantIdRef.current,
+        );
+        if (!handled && last && last.status !== "streaming") {
+          remember(sessionId);
+          if (last.status === "done")
+            useSessionsStore.getState().pollTitle(sessionId);
+        } else await recover(set, get, sessionId, pending, ac);
+        return;
+      }
+      if (handled) return;
 
       const current = get().bySession[sessionId]?.messages.find(
         (m) => m.id === assistantIdRef.current,
@@ -307,13 +566,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set((s) =>
           updateAssistantMessage(s, sessionId, assistantIdRef.current, {
             status: "error",
-            error: { code: "DISCONNECTED", message: "Connection lost" },
+            error: current.error ?? {
+              code: "DISCONNECTED",
+              message: "Koneksi terputus",
+            },
           }),
         );
       } else if (current?.status === "done") {
         useSessionsStore.getState().pollTitle(sessionId);
       }
     } catch (err: unknown) {
+      if (pending && !ac.signal.aborted) {
+        await recover(set, get, sessionId, pending, ac);
+        return;
+      }
       if (err instanceof Error && err.name === "AbortError") {
         set((s) =>
           updateAssistantMessage(s, sessionId, assistantIdRef.current, {
@@ -322,15 +588,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }),
         );
       } else {
-        set((s) =>
-          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+        set((s) => {
+          const current = s.bySession[sessionId]?.messages.find(
+            (m) => m.id === assistantIdRef.current,
+          );
+          if (current?.status !== "streaming") return s;
+          return updateAssistantMessage(s, sessionId, current.id, {
             status: "error",
-            error: {
+            error: current.error ?? {
               code: "NETWORK_ERROR",
               message: "Connection lost. Please try again.",
             },
-          }),
-        );
+          });
+        });
       }
     } finally {
       if (get().controllers[sessionId] === ac) {
@@ -341,7 +611,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   regenerate: async (sessionId, messageId) => {
-    if (get().controllers[sessionId]) return;
+    if (get().controllers[sessionId] || messageId.startsWith("tmp-")) return;
+    const previous = get().bySession[sessionId]?.messages.at(-1);
+    if (!previous || previous.id !== messageId || previous.role !== "assistant")
+      return;
+
     const ac = new AbortController();
     const tempAssistantId = `tmp-a-${Date.now()}`;
     const assistantIdRef = { current: tempAssistantId };
@@ -398,7 +672,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
       );
 
-      if (!res.ok) throw new Error("HTTP error");
+      if (!res.ok) {
+        const error = await readChatHttpError(res);
+        set((s) =>
+          updateAssistantMessage(s, sessionId, tempAssistantId, {
+            ...previous,
+            status: "error",
+            error,
+          }),
+        );
+        return;
+      }
 
       await consumeStream(set, get, sessionId, assistantIdRef, res.body!);
 
@@ -422,18 +706,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }),
         );
       } else {
-        set((s) =>
-          updateAssistantMessage(s, sessionId, assistantIdRef.current, {
+        set((s) => {
+          const current = s.bySession[sessionId]?.messages.find(
+            (m) => m.id === assistantIdRef.current,
+          );
+          if (current?.status !== "streaming") return s;
+          return updateAssistantMessage(s, sessionId, current.id, {
             status: "error",
-            error: {
+            error: current.error ?? {
               code: "NETWORK_ERROR",
               message: "Koneksi terputus. Silakan coba kembali.",
             },
-          }),
-        );
+          });
+        });
       }
     } finally {
       if (get().controllers[sessionId] === ac) {
+        if (assistantIdRef.current === tempAssistantId) {
+          set((s) => {
+            const draft = s.bySession[sessionId]?.messages.find(
+              (m) => m.id === tempAssistantId,
+            );
+            if (!draft) return s;
+            return updateAssistantMessage(s, sessionId, tempAssistantId, {
+              blocks: previous.blocks,
+              sources: previous.sources,
+              truncated: previous.truncated,
+            });
+          });
+        }
         finalizeStream(set, sessionId);
         useSessionsStore.getState().bump(sessionId);
       }
@@ -441,7 +742,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   stop: (id) => {
-    get().controllers[id]?.abort();
+    const pending = ticket(id);
+    if (!pending) {
+      get().controllers[id]?.abort();
+      return;
+    }
+    void fetchApi(`/sessions/${id}/turns/${pending.request}/stop`, {
+      method: "POST",
+    }).catch(() =>
+      useToastStore
+        .getState()
+        .push("error", "Permintaan berhenti belum diterima. Coba lagi."),
+    );
   },
 
   respond: async (sessionId, questionId, answer) => {
@@ -693,20 +1005,15 @@ function handleEvent(
       updates = { sources: payload.sources as any };
       break;
     case "thinking.delta": {
-      const current = msg.thinking ?? { text: "", done: false };
-      updates = {
-        thinking: {
-          ...current,
-          text: current.text + (payload.delta as string),
-        },
-      };
+      if (msg.thinking || !payload.delta) return;
+
+      updates = { thinking: { done: false } };
       break;
     }
+
     case "thinking.end": {
-      const current = msg.thinking ?? { text: "", done: false };
       updates = {
         thinking: {
-          ...current,
           done: true,
           durationMs: payload.durationMs as number,
         },

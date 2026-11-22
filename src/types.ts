@@ -345,6 +345,7 @@ export interface AttachmentRef {
 }
 
 export interface ChatMessage {
+  receiptOnly?: boolean;
   truncated?: boolean;
   id: string;
   role: "user" | "assistant";
@@ -358,7 +359,7 @@ export interface ChatMessage {
   error?: { code: string; message: string };
   usage?: Usage | null;
   sources?: SourceRef[];
-  thinking?: { text: string; done: boolean; durationMs?: number };
+  thinking?: { done: boolean; durationMs?: number };
 }
 
 export interface DailyUsage {

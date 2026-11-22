@@ -87,13 +87,23 @@ export function AssistantMessage({
   const mediaProgressLabel =
     mp?.kind === "image" ? t("chat.makingImage") : t("chat.makingVideo");
 
+  if (message.receiptOnly) {
+    return (
+      <p role="status" className="py-4 text-sm text-muted">
+        {t("chat.turnReceived")}
+      </p>
+    );
+  }
+
   const canRetryFromError =
     message.status === "error" &&
+    !message.id.startsWith("tmp-") &&
     isRetryable(message.error?.code) &&
     isLast &&
     !globalStreaming;
 
   const canRegenerate =
+    !message.id.startsWith("tmp-") &&
     isLast &&
     !globalStreaming &&
     !isStreaming &&
@@ -105,13 +115,11 @@ export function AssistantMessage({
       {message.blocks.length === 0 &&
         isStreaming &&
         !pendingClarification &&
-        !message.thinking?.text && <ThinkingIndicator phase={phase} />}
+        !message.thinking && <ThinkingIndicator phase={phase} />}
 
       {message.thinking || message.sources ? (
         <ThinkingPanel
           phase={phase}
-          thinkingText={message.thinking?.text ?? ""}
-          thinkingDone={message.thinking?.done ?? true}
           durationMs={message.thinking?.durationMs}
           sources={message.sources}
           isStreaming={isStreaming}
@@ -154,6 +162,9 @@ export function AssistantMessage({
           <p className="whitespace-pre-wrap wrap-break-word">
             {localizedError}
           </p>
+          {message.id.startsWith("tmp-") && errKind === "network" && (
+            <p className="mt-1">{t("errors.checkHistory")}</p>
+          )}
           {(errKind === "credits" || canRetryFromError) && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {errKind === "credits" && (
@@ -179,7 +190,7 @@ export function AssistantMessage({
       )}
 
       {!isStreaming && message.blocks.length > 0 && (
-        <div className="flex items-center gap-4 text-xs text-muted mt-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        <div className="renschat-actions mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted transition-opacity">
           <button
             type="button"
             onClick={handleCopy}

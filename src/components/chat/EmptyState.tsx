@@ -44,7 +44,10 @@ export function StarterPrompts({ sessionId }: { sessionId: string }) {
           type="button"
           onClick={() => {
             setText(sessionId, t(`chat.suggestions.${key}Prompt`));
-            document.getElementById(`composer-${sessionId}`)?.focus();
+
+            if (window.matchMedia("(pointer: fine)").matches) {
+              document.getElementById(`composer-${sessionId}`)?.focus();
+            }
           }}
           className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:bg-surface2 hover:text-ink focus-visible:outline-accent">
           <Icon aria-hidden="true" className="size-3.5" />

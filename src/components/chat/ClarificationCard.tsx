@@ -114,15 +114,23 @@ function Question({
 
   const handleOptionClick = (val: string): void => {
     if (submitting || expired) return;
-    if (clarification.multi) {
-      setSelected((prev) =>
-        prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val],
-      );
-    } else {
-      void handleSubmit([val]);
-    }
-  };
 
+    if (isRatioPicker) {
+      void handleSubmit([val]);
+      return;
+    }
+
+    setShowCustom(false);
+
+    if (!clarification.multi) {
+      setSelected([val]);
+      return;
+    }
+
+    setSelected((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val],
+    );
+  };
   const handleCustomSubmit = (): void => {
     const val = customText.trim();
     if (!val) return;
@@ -203,7 +211,7 @@ function Question({
         </div>
       )}
 
-      {clarification.multi && (
+      {!isRatioPicker && !showCustom && (
         <button
           type="button"
           disabled={disabled || selected.length === 0}

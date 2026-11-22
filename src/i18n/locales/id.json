@@ -31,7 +31,8 @@
     "videoExpiredTitle": "Media sudah kedaluwarsa",
     "videoLoadError": "Gagal memuat video"
   },
-  "chat": {
+    "chat": {
+    "turnReceived": "Permintaan sudah tercatat. Muat ulang percakapan untuk melihat hasil yang sudah tersimpan.",
     "commandNotExecuted": "Perintah yang diminta belum dijalankan. Coba kirim ulang.",
     "fileActionIncomplete": "Permintaan file belum selesai. Periksa kartu yang tersedia atau sebutkan nama file yang kamu maksud.",
     "quoteSelection": "Balas kutipan",
@@ -172,6 +173,8 @@
     "yourCode": "Kode donasi kamu"
   },
   "errors": {
+    "mediaDisabled": "Pembuatan media sedang tidak tersedia.",
+    "checkHistory": "Muat ulang percakapan untuk mengecek apakah pesan sudah tersimpan sebelum mengirim lagi.",
     "commandInvalidInput": "Input perintah tidak valid. Periksa argumen atau ekspresinya.",
     "commandNotAllowed": "Perintah ini tidak tersedia di RensChat.",
     "commandFailed": "Perintah gagal diproses.",
@@ -242,6 +245,7 @@
     "videoOptions": "Opsi video"
   },
   "menu": {
+    "sessionActions": "Opsi percakapan",
     "delete": "Hapus",
     "faq": "FAQ",
     "help": "Bantuan",

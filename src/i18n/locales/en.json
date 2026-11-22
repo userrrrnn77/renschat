@@ -33,6 +33,7 @@
     "videoLoadError": "Failed to load video"
   },
   "chat": {
+    "turnReceived": "Your request was recorded. Reload the conversation to see any saved result.",
     "commandNotExecuted": "The requested command did not run. Try sending it again.",
     "fileActionIncomplete": "The file request did not complete. Check the available cards or specify the file name.",
     "quoteSelection": "Reply to selection",
@@ -175,6 +176,8 @@
     "yourCode": "Your donation code"
   },
   "errors": {
+    "mediaDisabled": "Media generation is currently unavailable.",
+    "checkHistory": "Reload the conversation to check whether your message was saved before sending it again.",
     "commandInvalidInput": "Invalid command input. Check the arguments or expression.",
     "commandNotAllowed": "This command is unavailable in RensChat.",
     "commandFailed": "The command could not be processed.",
@@ -245,6 +248,7 @@
     "videoOptions": "Video options"
   },
   "menu": {
+    "sessionActions": "Conversation actions",
     "delete": "Delete",
     "faq": "FAQ",
     "help": "Help",

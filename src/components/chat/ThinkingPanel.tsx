@@ -1,5 +1,5 @@
 // src/components/chat/ThinkingPanel.tsx
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { SourcesList } from "./SourcesList";
@@ -9,15 +9,13 @@ import { formatDuration } from "../../lib/time";
 
 export function ThinkingPanel({
   phase,
-  thinkingText,
-  thinkingDone,
+
   durationMs,
-  sources,
+  sources = [],
   isStreaming,
 }: {
   phase: StreamPhase;
-  thinkingText: string;
-  thinkingDone: boolean;
+
   durationMs?: number;
   sources?: SourceRef[];
   isStreaming: boolean;
@@ -25,23 +23,14 @@ export function ThinkingPanel({
   const { t } = useTranslation();
 
   const [expanded, setExpanded] = useState(isStreaming);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-collapse saat selesai
   useEffect(() => {
     if (!isStreaming) setExpanded(false);
   }, [isStreaming]);
 
-  // Auto-scroll saat streaming
-  useEffect(() => {
-    if (expanded && isStreaming && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [thinkingText, expanded, isStreaming]);
-
-  const hasThinking = thinkingText.length > 0;
-  const hasSources = sources && sources.length > 0;
-  if (!hasThinking && !hasSources) return null;
+  const hasSources = sources.length > 0;
+  if (!isStreaming && !hasSources) return null;
 
   const phaseSteps = [
     { id: "clarifying", label: t("chat.thinking.clarifying") },
@@ -56,7 +45,8 @@ export function ThinkingPanel({
   return (
     <div className="my-3 border border-line rounded-xl bg-surface/50 overflow-hidden text-sm">
       <button
-        onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        onClick={() => setExpanded((open) => !open)}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface2/50 transition-colors">
         <div className="flex items-center gap-2 font-medium text-muted">
           {expanded ? (
@@ -77,7 +67,7 @@ export function ThinkingPanel({
         <div className="border-t border-line px-4 py-3 flex flex-col gap-3">
           {/* Phase Tracker */}
           {isStreaming && (
-            <div className="flex items-center gap-3 text-xs mb-1">
+            <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {phaseSteps.map((step, idx) => {
                 const isDone = currentPhaseIdx > idx || !isStreaming;
                 const isActive = currentPhaseIdx === idx && isStreaming;
@@ -106,16 +96,6 @@ export function ThinkingPanel({
             </div>
           )}
 
-          {/* Thinking Text */}
-          {hasThinking && (
-            <div
-              ref={scrollRef}
-              className="max-h-60 overflow-y-auto bg-surface2/30 rounded-lg p-3 text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed">
-              {thinkingText}
-              {!thinkingDone && <span className="animate-pulse">_</span>}
-            </div>
-          )}
-
           {/* Sources */}
           {hasSources && (
             <div>
@@ -123,6 +103,7 @@ export function ThinkingPanel({
                 {t("chat.thinking.sources")}
               </p>
               <SourcesList sources={sources} />
+  
             </div>
           )}
         </div>

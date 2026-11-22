@@ -14,6 +14,7 @@ export function errorKind(code: string | undefined): ErrorKind {
     case "NETWORK_ERROR":
     case "DISCONNECTED":
       return "network";
+    case "HTTP_429":
     case "RATE_LIMITED":
     case "COMMAND_RATE_LIMIT":
       return "rate";
@@ -22,6 +23,9 @@ export function errorKind(code: string | undefined): ErrorKind {
       return "timeout";
     case "PROVIDER_REFUSED":
       return "refused";
+    case "HTTP_502":
+    case "HTTP_503":
+    case "HTTP_504":
     case "PROVIDER_ERROR":
     case "STREAM_ERROR":
       return "provider";
@@ -47,6 +51,8 @@ export function isRetryable(code: string | undefined): boolean {
 
 export function errorI18nKey(code: string | undefined): string {
   switch (code) {
+    case "MEDIA_DISABLED":
+      return "errors.mediaDisabled";
     case "COMMAND_INVALID_INPUT":
       return "errors.commandInvalidInput";
     case "COMMAND_NOT_ALLOWED":

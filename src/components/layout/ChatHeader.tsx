@@ -43,7 +43,7 @@ export function ChatHeader() {
   };
 
   return (
-    <header className="h-14 flex items-center px-4 shrink-0 bg-bg/80 backdrop-blur-sm sticky top-0 z-10 gap-2">
+    <header className="sticky top-0 z-10 flex min-h-14 shrink-0 items-center gap-2 bg-bg/80 px-4 py-2 backdrop-blur-sm">
       {!sidebarOpen && (
         <button
           aria-label={t("menu.openSidebar", { defaultValue: "Sidebar" })}
@@ -70,11 +70,11 @@ export function ChatHeader() {
           <Menu
             align="left"
             trigger={
-              <button className="flex items-center gap-1 text-sm font-medium text-ink hover:text-muted transition-colors truncate max-w-50 md:max-w-xs">
-                <span className="truncate">
+              <button className="flex min-w-0 items-center gap-1 text-left text-sm font-medium text-ink transition-colors hover:text-muted">
+                <span className="min-w-0 wrap-anywhere">
                   {session.title || t("sidebar.newChat")}
                 </span>
-                <ChevronDown className="w-4 h-4 text-muted" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
               </button>
             }>
             <button

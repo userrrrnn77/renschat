@@ -146,7 +146,7 @@ export function UserMessage({
       )}
 
       {/* ACTION BUTTONS */}
-      <div className="flex items-center gap-2 pr-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+      <div className="renschat-actions flex flex-wrap items-center gap-2 pr-2 transition-opacity">
         {canEdit && (
           <button
             onClick={handleEdit}

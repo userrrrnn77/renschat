@@ -435,3 +435,28 @@
     color: var(--hljs-meta);
   }
 }
+
+/* Sembunyikan aksi saat idle hanya pada perangkat yang mengandalkan mouse. */
+@media (hover: hover) and (pointer: fine) and (not (any-pointer: coarse)) {
+  .group:not(:hover):not(:focus-within)
+    .renschat-actions:not(.renschat-actions-open) {
+    opacity: 0;
+  }
+}
+
+/* Ukuran field yang nyaman saat keyboard layar digunakan. */
+@media (pointer: coarse) {
+  input:not([type]),
+  input:is(
+    [type="text"],
+    [type="email"],
+    [type="password"],
+    [type="search"],
+    [type="url"],
+    [type="number"]
+  ),
+  textarea,
+  select {
+    font-size: max(1rem, 16px);
+  }
+}

@@ -67,6 +67,7 @@ export function SessionItem({
       ) : (
         <button
           onClick={onClick}
+          title={session.title || t("sidebar.newChat")}
           onDoubleClick={() => setIsEditing(true)}
           className={cn(
             "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors text-left",
@@ -74,7 +75,7 @@ export function SessionItem({
               ? "bg-surface2 text-ink font-medium"
               : "text-muted hover:bg-surface2 hover:text-ink",
           )}>
-          <span className="truncate pr-2">
+          <span className="min-w-0 truncate pr-8">
             {session.title || t("sidebar.newChat")}
           </span>
         </button>
@@ -83,14 +84,18 @@ export function SessionItem({
       {!isEditing && (
         <div
           className={cn(
-            "absolute right-2 top-1.5 opacity-0 group-hover:opacity-100 transition-opacity",
-            isActive && "opacity-100",
+            "renschat-actions absolute right-2 top-1.5 transition-opacity",
+            (isActive || menuOpen) && "renschat-actions-open",
           )}
           ref={menuRef}>
           <button
+            type="button"
+            aria-label={t("menu.sessionActions")}
+            title={t("menu.sessionActions")}
+            aria-expanded={menuOpen}
             onClick={(e) => {
               e.stopPropagation();
-              setMenuOpen(!menuOpen);
+              setMenuOpen((open) => !open);
             }}
             className="p-1 rounded text-muted hover:text-ink hover:bg-line transition-colors">
             <MoreHorizontal className="w-4 h-4" />
