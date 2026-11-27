@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
 import { useMediaStore } from "../../store/mediaStore";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
@@ -18,6 +19,7 @@ import { SettingsDialog } from "./SettingsDialog"; // <--- Import Dialog Baru
 import { cn } from "../../lib/cn";
 
 export function UserMenu() {
+  const reduced = useReducedMotion();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuthStore();
@@ -39,7 +41,8 @@ export function UserMenu() {
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
         className="flex items-center gap-2 w-full p-2 hover:bg-surface2 rounded-lg transition-colors text-left">
         {/* ... Kode Avatar & Nama lu tetep sama ... */}
         {user.avatarUrl ? (
@@ -59,8 +62,15 @@ export function UserMenu() {
         </div>
       </button>
 
-      {open && (
-        <div className="absolute bottom-full left-0 mb-2 w-full bg-surface border border-line rounded-xl shadow-lg z-50 p-1 animate-in slide-in-from-bottom-2">
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="account-menu"
+            initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: reduced ? 0 : 4, pointerEvents: "none" }}
+            transition={{ duration: reduced ? 0 : 0.15, ease: "easeOut" }}
+            className="absolute bottom-full left-0 mb-2 w-full bg-surface border border-line rounded-xl shadow-lg z-50 p-1">
           <div className="px-3 py-2 border-b border-line mb-1 flex items-center justify-between">
             <p className="text-xs text-muted truncate">{user.email}</p>
           </div>
@@ -116,8 +126,9 @@ export function UserMenu() {
             className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-danger/10 text-danger rounded-lg transition-colors mt-1">
             <LogOut className="w-4 h-4" /> {t("menu.logout")}
           </button>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Panggil SettingsDialog di sini */}
       <SettingsDialog />

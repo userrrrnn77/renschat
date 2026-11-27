@@ -1,5 +1,6 @@
 // src/components/blocks/FileBlockView.tsx
 import { formatBytes } from "../../lib/files";
+import { cn } from "../../lib/cn";
 import {
   Braces,
   Code2,
@@ -17,7 +18,10 @@ import {
 } from "lucide-react";
 import type { FileBlock } from "../../types";
 import { useUIStore } from "../../store/uiStore";
+import { usePreviewStore } from "../../store/usePreviewStore";
 import { useTranslation } from "react-i18next";
+
+import { officeKind } from "../../lib/officeKind";
 
 const FILE_ICONS = new Map<string, LucideIcon>([
   ["file", File],
@@ -40,8 +44,12 @@ export function FileBlockView({ block }: { block: FileBlock }) {
   const color = accent && /^#[0-9a-f]{6}$/i.test(accent) ? accent : "#8794A8";
   const { t } = useTranslation();
   const openPreview = useUIStore((s) => s.openPreview);
+  const activeFile = usePreviewStore((s) => s.activeFile);
+  const isActive =
+    activeFile?.fileId === block.fileId &&
+    activeFile?.version === block.version;
 
-  const canPreview = block.preview !== "none";
+  const canPreview = block.preview !== "none" || officeKind(block.name) !== null;
   const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || ""}/api/files/${block.fileId}/download`;
 
   const details = (
@@ -82,12 +90,17 @@ export function FileBlockView({ block }: { block: FileBlock }) {
   );
 
   return (
-    <div className="my-4 flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
+    <div
+      className={cn(
+        "my-4 flex items-center gap-3 rounded-xl border bg-surface p-3 transition-colors",
+        isActive ? "border-accent ring-1 ring-accent/40" : "border-line",
+      )}>
       {canPreview ? (
         <button
           type="button"
           onClick={() => openPreview(block)}
           aria-label={t("preview.openFile", { name: block.name })}
+          aria-current={isActive ? "true" : undefined}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left hover:bg-surface2 focus-visible:outline-accent">
           {details}
         </button>

@@ -1,5 +1,7 @@
+import { pollFile } from "./filePolling";
 // src/lib/upload.ts
-import { api } from "./api";
+import { api, ApiError } from "./api";
+import i18n from "../i18n";
 import type { AttachmentRef, FileMeta, IndexStatus } from "../types";
 
 export type UploadState =
@@ -23,6 +25,7 @@ export interface AttachmentUpload {
   state: UploadState;
   error?: string;
   indexStatus?: IndexStatus | null;
+  processingDeadline?: number;
 }
 
 export const resolveMime = (file: File): string => {
@@ -35,6 +38,45 @@ export const resolveMime = (file: File): string => {
   return file.type || "application/octet-stream";
 };
 
+function describeUploadError(err: unknown): string {
+  if (err instanceof ApiError) {
+    switch (err.code) {
+      case "QUOTA_EXCEEDED":
+        return i18n.t("upload.error.quotaExceeded");
+      case "PAYLOAD_TOO_LARGE":
+        return i18n.t("upload.error.payloadTooLarge");
+      case "UPLOAD_MISSING":
+        return i18n.t("upload.error.uploadMissing");
+      case "SIZE_MISMATCH":
+        return i18n.t("upload.error.sizeMismatch");
+      case "HASH_MISMATCH":
+        return i18n.t("upload.error.hashMismatch");
+      case "UNSUPPORTED_MIME":
+        return i18n.t("upload.error.unsupportedMime");
+      default:
+        // Contract: preserve backend code/message rather than flattening
+        // every status into a generic toast.
+        return err.message || i18n.t("upload.error.generic");
+    }
+  }
+  if (err instanceof Error) {
+    if (err.message.startsWith("Upload failed:")) {
+      return i18n.t("upload.error.uploadFailed");
+    }
+    if (err.message === "Network error during upload") {
+      return i18n.t("upload.error.networkError");
+    }
+    if (err.message.startsWith("File read failed")) {
+      return i18n.t("upload.error.fileReadFailed");
+    }
+    if (err.message === "Timeout menunggu file siap") {
+      return i18n.t("upload.error.processingTimeout");
+    }
+    return err.message;
+  }
+  return i18n.t("upload.error.generic");
+}
+
 export const uploadFile = async (
   sessionId: string,
   file: File,
@@ -45,6 +87,7 @@ export const uploadFile = async (
     indexStatus?: IndexStatus | null,
   ) => void,
   signal?: AbortSignal,
+  onFileId?: (fileId: string, mime: string) => void,
 ): Promise<AttachmentRef> => {
   const throwIfAborted = (): void => {
     if (signal?.aborted) throw new Error("Aborted");
@@ -64,6 +107,8 @@ export const uploadFile = async (
       },
       signal,
     );
+
+    onFileId?.(fileId, mime);
 
     throwIfAborted();
     onState("uploading", 0);
@@ -124,35 +169,22 @@ export const uploadFile = async (
 
     throwIfAborted();
     onState("processing", 100);
-    let ready = false;
-    let failed = false;
-    let errorMsg = "";
-    let finalIndexStatus: IndexStatus | null = null;
-    let attempts = 0;
-
-    while (!ready && !failed && attempts < 80) {
-      throwIfAborted();
-      await new Promise((r) => setTimeout(r, 1500));
-      throwIfAborted();
-      const meta = (await api.files.get(fileId)) as FileMeta;
-      if (meta.status === "ready") {
-        ready = true;
-        finalIndexStatus = meta.indexStatus ?? null;
-      } else if (meta.status === "failed") {
-        failed = true;
-        errorMsg = meta.error || "Proses file gagal";
-      }
-      attempts++;
+    const meta = await pollFile(sessionId, fileId, signal);
+    if (meta.status !== "ready") {
+      throw new Error(meta.error || i18n.t("upload.error.processingFailed"));
     }
-
-    if (!ready) {
-      throw new Error(failed ? errorMsg : "Timeout menunggu file siap");
-    }
-
-    onState("ready", 100, undefined, finalIndexStatus);
+    onState("ready", 100, undefined, meta.indexStatus ?? null);
     return attachment;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Upload gagal";
+    if (
+      signal?.aborted ||
+      (err instanceof Error && err.message === "Aborted")
+    ) {
+      // User-initiated cancel: removeAttachment handles cleanup; keep the
+      // attachment out of the "failed" state so the retry pill never flashes.
+      throw err;
+    }
+    const message = describeUploadError(err);
     onState("failed", 0, message);
     throw err;
   }

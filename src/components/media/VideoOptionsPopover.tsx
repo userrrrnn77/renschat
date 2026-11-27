@@ -1,5 +1,6 @@
 // src/components/media/VideoOptionsPopover.tsx
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useMediaStore } from "../../store/mediaStore";
 import { useComposerStore } from "../../store/composerStore";
 import { cn } from "../../lib/cn";
@@ -13,6 +14,7 @@ const VIDEO_SAMPLES = [
 
 export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
   const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
 
   const entitlements = useMediaStore((s) => s.entitlements);
   const selection = useMediaStore((s) => s.selection);
@@ -30,6 +32,10 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
     window.addEventListener("click", onClick);
     return () => window.removeEventListener("click", onClick);
   }, []);
+
+  // Backend contract currently rejects `generation.mode === "video"`.
+  // Hide video-only controls unless entitlements explicitly allow media.
+  if (!entitlements?.mediaEnabled) return null;
 
   const engine = selection.videoEngine;
   const autoLabel =
@@ -65,20 +71,29 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
         </span>
         <span className="text-muted">▾</span>
       </button>
-      {open && (
-        <>
-          {/* Overlay mobile-only untuk feel bottom sheet */}
-          <div
-            className="fixed inset-0 bg-black/30 z-40 md:hidden"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-label={t("media.videoOptions")}
-            className={cn(
-              "absolute bottom-full mb-2 left-0 w-80 bg-surface border border-line rounded-lg shadow-lg z-50 p-3 animate-in fade-in slide-in-from-bottom-2",
-              "max-md:fixed max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-2xl max-md:rounded-b-none",
-            )}>
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Overlay mobile-only untuk feel bottom sheet */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.16 }}
+              className="fixed inset-0 bg-black/30 z-40 md:hidden"
+              onClick={() => setOpen(false)}
+            />
+            <motion.div
+              role="dialog"
+              aria-label={t("media.videoOptions")}
+              initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+              className={cn(
+                "absolute bottom-full mb-2 left-0 w-80 bg-surface border border-line rounded-lg shadow-lg z-50 p-3",
+                "max-md:fixed max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-2xl max-md:rounded-b-none",
+              )}>
             <div className="mb-3">
               <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 {t("media.ratio")}
@@ -153,9 +168,10 @@ export function VideoOptionsPopover({ composerKey }: { composerKey: string }) {
                 ))}
               </div>
             </div>
-          </div>
-        </>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

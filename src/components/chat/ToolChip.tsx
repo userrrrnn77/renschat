@@ -1,4 +1,5 @@
 // src/components/chat/ToolChip.tsx
+import { motion, useReducedMotion } from "motion/react";
 import { Spinner } from "../ui/Spinner";
 import { cn } from "../../lib/cn";
 import type { ToolRun } from "../../types";
@@ -12,6 +13,7 @@ import { getToolProgressLabel } from "../../lib/toolLabels";
  */
 export function ToolChip({ tool }: { tool: ToolRun }) {
   const { i18n } = useTranslation();
+  const reduceMotion = useReducedMotion();
 
   // Tool yang selesai sudah direpresentasikan oleh blok hasilnya di UI.
   if (tool.status === "ok") return null;
@@ -20,8 +22,11 @@ export function ToolChip({ tool }: { tool: ToolRun }) {
   const isRunning = tool.status === "running";
 
   return (
-    <div
+    <motion.div
       aria-live="polite"
+      initial={reduceMotion ? false : { opacity: 0, y: 4, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
       className={cn(
         "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border my-1 mr-2",
         isRunning
@@ -34,6 +39,6 @@ export function ToolChip({ tool }: { tool: ToolRun }) {
         <AlertCircle className="w-3 h-3" />
       )}
       <span>{label}</span>
-    </div>
+    </motion.div>
   );
 }

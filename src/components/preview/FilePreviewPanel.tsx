@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Copy, Download, X } from "lucide-react";
+import { Check, Copy, Download, Maximize2, Minimize2, X, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { FileBlock } from "../../types";
 import { useFilePreview } from "../../hooks/useFilePreview";
@@ -8,6 +8,12 @@ import { getExt } from "../../lib/files";
 import { highlightCode } from "../../lib/highlight";
 import { Markdown } from "../ui/Markdown";
 import { Skeleton } from "../ui/Skeleton";
+import { OfficeContent } from "./OfficeContent";
+import { CsvContent } from "./CsvContent";
+import { OfficePdfViewer } from "./OfficePdfViewer";
+import { isPdfRenderableOffice, officeKind } from "../../lib/officeKind";
+import { usePreviewStore } from "../../store/usePreviewStore";
+import { useDocumentPreviewStore } from "../../store/useDocumentPreviewStore";
 
 interface Props {
   file: FileBlock;
@@ -25,11 +31,24 @@ export function FilePreviewPanel({ file, onClose }: Props) {
   const { t } = useTranslation();
   const state = useFilePreview(file);
   const [showRaw, setShowRaw] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const copied = useDocumentPreviewStore(
+    (s) => s.byFile[file.fileId]?.copied ?? "none",
+  );
+  const setCopied = useDocumentPreviewStore((s) => s.setCopied);
+  const clearActiveFile = usePreviewStore((s) => s.clearActiveFile);
+  const expanded = usePreviewStore((s) => s.expanded);
+  const setExpanded = usePreviewStore((s) => s.setExpanded);
+
+  const handleClose = () => {
+    clearActiveFile();
+    onClose?.();
+  };
 
   const ext = getExt(file.name).toLowerCase();
   const isMarkdown = ext === "md" || ext === "markdown";
+  const isCsv = ext === "csv";
   const text = state.kind === "text" ? state.text : null;
+  const isOfficePdf = isPdfRenderableOffice(officeKind(file.name));
 
   const highlighted = useMemo(() => {
     if (!text || file.preview !== "code" || isMarkdown) return null;
@@ -44,14 +63,20 @@ export function FilePreviewPanel({ file, onClose }: Props) {
 
   async function handleCopy() {
     if (text === null) return;
-    setCopied(await copyToClipboard(text));
+    const ok = await copyToClipboard(text);
+    if (!ok) return;
+    const partial = isCsv && state.kind === "text" && state.truncated;
+    setCopied(file.fileId, partial ? "partial" : "full");
   }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm font-medium">{file.name}</span>
+          <span className="truncate text-sm font-medium">
+            {file.name}
+            {ext && <span className="text-muted"> · {ext}</span>}
+          </span>
           {file.version > 1 && (
             <span className="shrink-0 rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
               v{file.version}
@@ -64,9 +89,23 @@ export function FilePreviewPanel({ file, onClose }: Props) {
             <button
               type="button"
               onClick={handleCopy}
-              aria-label={t(copied ? "common.copied" : "common.copy")}
+              aria-label={t(
+                copied === "partial"
+                  ? "preview.copiedPartial"
+                  : copied === "full"
+                    ? "common.copied"
+                    : "common.copy",
+                {
+                  defaultValue:
+                    copied === "partial"
+                      ? "Copied partial"
+                      : copied === "full"
+                        ? "Copied"
+                        : "Copy",
+                },
+              )}
               className="rounded-md p-2 text-muted hover:bg-surface2">
-              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied !== "none" ? <Check size={16} /> : <Copy size={16} />}
             </button>
           )}
 
@@ -93,7 +132,18 @@ export function FilePreviewPanel({ file, onClose }: Props) {
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => setExpanded(!expanded)}
+            aria-label={t(expanded ? "preview.restore" : "preview.expand", {
+              defaultValue: expanded ? "Restore" : "Expand",
+            })}
+            aria-pressed={expanded}
+            className="hidden rounded-md p-2 text-muted hover:bg-surface2 md:inline-flex">
+            {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClose}
             aria-label={t("common.close")}
             className="rounded-md p-2 text-muted hover:bg-surface2">
             <X size={16} />
@@ -101,8 +151,13 @@ export function FilePreviewPanel({ file, onClose }: Props) {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto bg-bg p-4">
-        {state.kind === "loading" && <Skeleton className="h-56 w-full" />}
+      {isOfficePdf ? (
+        <div className="min-h-0 flex-1">
+          <OfficePdfViewer file={file} />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-auto bg-bg p-4">
+          {state.kind === "loading" && <Skeleton className="h-56 w-full" />}
 
         {state.kind === "error" && (
           <p role="status" className="text-sm text-muted">
@@ -110,8 +165,34 @@ export function FilePreviewPanel({ file, onClose }: Props) {
           </p>
         )}
 
+        {state.kind === "office" && (
+          <OfficeContent
+            key={file.fileId}
+            fileId={file.fileId}
+            data={state.data}
+          />
+        )}
+
         {state.kind === "none" && (
-          <p className="text-sm text-muted">{t("preview.noPreview")}</p>
+          <div className="flex flex-col items-center justify-center h-full min-h-64 p-6 text-center">
+            <div className="p-4 rounded-2xl bg-surface2 text-muted mb-3">
+              <FileText className="w-10 h-10" />
+            </div>
+            <h3 className="text-sm font-semibold text-ink mb-1">{file.name}</h3>
+            <p className="text-xs text-muted max-w-sm mb-4 leading-relaxed">
+              {t("preview.noPreview", {
+                defaultValue:
+                  "Pratinjau langsung tidak tersedia untuk tipe file ini.",
+              })}
+            </p>
+            <a
+              href={downloadUrl}
+              download
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium bg-accent text-accent-fg rounded-xl hover:bg-accent-hover transition-colors">
+              <Download className="w-4 h-4" />
+              {t("common.download", { defaultValue: "Unduh File" })}
+            </a>
+          </div>
         )}
 
         {state.kind === "blob" && file.preview === "image" && (
@@ -130,7 +211,15 @@ export function FilePreviewPanel({ file, onClose }: Props) {
           />
         )}
 
-        {state.kind === "text" && (
+        {state.kind === "text" && isCsv && (
+          <CsvContent
+            file={file}
+            text={state.text}
+            truncated={state.truncated}
+          />
+        )}
+
+        {state.kind === "text" && !isCsv && (
           <>
             {state.truncated && (
               <p className="mb-3 rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
@@ -179,7 +268,8 @@ export function FilePreviewPanel({ file, onClose }: Props) {
             )}
           </>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -62,7 +62,11 @@ export interface Entitlements {
   koFiUrl: string | null;
   image: { models: EntitlementsImageModel[] };
   video: {
-    engine: "cosmos" | "python";
+    // Backend contract saat ini: `video.engines` hanya berisi `auto` dan
+    // mode video ditolak (`MEDIA_DISABLED`). Tipe engine diperlebar agar
+    // komponen legacy tidak memaksa narrow-cast, tetapi buildGeneration
+    // tidak pernah mengirim mode video.
+    engine: "auto" | "cosmos" | "python";
     engines: EntitlementsVideoEngine[];
     aspects: Array<"16:9" | "9:16">;
   };
@@ -221,6 +225,18 @@ export interface Preferences {
   styleProfile?: PersistedStyleProfile | null;
 }
 
+/**
+ * Saved note on the legacy `/api/me/memory` routes. Backend may return
+ * extra fields on GET; preserve them when PUTting the full array back.
+ * Do NOT read this from `/api/memory` (newer router is not wired yet).
+ */
+export interface SavedNote {
+  topic: string;
+  text: string;
+  expiresAt?: string | null;
+  [key: string]: unknown;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -251,6 +267,7 @@ export interface ServerMessage {
   errorCode?: string;
   createdAt: string;
   attachmentIds?: string[];
+  attachments?: AttachmentRef[];
   sources?: SourceRef[];
 }
 
@@ -283,7 +300,14 @@ export interface SourceRef {
 }
 
 export type StreamEvent =
-  | { event: "message.start"; data: { messageId: string; sessionId: string } }
+  | {
+      event: "message.start";
+      data: {
+        messageId: string;
+        userMessageId: string;
+        sessionId: string;
+      };
+    }
   | {
       event: "status";
       data: { phase: "clarifying" | "retrieving" | "generating" };

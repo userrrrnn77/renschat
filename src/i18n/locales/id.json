@@ -31,7 +31,7 @@
     "videoExpiredTitle": "Media sudah kedaluwarsa",
     "videoLoadError": "Gagal memuat video"
   },
-    "chat": {
+  "chat": {
     "turnReceived": "Permintaan sudah tercatat. Muat ulang percakapan untuk melihat hasil yang sudah tersimpan.",
     "commandNotExecuted": "Perintah yang diminta belum dijalankan. Coba kirim ulang.",
     "fileActionIncomplete": "Permintaan file belum selesai. Periksa kartu yang tersedia atau sebutkan nama file yang kamu maksud.",
@@ -145,7 +145,17 @@
     "editingMessage": "Sedang mengubah pesan...",
     "pastedText": "Teks yang di-paste",
     "placeholderNew": "Apa yang bisa dibantu hari ini?",
-    "placeholderReply": "Balas ke RensChat…"
+    "placeholderReply": "Balas ke RensChat…",
+    "uploadingPastes": "Mengunggah lampiran teks…",
+    "errors": {
+      "newSessionWithAttachments": "Gagal membuat sesi baru. Lampiran tetap tersimpan; coba unggah lagi.",
+      "newSessionWithMessage": "Gagal membuat sesi baru. Isi pesan tetap tersimpan; coba kirim lagi.",
+      "messageTooLong": "Pesan dan kutipan sudah melebihi batas {{limit}} karakter. Pendekkan teks atau kutipan terlebih dahulu.",
+      "totalTooLong": "Total pesan dan kutipan melebihi batas {{limit}} karakter. Pendekkan pesan terlebih dahulu.",
+      "uploadPastesFailed": "Upload file teks gagal. Periksa lampiran lalu coba retry sebelum mengirim.",
+      "failedAttachment": "Ada lampiran gagal diunggah. Retry atau hapus lampiran sebelum mengirim.",
+      "waitForUploads": "Tunggu upload lampiran selesai sebelum mengirim."
+    }
   },
   "donation": {
     "alreadyDonated": "Sudah donasi tapi kredit belum masuk? Klaim di sini",
@@ -178,13 +188,27 @@
     "commandInvalidInput": "Input perintah tidak valid. Periksa argumen atau ekspresinya.",
     "commandNotAllowed": "Perintah ini tidak tersedia di RensChat.",
     "commandFailed": "Perintah gagal diproses.",
-    "credits": "Kredit habis untuk model ini. Buka donasi atau gunakan model gratis.",
+    "credits": "Kredit habis untuk model ini. Gunakan model gratis.",
     "network": "Koneksi terputus. Silakan coba kembali.",
     "provider": "Penyedia AI sedang sibuk. Coba lagi beberapa menit lagi.",
     "rate": "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.",
     "refused": "Permintaan ditolak oleh penyedia AI. Coba ubah permintaanmu.",
     "timeout": "Proses membutuhkan waktu lebih lama dari biasanya. Coba lagi.",
-    "unknown": "Terjadi kesalahan saat memproses permintaan."
+    "unknown": "Terjadi kesalahan saat memproses permintaan.",
+    "media": "Pembuatan media sedang tidak tersedia.",
+    "upload": "Upload gagal. Periksa file lalu coba lagi.",
+    "asset": "File ini sudah tidak tersedia.",
+    "auth": "Sesi kamu sudah berakhir. Silakan masuk lagi.",
+    "validation": "Permintaan tidak valid. Periksa kembali inputmu.",
+    "uploadQuota": "Kuota total upload akun kamu sudah penuh. Hapus file lama untuk mengosongkan ruang.",
+    "uploadTooLarge": "File ini melebihi batas ukuran per-file. Kompres atau pilih file lebih kecil.",
+    "uploadMissing": "File belum diterima server. Coba unggah ulang.",
+    "uploadSizeMismatch": "Ukuran file tidak cocok. Coba unggah ulang.",
+    "uploadHashMismatch": "File tidak cocok dengan checksum. Coba unggah ulang.",
+    "uploadUnsupported": "Tipe file ini tidak didukung.",
+    "assetExpired": "Media ini sudah kedaluwarsa dan tidak bisa dipulihkan.",
+    "busy": "Server sedang sibuk memproses permintaan lain. Coba lagi sebentar lagi.",
+    "entitlementRequired": "Fitur ini memerlukan akses tambahan."
   },
   "landing": {
     "brand": "RensChat",
@@ -235,14 +259,42 @@
     "autoCosmos": "Otomatis (Cosmos3 — kredit)",
     "engine": "Engine",
     "examples": "Contoh",
-    "flux3Note": "FLUX.3 membuka akses model lebih berat. Semua fitur tetap gratis.",
+    "flux3Note": "Model ini memerlukan akses tambahan dari server.",
     "image": "Gambar",
     "locked": "Terkunci",
-    "lockedTooltip": "Terbuka setelah traktir kopi di Ko-fi (opsional)",
+    "lockedTooltip": "Model ini sedang tidak tersedia untuk akunmu.",
     "pythonFree": "Python (gratis)",
     "ratio": "Rasio",
     "video": "Video",
     "videoOptions": "Opsi video"
+  },
+  "memory": {
+    "addTitle": "Tambah catatan",
+    "editTitle": "Ubah catatan",
+    "count": "{{count}} dari {{max}} catatan",
+    "empty": "Belum ada catatan tersimpan.",
+    "topicLabel": "Topik",
+    "topicPlaceholder": "Misal: Gaya menulis, Preferensi proyek",
+    "textLabel": "Isi catatan",
+    "textPlaceholder": "Tulis catatan singkat (maks 240 karakter)…",
+    "save": "Simpan catatan",
+    "editAria": "Ubah catatan",
+    "deleteAria": "Hapus catatan",
+    "clearAll": "Hapus semua",
+    "clearConfirm": "Ya, hapus semua",
+    "confirmClearPrompt": "Hapus semua catatan tersimpan?",
+    "toastSaved": "Catatan tersimpan diperbarui",
+    "toastCleared": "Semua catatan tersimpan dihapus",
+    "loadError": "Gagal memuat catatan tersimpan",
+    "saveError": "Gagal menyimpan catatan",
+    "clearError": "Gagal menghapus catatan",
+    "errors": {
+      "topicTooShort": "Topik minimal 2 karakter",
+      "topicTooLong": "Topik maksimal 64 karakter",
+      "textEmpty": "Isi catatan tidak boleh kosong",
+      "textTooLong": "Isi catatan maksimal 240 karakter",
+      "tooMany": "Maksimal 24 catatan"
+    }
   },
   "menu": {
     "sessionActions": "Opsi percakapan",
@@ -278,6 +330,20 @@
     "toastSuccess": "Preferensi personality disimpan"
   },
   "preview": {
+    "wordDocument": "Dokumen Microsoft Word (.docx)",
+    "wordEmpty": "Dokumen ini tidak memiliki teks.",
+    "powerpointPresentation": "Presentasi PowerPoint (.pptx)",
+    "selectSlide": "Pilih Slide",
+    "slideOption": "Slide {{current}} dari {{total}} {{title}}",
+    "slideLabel": "Slide {{current}}",
+    "slideCounter": "{{current}} / {{total}}",
+    "slideEmpty": "Slide ini tidak memiliki teks.",
+    "excelWorksheet": "Lembar Kerja Excel (.xlsx)",
+    "sheetDefaultTitle": "Sheet {{number}}",
+    "excelEmpty": "Sheet ini tidak memiliki data.",
+    "paginationInfo": "Halaman {{page}} dari {{total}} ({{rows}} baris)",
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
     "imageAlt": "Pratinjau gambar",
     "openFile": "Buka pratinjau {{name}}",
     "empty": "File ini kosong.",
@@ -317,7 +383,7 @@
       "title": "Hubungi Kami"
     },
     "faq": {
-      "content": "<h2>Apa itu RensChat?</h2><p>RensChat adalah asisten AI yang tidak hanya membalas dengan teks, tapi juga bisa merender tabel interaktif, grafik, kartu, membuat file, serta <strong>membuat gambar dan video</strong> secara langsung di dalam chat.</p><h2>Apakah dataku aman?</h2><p>Ya. Kami menggunakan otentikasi JWT yang aman dan file disimpan di storage pribadi (Cloudflare R2). Baca selengkapnya di <a href='/privacy'>Kebijakan Privasi</a>.</p><h2>Format file apa saja yang didukung?</h2><p>Saat ini kami mendukung PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, serta gambar (PNG, JPG). Untuk <strong>media yang dibuat</strong>, output berupa gambar (PNG/JPEG/WebP) dan video MP4.</p><h2>Apakah gambar dan video yang dibuat AI itu gratis?</h2><p>Gambar <strong>FLUX.2 Klein 4B</strong> dan <strong>video Python</strong> (animasi grafis yang dihasilkan dari kode) sepenuhnya gratis dengan limit harian. Gambar <strong>FLUX.3 Image Klein</strong> dan video <strong>NVIDIA Cosmos3 Nano</strong> membutuhkan kredit yang diperoleh lewat donasi Ko-fi <em>opsional</em>. Semua fitur inti tetap gratis tanpa donasi.</p><h2>Berapa lama media saya disimpan?</h2><p>Semua media hasil generate disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan perlu dibuat ulang.</p><h2>Apakah media buatan AI ini legal untuk dipakai?</h2><p>Model gambar FLUX.3 tunduk pada FLUX Kommunity License v1.0, sedangkan video Cosmos tunduk pada NVIDIA API Trial Terms. Output video Cosmos menyertakan watermark <strong>SynthID</strong> yang tidak boleh dihapus. Selalu periksa lisensi model sebelum pemakaian komersial. Detail di <a href='/terms'>Syarat & Ketentuan</a>.</p><h2>Bagaimana cara klaim kredit donasi?</h2><p>Setelah donasi, tulis kode donasi <code>RC-XXXXXX</code> (tersedia di menu akun) di pesan donasi Ko-fi — kredit masuk otomatis. Kalau lupa menulis kode, buka menu akun → <em>Donasi (opsional)</em> → <em>Klaim donasi</em> dan masukkan email + ID transaksi Ko-fi.</p><h2>Kenapa AI terkadang salah?</h2><p>Model bahasa besar (LLM) dapat berhalusinasi. Kami sudah menambahkan fitur RAG (Retrieval-Augmented Generation) untuk meminimalisir hal ini, tapi selalu cek ulang informasi kritis.</p>",
+      "content": "<h2>Apa itu RensChat?</h2><p>RensChat adalah asisten AI yang tidak hanya membalas dengan teks, tapi juga bisa merender tabel interaktif, grafik, kartu, membuat file, serta <strong>membuat gambar</strong> secara langsung di dalam chat.</p><h2>Apakah dataku aman?</h2><p>Ya. Kami menggunakan otentikasi JWT yang aman dan file disimpan di storage pribadi (Cloudflare R2). Baca selengkapnya di <a href='/privacy'>Kebijakan Privasi</a>.</p><h2>Format file apa saja yang didukung?</h2><p>Saat ini kami mendukung PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, serta gambar (PNG, JPG). Untuk <strong>media yang dibuat</strong>, output berupa gambar (PNG/JPEG/WebP) dan video MP4.</p><h2>Apakah gambar yang dibuat AI itu gratis?</h2><p>Gambar dari model <strong>FLUX.2 Klein</strong> sepenuhnya gratis dengan limit harian. Model gambar lain dan video saat ini dinonaktifkan oleh backend.</p><h2>Berapa lama media saya disimpan?</h2><p>Semua media hasil generate disimpan maksimal <strong>24 jam</strong> sejak dibuat, lalu dihapus otomatis. Unduh media yang kamu butuhkan sebelum kedaluwarsa. Setelah kedaluwarsa, media tidak dapat dipulihkan dan perlu dibuat ulang.</p><h2>Apakah media buatan AI ini legal untuk dipakai?</h2><p>Model gambar FLUX.2 Klein tunduk pada FLUX Kommunity License v1.0. Media dari history lama (gambar/video) tetap terbaca dengan lisensi model aslinya. Detail di <a href='/terms'>Syarat & Ketentuan</a>.</p><h2>Model apa yang dipakai RensChat?</h2><p>Generate gambar memakai FLUX.2 Klein. Mode video dan model FLUX.3 dinonaktifkan pada kontrak backend saat ini. UI hanya menampilkan model yang dikembalikan endpoint entitlements.</p><h2>Kenapa AI terkadang salah?</h2><p>Model bahasa besar (LLM) dapat berhalusinasi. Kami sudah menambahkan fitur RAG (Retrieval-Augmented Generation) untuk meminimalisir hal ini, tapi selalu cek ulang informasi kritis.</p>",
       "title": "Frequently Asked Questions (FAQ)"
     },
     "privacy": {
@@ -356,7 +422,29 @@
   },
   "upload": {
     "cancelUpload": "Batal unggah",
+    "completing": "Menyelesaikan…",
+    "error": {
+      "disconnected": "Upload terputus. Klik retry untuk unggah ulang.",
+      "fileReadFailed": "Gagal membaca file lokal",
+      "generic": "Upload gagal",
+      "hashMismatch": "File tidak cocok dengan checksum. Coba unggah ulang.",
+      "localMissing": "File lokal tidak tersedia. Hapus lalu pilih ulang.",
+      "networkCheck": "Gangguan jaringan. Klik retry untuk memeriksa ulang.",
+      "networkError": "Koneksi terputus saat mengunggah. Periksa jaringan lalu coba lagi.",
+      "pendingRetry": "Upload belum selesai. Klik retry untuk menyelesaikan.",
+      "payloadTooLarge": "File ini melebihi batas ukuran per-file. Kompres atau pilih file lebih kecil.",
+      "processingFailed": "Proses file gagal",
+      "processingTimeout": "File terlalu lama diproses. Coba lagi beberapa saat lagi.",
+      "quotaExceeded": "Kuota total upload akun kamu sudah penuh. Hapus file lama untuk mengosongkan ruang.",
+      "serverExpired": "File kedaluwarsa di server. Klik retry untuk unggah ulang.",
+      "sizeMismatch": "Ukuran file yang diterima tidak sesuai. Coba unggah ulang.",
+      "unsupportedMime": "Tipe file ini tidak didukung.",
+      "uploadFailed": "Upload gagal. Coba lagi.",
+      "uploadMissing": "File belum diterima server. Coba unggah ulang."
+    },
+    "presigning": "Menyiapkan…",
     "processing": "Memproses",
+    "queued": "Menunggu…",
     "remove": "Hapus",
     "retry": "Ulangi",
     "uploading": "Mengunggah"
@@ -386,6 +474,8 @@
     "themeDesc": "Sesuaikan tampilan antarmuka RensChat.",
     "languageDesc": "Pilih bahasa yang digunakan untuk antarmuka.",
     "personalityDesc": "Atur gaya bawaan RensChat saat menjawabmu.",
+    "memory": "Catatan tersimpan",
+    "memoryDesc": "Catatan yang tersimpan di akunmu dan bisa diubah kapan saja.",
     "usageDesc": "Lihat statistik penggunaan token dan media kamu."
   }
 }

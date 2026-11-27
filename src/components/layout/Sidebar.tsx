@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence, motion } from "motion/react";
 import { Plus, Search, PanelLeftClose } from "lucide-react";
 import {
   useSessionsStore,
@@ -34,6 +35,20 @@ export function Sidebar() {
   const askConfirm = useConfirmStore((s) => s.request);
   const groups = selectGroupedSessions();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 768px)").matches
+      : false,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     loadFirst();
@@ -69,27 +84,35 @@ export function Sidebar() {
 
   return (
     <>
-      <div
-        aria-hidden="true"
-        onClick={sidebarOpen ? toggleSidebar : undefined}
-        className={[
-          "fixed inset-0 z-40 bg-black/20 md:hidden",
-          "transition-opacity duration-200 motion-reduce:transition-none",
-          sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0",
-        ].join(" ")}
-      />
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            key="sidebar-backdrop"
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onClick={toggleSidebar}
+            className="fixed inset-0 z-40 bg-black/20 md:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-      <div
+      <motion.div
         inert={!sidebarOpen}
         aria-hidden={!sidebarOpen}
+        initial={false}
+        animate={{
+          x: isDesktop ? 0 : sidebarOpen ? 0 : "-100%",
+        }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
         className={[
           "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw]",
           "md:relative md:inset-auto md:h-full md:shrink-0",
-          "transition-[translate,width] duration-200 ease-out",
-          "motion-reduce:transition-none",
-          sidebarOpen
-            ? "translate-x-0 md:w-72"
-            : "pointer-events-none -translate-x-full md:w-0 md:translate-x-0",
+          "md:transition-[width] md:duration-200 md:ease-out",
+          "md:motion-reduce:transition-none",
+          sidebarOpen ? "md:w-72" : "pointer-events-none md:w-0",
         ].join(" ")}>
         <aside
           className={[
@@ -180,7 +203,7 @@ export function Sidebar() {
             <UserMenu />
           </div>
         </aside>
-      </div>
+      </motion.div>
     </>
   );
 }

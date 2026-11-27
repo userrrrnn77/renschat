@@ -22,7 +22,13 @@ interface SessionsState {
   setTitle: (id: string, title: string) => void;
   setQuery: (q: string) => void;
   pollTitle: (id: string) => void;
+  stopPollTitle: (id: string) => void;
 }
+
+// 1 ID cuma boleh punya 1 rantai polling judul.
+// Tanpa ini, pollTitle() yang kepanggil 5x bikin 5 rantai paralel,
+// keliatannya kayak request tiap 300ms padahal interval aslinya 3 detik.
+const pollingTitles = new Map<string, ReturnType<typeof setTimeout>>();
 
 export const useSessionsStore = create<SessionsState>((set, get) => ({
   items: [],
@@ -159,38 +165,53 @@ export const useSessionsStore = create<SessionsState>((set, get) => ({
   /**
    * Poll GET /api/sessions/:id?limit=1 sampai `titleAuto === false`
    * (title gen selesai) atau timeout 30s. Non-blocking.
+   * Dedup: kalau sudah ada rantai untuk ID ini, jangan bikin lagi.
    */
   pollTitle: (id) => {
     const current = get().items.find((x) => x.id === id);
     if (!current) return;
     if (current.titleAuto === false) return;
+    if (pollingTitles.has(id)) return;
 
     const startedAt = Date.now();
     const MAX_MS = 30_000;
     const INTERVAL_MS = 3_000;
 
     const tick = async (): Promise<void> => {
-      if (Date.now() - startedAt > MAX_MS) return;
+      if (Date.now() - startedAt > MAX_MS) {
+        pollingTitles.delete(id);
+        return;
+      }
       try {
         const data = await api.sessions.get(id, "?limit=1");
         const s: { title: string; titleAuto: boolean } | undefined =
           data?.session;
-        if (!s) return;
+        if (!s) {
+          pollingTitles.delete(id);
+          return;
+        }
         if (s.titleAuto === false) {
           set((st) => ({
             items: st.items.map((x) =>
               x.id === id ? { ...x, title: s.title, titleAuto: false } : x,
             ),
           }));
+          pollingTitles.delete(id);
           return;
         }
-        setTimeout(() => void tick(), INTERVAL_MS);
+        pollingTitles.set(id, setTimeout(() => void tick(), INTERVAL_MS));
       } catch {
-        setTimeout(() => void tick(), INTERVAL_MS);
+        pollingTitles.set(id, setTimeout(() => void tick(), INTERVAL_MS));
       }
     };
 
-    setTimeout(() => void tick(), 1_500);
+    pollingTitles.set(id, setTimeout(() => void tick(), 1_500));
+  },
+
+  stopPollTitle: (id) => {
+    const t = pollingTitles.get(id);
+    if (t) clearTimeout(t);
+    pollingTitles.delete(id);
   },
 }));
 

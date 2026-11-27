@@ -27,6 +27,7 @@ export function ChatPage() {
 
   const open = useChatStore((s) => s.open);
   const upsert = useSessionsStore((s) => s.upsert);
+  const stopPollTitle = useSessionsStore((s) => s.stopPollTitle);
   const addFiles = useComposerStore((s) => s.addFiles);
 
   const sessionId = id ?? "new";
@@ -46,7 +47,10 @@ export function ChatPage() {
 
   useEffect(() => {
     if (id) open(id);
-  }, [id, open]);
+    return () => {
+      if (id) stopPollTitle(id);
+    };
+  }, [id, open, stopPollTitle]);
 
   const handleFiles = async (files: File[]) => {
     let targetId = id;

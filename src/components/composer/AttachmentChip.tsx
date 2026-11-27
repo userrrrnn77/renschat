@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from "motion/react";
 import { RotateCcw, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AttachmentUpload } from "../../lib/upload";
@@ -11,22 +12,47 @@ interface Props {
 
 export function AttachmentChip({ attachment, onRemove, onRetry }: Props) {
   const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
 
   const failed = attachment.state === "failed";
   const busy = !failed && attachment.state !== "ready";
 
-  const status = busy
-    ? attachment.state === "processing"
-      ? t("upload.processing")
-      : `${t("upload.uploading")} ${attachment.progress}%`
-    : undefined;
+  // Only show a percentage while bytes are actually flowing. Presigning,
+  // completing, and processing use their own labels so the UI never
+  // pretends to know upload progress that isn't real.
+  let status: string | undefined;
+  switch (attachment.state) {
+    case "ready":
+    case "failed":
+      status = undefined;
+      break;
+    case "queued":
+      status = t("upload.queued");
+      break;
+    case "presigning":
+      status = t("upload.presigning");
+      break;
+    case "uploading":
+      status = `${t("upload.uploading")} ${attachment.progress}%`;
+      break;
+    case "completing":
+      status = t("upload.completing");
+      break;
+    case "processing":
+      status = t("upload.processing");
+      break;
+  }
 
   const removeLabel = t(busy ? "upload.cancelUpload" : "upload.remove");
   const actionClass =
     "grid size-6 place-items-center rounded-full border border-line bg-surface text-muted shadow-sm hover:bg-surface2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent";
 
   return (
-    <div className="relative w-fit max-w-full self-start">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 4, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+      className="relative w-fit max-w-full self-start">
       <AttachmentCard
         compact
         id={attachment.fileId ?? attachment.localId}
@@ -59,6 +85,6 @@ export function AttachmentChip({ attachment, onRemove, onRetry }: Props) {
           <X className="size-3.5" />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

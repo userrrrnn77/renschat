@@ -1,5 +1,6 @@
 // src/components/chat/ThinkingPanel.tsx
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { SourcesList } from "./SourcesList";
@@ -21,6 +22,7 @@ export function ThinkingPanel({
   isStreaming: boolean;
 }) {
   const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
 
   const [expanded, setExpanded] = useState(isStreaming);
 
@@ -63,51 +65,64 @@ export function ThinkingPanel({
         </div>
       </button>
 
-      {expanded && (
-        <div className="border-t border-line px-4 py-3 flex flex-col gap-3">
-          {/* Phase Tracker */}
-          {isStreaming && (
-            <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              {phaseSteps.map((step, idx) => {
-                const isDone = currentPhaseIdx > idx || !isStreaming;
-                const isActive = currentPhaseIdx === idx && isStreaming;
-                return (
-                  <div
-                    key={step.id}
-                    className={cn(
-                      "flex items-center gap-1.5",
-                      isDone
-                        ? "text-success"
-                        : isActive
-                          ? "text-accent font-medium"
-                          : "text-muted opacity-50",
-                    )}>
-                    {isDone ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    ) : isActive ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />
-                    )}
-                    {step.label}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="thinking-panel-content"
+            initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 0.22, ease: "easeOut" }
+            }
+            className="overflow-hidden">
+            <div className="border-t border-line px-4 py-3 flex flex-col gap-3">
+              {/* Phase Tracker */}
+              {isStreaming && (
+                <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  {phaseSteps.map((step, idx) => {
+                    const isDone = currentPhaseIdx > idx || !isStreaming;
+                    const isActive = currentPhaseIdx === idx && isStreaming;
+                    return (
+                      <div
+                        key={step.id}
+                        className={cn(
+                          "flex items-center gap-1.5",
+                          isDone
+                            ? "text-success"
+                            : isActive
+                              ? "text-accent font-medium"
+                              : "text-muted opacity-50",
+                        )}>
+                        {isDone ? (
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        ) : isActive ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />
+                        )}
+                        {step.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-          {/* Sources */}
-          {hasSources && (
-            <div>
-              <p className="text-xs font-semibold text-muted mb-2">
-                {t("chat.thinking.sources")}
-              </p>
-              <SourcesList sources={sources} />
-  
+              {/* Sources */}
+              {hasSources && (
+                <div>
+                  <p className="text-xs font-semibold text-muted mb-2">
+                    {t("chat.thinking.sources")}
+                  </p>
+                  <SourcesList sources={sources} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

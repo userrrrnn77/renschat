@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { MotionConfig } from "motion/react";
 import App from "./App";
 import "./index.css";
 import "./i18n"; // Import init i18n sebelum render
@@ -11,6 +12,8 @@ import "@fontsource-variable/jetbrains-mono";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <MotionConfig reducedMotion="user">
+      <App />
+    </MotionConfig>
   </React.StrictMode>,
 );

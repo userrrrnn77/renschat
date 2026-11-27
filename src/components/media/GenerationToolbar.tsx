@@ -26,7 +26,7 @@ export function GenerationToolbar({ disabled }: GenerationToolbarProps) {
     if (mode === "video") setMode("auto");
   }, [mode, setMode]);
 
-  if (entitlements !== null && !entitlements.mediaEnabled) return null;
+  if (!entitlements || !entitlements.mediaEnabled) return null;
 
   const imageSelected = mode === "image";
 

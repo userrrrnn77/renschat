@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { matchPath } from "react-router";
 import { useUIStore } from "./uiStore";
 import { useToastStore } from "./toastStore";
-import { ApiError, fetchApi } from "../lib/api";
+import { api, ApiError, fetchApi, fetchApiResponse } from "../lib/api";
 import { parseSse } from "../lib/sse";
 import type {
   ChatMessage,
@@ -98,14 +98,13 @@ type SetChatState = (
   partial: Partial<ChatState> | ((s: ChatState) => Partial<ChatState>),
 ) => void;
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
-
 function mapServerMessage(m: ServerMessage): ChatMessage {
   return {
     id: m.id,
     role: m.role === "user" ? "user" : "assistant",
     blocks: m.blocks,
     status: m.status,
+    ...(m.attachments?.length ? { attachments: m.attachments } : {}),
     ...(m.status === "error" && m.errorCode
       ? { error: { code: m.errorCode, message: m.errorCode } }
       : {}),
@@ -269,6 +268,134 @@ async function recover(
     }
     await pause();
   }
+}
+
+// ── Media job reconciliation ────────────────────────────────────────
+// Poll `GET /api/jobs/:id` only after a `media.progress` event delivered a
+// non-empty `jobId`. Stop on terminal status, endpoint error, session/message
+// disappearance, or user reset. Never reconstruct image/video blocks from
+// the job payload — the block output still comes from the stream or the
+// final turn reconcile.
+
+interface JobPoller {
+  cancelled: boolean;
+}
+
+const jobPollers = new Map<string, JobPoller>();
+
+function stopJobPollersForSession(sessionId: string): void {
+  for (const [key, poller] of Array.from(jobPollers.entries())) {
+    if (key.startsWith(`${sessionId}:`)) {
+      poller.cancelled = true;
+      jobPollers.delete(key);
+    }
+  }
+}
+
+function stopAllJobPollers(): void {
+  for (const [key, poller] of Array.from(jobPollers.entries())) {
+    poller.cancelled = true;
+    jobPollers.delete(key);
+  }
+}
+
+const JOB_POLL_INTERVAL_MS = 3000;
+const JOB_POLL_MAX_MS = 5 * 60_000;
+
+function ensureJobPolling(
+  set: SetChatState,
+  get: () => ChatState,
+  sessionId: string,
+  messageId: string,
+  progress: MediaProgress,
+): void {
+  const jobId = progress.jobId;
+  if (!jobId) return;
+
+  const terminal =
+    progress.status === "succeeded" ||
+    progress.status === "failed" ||
+    progress.status === "cancelled";
+  if (terminal) return;
+
+  const key = `${sessionId}:${jobId}`;
+  if (jobPollers.has(key)) return;
+
+  const poller: JobPoller = { cancelled: false };
+  jobPollers.set(key, poller);
+
+  const tick = async (): Promise<void> => {
+    const startedAt = Date.now();
+    while (!poller.cancelled) {
+      await new Promise((r) => setTimeout(r, JOB_POLL_INTERVAL_MS));
+      if (poller.cancelled) return;
+      if (Date.now() - startedAt > JOB_POLL_MAX_MS) {
+        jobPollers.delete(key);
+        return;
+      }
+
+      const session = get().bySession[sessionId];
+      if (!session) {
+        jobPollers.delete(key);
+        return;
+      }
+      const message = session.messages.find((m) => m.id === messageId);
+      if (!message) {
+        jobPollers.delete(key);
+        return;
+      }
+
+      let job;
+      try {
+        job = await api.jobs.get(jobId);
+      } catch {
+        // Any endpoint error stops this poller — no infinite retry.
+        jobPollers.delete(key);
+        return;
+      }
+      if (poller.cancelled) return;
+
+      const jobTerminal =
+        job.status === "succeeded" ||
+        job.status === "failed" ||
+        job.status === "cancelled";
+
+      set((s) => {
+        const cur = s.bySession[sessionId];
+        if (!cur) return s;
+        return {
+          bySession: {
+            ...s.bySession,
+            [sessionId]: {
+              ...cur,
+              messages: cur.messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      mediaProgress: {
+                        jobId,
+                        engine: job.engine,
+                        kind: job.kind,
+                        status: job.status,
+                        ...(job.error?.message
+                          ? { message: job.error.message }
+                          : {}),
+                      },
+                    }
+                  : m,
+              ),
+            },
+          },
+        };
+      });
+
+      if (jobTerminal) {
+        jobPollers.delete(key);
+        return;
+      }
+    }
+  };
+  void tick();
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -468,19 +595,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       const deliver = async (): Promise<boolean> => {
-        const res = await fetch(
-          `${API_BASE}/api/sessions/${sessionId}/messages`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "text/event-stream, application/json",
-            },
-            credentials: "include",
-            body,
-            signal: ac.signal,
+        const res = await fetchApiResponse(`/sessions/${sessionId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream, application/json",
           },
-        );
+          body,
+          signal: ac.signal,
+        });
 
         if (!res.ok) {
           const error = await readChatHttpError(res);
@@ -658,8 +781,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     try {
-      const res = await fetch(
-        `${API_BASE}/api/sessions/${sessionId}/messages/${messageId}/regenerate`,
+      const res = await fetchApiResponse(
+        `/sessions/${sessionId}/messages/${messageId}/regenerate`,
         {
           method: "POST",
           headers: {
@@ -667,7 +790,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
             Accept: "text/event-stream",
           },
           body: JSON.stringify({}),
-          credentials: "include",
           signal: ac.signal,
         },
       );
@@ -797,6 +919,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         // ignore
       }
     });
+    stopAllJobPollers();
     set({ bySession: {}, controllers: {}, editingBySession: {} });
   },
 }));
@@ -824,6 +947,73 @@ function finalizeStream(set: SetChatState, sessionId: string): void {
   });
 }
 
+interface PendingDelta {
+  sessionId: string;
+  assistantId: string;
+  blockIndex: number;
+  delta: string;
+}
+
+function applyDeltaBatch(
+  set: SetChatState,
+  batch: PendingDelta[],
+): void {
+  if (batch.length === 0) return;
+  set((s) => {
+    const byMessage = new Map<string, Map<number, string>>();
+    for (const item of batch) {
+      const mKey = `${item.sessionId}\u0000${item.assistantId}`;
+      let byBlock = byMessage.get(mKey);
+      if (!byBlock) {
+        byBlock = new Map();
+        byMessage.set(mKey, byBlock);
+      }
+      byBlock.set(
+        item.blockIndex,
+        (byBlock.get(item.blockIndex) ?? "") + item.delta,
+      );
+    }
+    let next: ChatState = s;
+    for (const [mKey, byBlock] of byMessage) {
+      const sep = mKey.indexOf("\u0000");
+      const sid = mKey.slice(0, sep);
+      const aid = mKey.slice(sep + 1);
+      const session = next.bySession[sid];
+      if (!session) continue;
+      let touched = false;
+      const messages = session.messages.map((m) => {
+        if (m.id !== aid) return m;
+        if (m.status !== "streaming") return m;
+        const blocks = [...(m.blocks || [])];
+        let changed = false;
+        for (const [idx, d] of byBlock) {
+          const prev = blocks[idx];
+          if (!prev) continue;
+          if (prev.type === "text") {
+            blocks[idx] = { ...prev, markdown: prev.markdown + d };
+            changed = true;
+          } else if (prev.type === "code") {
+            blocks[idx] = { ...prev, content: prev.content + d };
+            changed = true;
+          }
+        }
+        if (!changed) return m;
+        touched = true;
+        return { ...m, blocks };
+      });
+      if (!touched) continue;
+      next = {
+        ...next,
+        bySession: {
+          ...next.bySession,
+          [sid]: { ...session, messages },
+        },
+      };
+    }
+    return next;
+  });
+}
+
 async function consumeStream(
   set: SetChatState,
   get: () => ChatState,
@@ -833,59 +1023,181 @@ async function consumeStream(
   localUserId?: string,
 ): Promise<void> {
   let autoOpened = false;
-  const stream = parseSse(body);
-  for await (const chunk of stream) {
-    if (chunk.event === "message") continue;
-    let data: unknown;
-    try {
-      data = JSON.parse(chunk.data);
-    } catch {
-      continue;
-    }
-    if (chunk.event === "message.start") {
-      const { messageId, userMessageId } = data as {
-        messageId: string;
-        userMessageId?: string;
-      };
+  let sawFirstDelta = false;
 
-      if (
-        localUserId &&
-        typeof userMessageId === "string" &&
-        localUserId !== userMessageId
-      ) {
-        set((s) => renameMessage(s, sessionId, localUserId, userMessageId));
+  const pending = new Map<string, PendingDelta>();
+  let rafId: number | null = null;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let scheduled = false;
+  let cancelled = false;
+
+  function doFlush(): void {
+    if (rafId !== null) {
+      if (typeof cancelAnimationFrame === "function")
+        cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    scheduled = false;
+    if (pending.size === 0) return;
+    const batch = [...pending.values()];
+    pending.clear();
+    applyDeltaBatch(set, batch);
+  }
+
+  function schedule(): void {
+    if (scheduled) return;
+    scheduled = true;
+    const isVisible =
+      typeof document === "undefined" ||
+      document.visibilityState === "visible";
+    if (isVisible && typeof requestAnimationFrame === "function") {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        doFlush();
+      });
+    } else {
+      // Hidden tab: rAF tidak akan menembak; pakai setTimeout agar
+      // pesan tetap selesai tanpa menunggu frame.
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        doFlush();
+      }, 16);
+    }
+  }
+
+  function pushDelta(
+    sid: string,
+    aid: string,
+    blockIndex: number,
+    delta: string,
+  ): void {
+    if (cancelled) return;
+    const key = `${sid}\u0000${aid}\u0000${blockIndex}`;
+    const existing = pending.get(key);
+    if (existing) {
+      existing.delta += delta;
+    } else {
+      pending.set(key, {
+        sessionId: sid,
+        assistantId: aid,
+        blockIndex,
+        delta,
+      });
+    }
+    schedule();
+  }
+
+  const stream = parseSse(body);
+  try {
+    for await (const chunk of stream) {
+      if (chunk.event === "message") continue;
+      let data: unknown;
+      try {
+        data = JSON.parse(chunk.data);
+      } catch {
+        continue;
       }
 
-      set((s) =>
-        renameMessage(s, sessionId, assistantIdRef.current, messageId),
+      if (chunk.event === "message.start") {
+        doFlush();
+        const { messageId, userMessageId } = data as {
+          messageId: string;
+          userMessageId?: string;
+        };
+
+        if (
+          localUserId &&
+          typeof userMessageId === "string" &&
+          localUserId !== userMessageId
+        ) {
+          set((s) => renameMessage(s, sessionId, localUserId, userMessageId));
+        }
+
+        set((s) =>
+          renameMessage(s, sessionId, assistantIdRef.current, messageId),
+        );
+        assistantIdRef.current = messageId;
+        continue;
+      }
+
+      if (chunk.event === "block.delta") {
+        const payload = data as { index?: unknown; delta?: unknown };
+        const idx = payload.index;
+        const d = payload.delta;
+        if (typeof idx === "number" && typeof d === "string" && d.length > 0) {
+          if (!sawFirstDelta) {
+            sawFirstDelta = true;
+            applyDeltaBatch(set, [
+              {
+                sessionId,
+                assistantId: assistantIdRef.current,
+                blockIndex: idx,
+                delta: d,
+              },
+            ]);
+          } else {
+            pushDelta(sessionId, assistantIdRef.current, idx, d);
+          }
+          continue;
+        }
+      }
+
+      // Event struktural (thinking, block.start/end, tool, error,
+      // message.end, done, dsb.): flush batch tertunda dulu agar urutan
+      // dan semantik terjaga.
+      doFlush();
+
+      handleEvent(
+        set,
+        get,
+        sessionId,
+        assistantIdRef.current,
+        chunk.event,
+        data,
       );
-      assistantIdRef.current = messageId;
-      continue;
+
+      if (autoOpened || chunk.event !== "tool.end") continue;
+
+      const activeChat = matchPath("/chat/:id", window.location.pathname);
+      if (activeChat?.params.id !== sessionId) continue;
+
+      const { callId } = data as { callId: string };
+      const message = get().bySession[sessionId]?.messages.find(
+        (item) => item.id === assistantIdRef.current,
+      );
+
+      const tool = message?.tools?.find((item) => item.callId === callId);
+      if (!message || tool?.status !== "ok") continue;
+      if (tool.name !== "present_files" && tool.name !== "create_file")
+        continue;
+
+      const file = message.blocks
+        .slice(tool.beforeIndex)
+        .find((block) => block?.type === "file" && block.preview !== "none");
+
+      if (file?.type !== "file") continue;
+
+      autoOpened = true;
+      useUIStore.getState().openPreview(file);
     }
-    handleEvent(set, get, sessionId, assistantIdRef.current, chunk.event, data);
-
-    if (autoOpened || chunk.event !== "tool.end") continue;
-
-    const activeChat = matchPath("/chat/:id", window.location.pathname);
-    if (activeChat?.params.id !== sessionId) continue;
-
-    const { callId } = data as { callId: string };
-    const message = get().bySession[sessionId]?.messages.find(
-      (item) => item.id === assistantIdRef.current,
-    );
-
-    const tool = message?.tools?.find((item) => item.callId === callId);
-    if (!message || tool?.status !== "ok") continue;
-    if (tool.name !== "present_files" && tool.name !== "create_file") continue;
-
-    const file = message.blocks
-      .slice(tool.beforeIndex)
-      .find((block) => block?.type === "file" && block.preview !== "none");
-
-    if (file?.type !== "file") continue;
-
-    autoOpened = true;
-    useUIStore.getState().openPreview(file);
+  } finally {
+    doFlush();
+    cancelled = true;
+    pending.clear();
+    if (rafId !== null) {
+      if (typeof cancelAnimationFrame === "function")
+        cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    scheduled = false;
   }
 }
 
@@ -1081,6 +1393,8 @@ function handleEvent(
           ...(mp.message !== undefined ? { message: mp.message } : {}),
         },
       };
+      // Start reconciliation only when SSE actually provided a jobId.
+      ensureJobPolling(set, get, sessionId, assistantId, mp);
       break;
     }
     case "error":

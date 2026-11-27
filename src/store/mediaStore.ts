@@ -60,7 +60,12 @@ export const useMediaStore = create<MediaState>((set, get) => ({
   setSelection: (patch) =>
     set((s) => ({ selection: { ...s.selection, ...patch } })),
 
-  setMode: (mode) => set((s) => ({ selection: { ...s.selection, mode } })),
+  setMode: (mode) => {
+    // Backend contract: `generation.mode === "video"` is rejected with
+    // MEDIA_DISABLED. Never surface video as a selectable mode.
+    if (mode === "video") return;
+    set((s) => ({ selection: { ...s.selection, mode } }));
+  },
 
   resetSelection: () => set({ selection: { ...DEFAULT_SELECTION } }),
 
@@ -68,30 +73,32 @@ export const useMediaStore = create<MediaState>((set, get) => ({
 }));
 
 /**
- * Build body `generation` dari selection (§7.7). Kembalikan undefined bila
- * semua default — request body tetap ringkas. Flux3 dipilih eksplisit tetap
- * dikirim meski mode auto supaya backend route ke flux3 (§8.1).
+ * Build body `generation` dari selection (§7.7). `entitlements` adalah satu-
+ * satunya sumber capability: tidak ada generation yang dibangun tanpa
+ * entitlements yang mengizinkannya. Kontrak backend saat ini menolak
+ * `generation.mode === "video"` dengan MEDIA_DISABLED, jadi mode video
+ * maupun opsi video tidak pernah dikirim.
  */
 export function buildGeneration(
   selection: MediaSelection,
+  entitlements: Entitlements | null,
 ): GenerationInput | undefined {
-  const imageExplicit = selection.imageModel === "flux3-klein";
-  const videoExplicit =
-    selection.videoEngine !== "auto" || selection.videoAspect !== "auto";
+  if (!entitlements || !entitlements.mediaEnabled) return undefined;
 
-  if (selection.mode === "auto" && !imageExplicit && !videoExplicit) {
-    return undefined;
-  }
+  const unlockedImageIds = new Set(
+    entitlements.image.models.filter((m) => !m.locked).map((m) => m.id),
+  );
+  const imageExplicit =
+    selection.imageModel === "flux3-klein" &&
+    unlockedImageIds.has("flux3-klein");
 
-  const gen: GenerationInput = { mode: selection.mode };
-  if (imageExplicit) gen.imageModel = selection.imageModel;
-  if (videoExplicit) {
-    gen.video = {
-      ...(selection.videoAspect === "auto"
-        ? {}
-        : { aspect: selection.videoAspect }),
-      engine: selection.videoEngine,
-    };
-  }
-  return gen;
+  // Video mode is rejected by the backend regardless of entitlements state.
+  const requestedMode = selection.mode === "video" ? "auto" : selection.mode;
+
+  if (requestedMode === "auto" && !imageExplicit) return undefined;
+
+  const gen: GenerationInput = {};
+  if (requestedMode === "image") gen.mode = "image";
+  if (imageExplicit) gen.imageModel = "flux3-klein";
+  return Object.keys(gen).length > 0 ? gen : undefined;
 }

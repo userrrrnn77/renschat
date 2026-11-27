@@ -1,3 +1,4 @@
+import "./public-page-motion.css";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { SparkleLogo } from "../components/ui/Icons";
@@ -54,7 +55,7 @@ export function LandingPage() {
           <section
             aria-labelledby="landing-title"
             className="grid items-center gap-9 py-12 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-28">
-            <div className="min-w-0">
+            <div className="rens-page-enter min-w-0">
               <h1
                 id="landing-title"
                 className="max-w-[12ch] text-balance text-5xl leading-[1.03] font-semibold tracking-tighter sm:text-6xl lg:text-7xl">
@@ -72,7 +73,7 @@ export function LandingPage() {
               </Link>
             </div>
 
-            <figure className="min-w-0 border-s-[3px] border-accent bg-surface2 p-5 sm:p-7">
+            <figure className="rens-page-enter rens-page-example min-w-0 border-s-[3px] border-accent bg-surface2 p-5 sm:p-7">
               <figcaption className="text-sm font-medium">
                 {t("landing.example.caption")}
               </figcaption>

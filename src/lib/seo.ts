@@ -78,7 +78,7 @@ export function defaultJsonLd(): Record<string, unknown> {
         },
         email: "developer@renschat.web.id",
         description:
-          "RensChat is a generative AI assistant that renders text, code, tables, charts, cards, files, images, and video directly in chat.",
+          "RensChat is a generative AI assistant that renders text, code, tables, charts, cards, files, and images directly in chat. Legacy image and video blocks remain viewable in history.",
       },
       {
         "@type": "WebSite",
@@ -97,7 +97,7 @@ export function defaultJsonLd(): Record<string, unknown> {
         url: `${SITE_URL}/`,
         image: DEFAULT_IMAGE,
         description:
-          "Generative AI assistant with interactive tables, charts, files, image and video generation. Core features are free; optional donation unlocks heavier media models.",
+          "Generative AI assistant with interactive tables, charts, files, and image generation using FLUX.2 Klein. Renders text, code, tables, charts, cards, and files directly in chat.",
         offers: {
           "@type": "Offer",
           price: "0",

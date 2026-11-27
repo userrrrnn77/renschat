@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { FileBlock } from "../types";
+import { usePreviewStore } from "./usePreviewStore";
 
 type Theme = "light" | "dark" | "system";
 
@@ -23,11 +24,12 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => {
   const savedTheme = (localStorage.getItem("theme") as Theme) || "system";
   const savedSidebar = localStorage.getItem("sidebarOpen") !== "false";
+  const initialPreview = usePreviewStore.getState().activeFile;
 
   return {
     sidebarOpen: savedSidebar,
     theme: savedTheme,
-    preview: null,
+    preview: initialPreview,
     lightbox: null,
     setSidebarOpen: (open) => {
       localStorage.setItem("sidebarOpen", String(open));
@@ -47,8 +49,14 @@ export const useUIStore = create<UIState>((set) => {
       document.documentElement.dataset.theme = isDark ? "dark" : "light";
       set({ theme });
     },
-    openPreview: (file) => set({ preview: file }),
-    closePreview: () => set({ preview: null }),
+    openPreview: (file) => {
+      usePreviewStore.getState().setActiveFile(file);
+      set({ preview: file });
+    },
+    closePreview: () => {
+      usePreviewStore.getState().clearActiveFile();
+      set({ preview: null });
+    },
     setLightbox: (url) => set({ lightbox: url }),
     personalityOpen: false,
     setPersonalityOpen: (open) => set({ personalityOpen: open }),

@@ -1,4 +1,5 @@
 // src/pages/LoginPage.tsx
+import "./public-page-motion.css";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuthStore } from "../store/authStore";
@@ -76,7 +77,7 @@ export function LoginPage() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-5xl bg-surface/80 backdrop-blur-xl border border-line rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative z-10 animate-in fade-in zoom-in-95 duration-500 min-h-150">
+      <div className="w-full max-w-5xl bg-surface/80 backdrop-blur-xl border border-line rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative z-10 rens-page-enter min-h-150">
         {/* KIRI: Branding Panel */}
         <div className="hidden md:flex w-full md:w-[45%] relative bg-accent flex-col justify-between p-12 overflow-hidden text-accent-fg">
           <div className="absolute top-0 right-0 w-100 h-100 bg-white/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
@@ -93,7 +94,7 @@ export function LoginPage() {
 
           <div
             key={isLogin ? "login" : "register"}
-            className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            className="relative z-10 rens-page-enter">
             <h2 className="text-3xl font-semibold leading-tight mb-4">
               {isLogin ? t("auth.welcomeBackTitle") : t("auth.joinTitle")}
             </h2>
@@ -161,7 +162,7 @@ export function LoginPage() {
 
             <div
               key={isLogin ? "form-login" : "form-register"}
-              className="animate-in fade-in slide-in-from-right-4 duration-300">
+              className="rens-page-enter rens-form-enter">
               <div className="mb-6">
                 <h1 className="text-2xl font-semibold text-ink tracking-tight">
                   {isLogin ? t("auth.loginTitle") : t("auth.registerTitle")}
@@ -174,7 +175,7 @@ export function LoginPage() {
               </div>
 
               {error && (
-                <div className="mb-5 p-3 bg-danger/10 text-danger text-sm rounded-xl border border-danger/20 flex items-center gap-2 animate-in fade-in">
+                <div className="mb-5 p-3 bg-danger/10 text-danger text-sm rounded-xl border border-danger/20 flex items-center gap-2 rens-page-enter">
                   <div className="w-1.5 h-1.5 rounded-full bg-danger shrink-0" />
                   {error}
                 </div>

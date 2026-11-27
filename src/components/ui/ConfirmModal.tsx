@@ -1,9 +1,9 @@
-// src/components/ui/ConfirmModal.tsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { useConfirmStore } from "../../store/confirmStore";
 import { cn } from "../../lib/cn";
 import { useTranslation } from "react-i18next";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 export function ConfirmModal() {
   const { t } = useTranslation();
@@ -12,12 +12,18 @@ export function ConfirmModal() {
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
-  const variant = options?.variant ?? "danger";
-  const confirmLabel = options?.confirmLabel ?? t("common.confirm");
-  const cancelLabel = options?.cancelLabel ?? t("common.cancel");
+  // Snapshot agar konten tetap terlihat selama exit animation meskipun
+  // store sudah mengosongkan options.
+  const [displayedOptions, setDisplayedOptions] = useState(options);
 
-  // Autofocus: destructive → fokus tombol Batal (safety). Primary →
-  // fokus tombol utama (Enter langsung konfirmasi).
+  useEffect(() => {
+    if (options) setDisplayedOptions(options);
+  }, [options]);
+
+  const variant = displayedOptions?.variant ?? "danger";
+  const confirmLabel = displayedOptions?.confirmLabel ?? t("common.confirm");
+  const cancelLabel = displayedOptions?.cancelLabel ?? t("common.cancel");
+
   useEffect(() => {
     if (!open) return;
     const target =
@@ -25,22 +31,16 @@ export function ConfirmModal() {
     target?.focus();
   }, [open, variant]);
 
-  // Enter / Escape global handling saat dialog terbuka. Modal sudah
-  // handle Escape via onClose, tapi kita tangkap Escape di sini juga
-  // agar jelas bahwa Escape = cancel (bukan onClose yang ambigu).
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
-        // Enter trigger tombol yang sedang focused (biasanya salah satu
-        // dari dua tombol ini). Kalau fokus di luar modal (mis. body),
-        // default ke cancel untuk safety.
         const active = document.activeElement;
         if (
           active === cancelBtnRef.current ||
           active === confirmBtnRef.current
         ) {
-          return; // biarkan native button behavior
+          return;
         }
         e.preventDefault();
         cancel();
@@ -50,36 +50,61 @@ export function ConfirmModal() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, cancel]);
 
-  if (!options) return null;
+  if (!displayedOptions) return null;
 
   return (
-    <Modal open={open} onClose={cancel}>
-      <h2 className="text-lg font-semibold text-ink">{options.title}</h2>
-      {options.description && (
-        <p className="text-sm text-muted mt-2 whitespace-pre-line">
-          {options.description}
-        </p>
-      )}
-      <div className="flex items-center justify-end gap-2 mt-6">
-        <button
-          ref={cancelBtnRef}
-          type="button"
-          onClick={cancel}
-          className="px-4 py-2 text-sm font-medium bg-surface2 hover:bg-line text-ink rounded-lg transition-colors">
-          {cancelLabel}
-        </button>
-        <button
-          ref={confirmBtnRef}
-          type="button"
-          onClick={confirm}
-          className={cn(
-            "px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors",
-            variant === "danger"
-              ? "bg-danger hover:bg-danger/90"
-              : "bg-accent hover:bg-accent-hover",
-          )}>
-          {confirmLabel}
-        </button>
+    <Modal
+      open={open}
+      onClose={cancel}
+      onExitComplete={() => setDisplayedOptions(null)}>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              "p-2.5 rounded-xl shrink-0",
+              variant === "danger"
+                ? "bg-danger/10 text-danger"
+                : "bg-accent/10 text-accent",
+            )}>
+            {variant === "danger" ? (
+              <Trash2 className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-ink">
+              {displayedOptions.title}
+            </h2>
+            {displayedOptions.description && (
+              <p className="text-xs text-muted mt-1 leading-relaxed whitespace-pre-line">
+                {displayedOptions.description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 mt-2">
+          <button
+            ref={cancelBtnRef}
+            type="button"
+            onClick={cancel}
+            className="px-4 py-2 text-xs font-medium bg-surface2 hover:bg-line text-ink rounded-xl transition-colors">
+            {cancelLabel}
+          </button>
+          <button
+            ref={confirmBtnRef}
+            type="button"
+            onClick={confirm}
+            className={cn(
+              "px-4 py-2 text-xs font-medium text-white rounded-xl transition-colors shadow-sm",
+              variant === "danger"
+                ? "bg-danger hover:bg-danger/90"
+                : "bg-accent hover:bg-accent-hover",
+            )}>
+            {confirmLabel}
+          </button>
+        </div>
       </div>
     </Modal>
   );

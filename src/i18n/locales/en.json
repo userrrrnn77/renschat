@@ -148,7 +148,17 @@
     "editingMessage": "Editing message...",
     "pastedText": "Pasted text",
     "placeholderNew": "What can I help you with today?",
-    "placeholderReply": "Reply to RensChat..."
+    "placeholderReply": "Reply to RensChat...",
+    "uploadingPastes": "Uploading pasted text...",
+    "errors": {
+      "newSessionWithAttachments": "Could not create a new session. The attachment is kept; try uploading again.",
+      "newSessionWithMessage": "Could not create a new session. Your message is kept; try sending again.",
+      "messageTooLong": "Your message and quote already exceed the {{limit}}-character limit. Shorten the text or quote first.",
+      "totalTooLong": "The message and quote exceed the {{limit}}-character limit. Shorten the message first.",
+      "uploadPastesFailed": "Pasted-text upload failed. Check the attachment and retry before sending.",
+      "failedAttachment": "An attachment failed to upload. Retry or remove it before sending.",
+      "waitForUploads": "Wait for attachments to finish uploading before sending."
+    }
   },
   "donation": {
     "alreadyDonated": "Already donated but credits not added? Claim here",
@@ -181,13 +191,27 @@
     "commandInvalidInput": "Invalid command input. Check the arguments or expression.",
     "commandNotAllowed": "This command is unavailable in RensChat.",
     "commandFailed": "The command could not be processed.",
-    "credits": "No credits left for this model. Open donation or use a free model.",
+    "credits": "No credits left for this model. Use a free model.",
     "network": "Connection lost. Please try again.",
     "provider": "AI provider is busy. Try again in a few minutes.",
     "rate": "Too many requests. Try again in a moment.",
     "refused": "The AI provider refused the request. Try adjusting your prompt.",
     "timeout": "The process is taking longer than usual. Please try again.",
-    "unknown": "Something went wrong while processing the request."
+    "unknown": "Something went wrong while processing the request.",
+    "media": "Media generation is currently unavailable.",
+    "upload": "Upload failed. Check the file and try again.",
+    "asset": "This file is no longer available.",
+    "auth": "Your session has ended. Please sign in again.",
+    "validation": "The request is invalid. Please check your input.",
+    "uploadQuota": "Your account's total upload quota is full. Delete old files to free up space.",
+    "uploadTooLarge": "This file exceeds the per-file size limit. Compress or pick a smaller file.",
+    "uploadMissing": "Server did not receive the file. Try uploading again.",
+    "uploadSizeMismatch": "File size did not match. Try uploading again.",
+    "uploadHashMismatch": "File checksum mismatch. Try uploading again.",
+    "uploadUnsupported": "This file type is not supported.",
+    "assetExpired": "This media has expired and cannot be recovered.",
+    "busy": "Server is busy processing another request. Try again in a moment.",
+    "entitlementRequired": "This feature requires additional access."
   },
   "landing": {
     "brand": "RensChat",
@@ -238,14 +262,42 @@
     "autoCosmos": "Auto (Cosmos3 — credits)",
     "engine": "Engine",
     "examples": "Examples",
-    "flux3Note": "FLUX.3 unlocks heavier models. All features remain free.",
+    "flux3Note": "This model requires additional access from the server.",
     "image": "Image",
     "locked": "Locked",
-    "lockedTooltip": "Unlocked after buying a coffee on Ko-fi (optional)",
+    "lockedTooltip": "This model is currently unavailable for your account.",
     "pythonFree": "Python (free)",
     "ratio": "Ratio",
     "video": "Video",
     "videoOptions": "Video options"
+  },
+  "memory": {
+    "addTitle": "Add note",
+    "editTitle": "Edit note",
+    "count": "{{count}} of {{max}} notes",
+    "empty": "No saved notes yet.",
+    "topicLabel": "Topic",
+    "topicPlaceholder": "E.g. Writing style, Project preferences",
+    "textLabel": "Note",
+    "textPlaceholder": "Write a short note (max 240 characters)…",
+    "save": "Save note",
+    "editAria": "Edit note",
+    "deleteAria": "Delete note",
+    "clearAll": "Delete all",
+    "clearConfirm": "Yes, delete all",
+    "confirmClearPrompt": "Delete all saved notes?",
+    "toastSaved": "Saved note updated",
+    "toastCleared": "All saved notes deleted",
+    "loadError": "Failed to load saved notes",
+    "saveError": "Failed to save note",
+    "clearError": "Failed to delete notes",
+    "errors": {
+      "topicTooShort": "Topic must be at least 2 characters",
+      "topicTooLong": "Topic must be 64 characters or less",
+      "textEmpty": "Note text is required",
+      "textTooLong": "Note text must be 240 characters or less",
+      "tooMany": "Maximum 24 notes"
+    }
   },
   "menu": {
     "sessionActions": "Conversation actions",
@@ -281,6 +333,20 @@
     "toastSuccess": "Personality preferences saved"
   },
   "preview": {
+    "wordDocument": "Microsoft Word Document (.docx)",
+    "wordEmpty": "This document has no text.",
+    "powerpointPresentation": "Microsoft PowerPoint Presentation (.pptx)",
+    "selectSlide": "Select Slide",
+    "slideOption": "Slide {{current}} of {{total}} {{title}}",
+    "slideLabel": "Slide {{current}}",
+    "slideCounter": "{{current}} / {{total}}",
+    "slideEmpty": "This slide has no text.",
+    "excelWorksheet": "Microsoft Excel Worksheet (.xlsx)",
+    "sheetDefaultTitle": "Sheet {{number}}",
+    "excelEmpty": "This sheet has no data.",
+    "paginationInfo": "Page {{page}} of {{total}} ({{rows}} rows)",
+    "previous": "Previous",
+    "next": "Next",
     "imageAlt": "Image preview",
     "openFile": "Preview {{name}}",
     "empty": "This file is empty.",
@@ -320,7 +386,7 @@
       "title": "Contact Us"
     },
     "faq": {
-      "content": "<h2>What is RensChat?</h2><p>RensChat is an AI assistant that not only replies with text but can also render interactive tables, charts, cards, create files, and <strong>generate images and videos</strong> directly within the chat.</p><h2>Is my data safe?</h2><p>Yes. We use secure JWT authentication and files are stored in private storage (Cloudflare R2). Read more in our <a href='/privacy'>Privacy Policy</a>.</p><h2>What file formats are supported?</h2><p>Currently we support PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, as well as images (PNG, JPG). For <strong>generated media</strong>, the output is images (PNG/JPEG/WebP) and MP4 videos.</p><h2>Are AI-generated images and videos free?</h2><p><strong>FLUX.2 Klein 4B</strong> images and <strong>Python videos</strong> (graphic animations generated from code) are completely free with a daily limit. <strong>FLUX.3 Image Klein</strong> images and <strong>NVIDIA Cosmos3 Nano</strong> videos require credits obtained through <em>optional</em> Ko-fi donations. All core features remain free without donation.</p><h2>How long is my media stored?</h2><p>All generated media is stored for a maximum of <strong>24 hours</strong> from creation, then automatically deleted. Download the media you need before it expires. After expiration, media cannot be recovered and needs to be regenerated.</p><h2>Is AI-generated media legal to use?</h2><p>FLUX.3 image models are subject to the FLUX Kommunity License v1.0, while Cosmos videos are subject to the NVIDIA API Trial Terms. Cosmos video output includes a <strong>SynthID</strong> watermark that must not be removed. Always check model licenses before commercial use. Details in <a href='/terms'>Terms & Conditions</a>.</p><h2>How to claim donation credits?</h2><p>After donating, write the donation code <code>RC-XXXXXX</code> (available in the account menu) in the Ko-fi donation message — credits will be added automatically. If you forgot to write the code, open the account menu → <em>Donation (optional)</em> → <em>Claim donation</em> and enter your email + Ko-fi transaction ID.</p><h2>Why is the AI sometimes wrong?</h2><p>Large language models (LLMs) can hallucinate. We have added a RAG (Retrieval-Augmented Generation) feature to minimize this, but always double-check critical information.</p>",
+      "content": "<h2>What is RensChat?</h2><p>RensChat is an AI assistant that not only replies with text but can also render interactive tables, charts, cards, create files, and <strong>generate images</strong> directly within the chat.</p><h2>Is my data safe?</h2><p>Yes. We use secure JWT authentication and files are stored in private storage (Cloudflare R2). Read more in our <a href='/privacy'>Privacy Policy</a>.</p><h2>What file formats are supported?</h2><p>Currently we support PDF, DOCX, XLSX, CSV, TXT, Markdown, JSON, as well as images (PNG, JPG). For <strong>generated media</strong>, the output is images (PNG/JPEG/WebP) and MP4 videos.</p><h2>Is AI image generation free?</h2><p>Images from <strong>FLUX.2 Klein</strong> are completely free with a daily limit. Other image models and videos are currently disabled by the backend.</p><h2>How long is my media stored?</h2><p>All generated media is stored for a maximum of <strong>24 hours</strong> from creation, then automatically deleted. Download the media you need before it expires. After expiration, media cannot be recovered and needs to be regenerated.</p><h2>Is AI-generated media legal to use?</h2><p>FLUX.2 Klein images are subject to the FLUX Kommunity License v1.0. Legacy media (images/videos) from chat history remain viewable under their original model licenses. Details in <a href='/terms'>Terms & Conditions</a>.</p><h2>Which models does RensChat use?</h2><p>Image generation uses FLUX.2 Klein. Video mode and FLUX.3 image models are disabled in the current backend contract. The UI only shows models returned by the entitlements endpoint.</p><h2>Why is the AI sometimes wrong?</h2><p>Large language models (LLMs) can hallucinate. We have added a RAG (Retrieval-Augmented Generation) feature to minimize this, but always double-check critical information.</p>",
       "title": "Frequently Asked Questions (FAQ)"
     },
     "privacy": {
@@ -359,7 +425,29 @@
   },
   "upload": {
     "cancelUpload": "Cancel upload",
+    "completing": "Finishing up…",
+    "error": {
+      "disconnected": "Upload interrupted. Click retry to upload again.",
+      "fileReadFailed": "Failed to read local file",
+      "generic": "Upload failed",
+      "hashMismatch": "File checksum mismatch. Try uploading again.",
+      "localMissing": "Local file is no longer available. Remove and pick again.",
+      "networkCheck": "Network issue. Click retry to check again.",
+      "networkError": "Connection lost while uploading. Check your network and try again.",
+      "pendingRetry": "Upload incomplete. Click retry to finish.",
+      "payloadTooLarge": "This file exceeds the per-file size limit. Compress or pick a smaller file.",
+      "processingFailed": "File processing failed",
+      "processingTimeout": "File is taking too long to process. Try again in a moment.",
+      "quotaExceeded": "Your account's total upload quota is full. Delete old files to free up space.",
+      "serverExpired": "File expired on the server. Click retry to upload again.",
+      "sizeMismatch": "Uploaded size did not match. Try uploading again.",
+      "unsupportedMime": "This file type is not supported.",
+      "uploadFailed": "Upload failed. Try again.",
+      "uploadMissing": "Server did not receive the file. Try uploading again."
+    },
+    "presigning": "Preparing…",
     "processing": "Processing",
+    "queued": "Queued…",
     "remove": "Remove",
     "retry": "Retry",
     "uploading": "Uploading"
@@ -389,6 +477,8 @@
     "themeDesc": "Customize the RensChat interface appearance.",
     "languageDesc": "Choose the language used for the interface.",
     "personalityDesc": "Set RensChat's default style when replying to you.",
+    "memory": "Saved memory",
+    "memoryDesc": "Notes saved to your account that you can edit anytime.",
     "usageDesc": "View your token and media usage statistics."
   }
 }

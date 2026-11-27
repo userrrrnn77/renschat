@@ -13,6 +13,45 @@ import { PastedTextBubble } from "../chat/PastedTextBubble";
 import { encodeUserTurn } from "../../lib/userTurn";
 import { cn } from "../../lib/cn";
 
+const MAX_MESSAGE_CHARS = 100_000;
+
+function waitForUploadsReady(
+  key: string,
+  localIds: string[],
+): Promise<boolean> {
+  if (localIds.length === 0) return Promise.resolve(true);
+  const ids = new Set(localIds);
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const tick = () => {
+      const draft = useComposerStore.getState().drafts[key];
+      if (!draft) {
+        resolve(false);
+        return;
+      }
+      const attachments = draft.attachments.filter((a) => ids.has(a.localId));
+      if (attachments.length < ids.size) {
+        resolve(false);
+        return;
+      }
+      if (attachments.some((a) => a.state === "failed")) {
+        resolve(false);
+        return;
+      }
+      if (attachments.every((a) => a.state === "ready" && a.fileId !== null)) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - startedAt > 120_000) {
+        resolve(false);
+        return;
+      }
+      setTimeout(tick, 200);
+    };
+    tick();
+  });
+}
+
 export function Composer({
   sessionId,
   isNew = false,
@@ -20,8 +59,17 @@ export function Composer({
   sessionId: string;
   isNew?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const messageLimitLabel = MAX_MESSAGE_CHARS.toLocaleString(
+    i18n.language === "en" ? "en-US" : "id-ID",
+  );
   const key = isNew ? "new" : sessionId;
+
+  const userId = useComposerStore((s) => s.userId);
+  const open = useComposerStore((s) => s.open);
+  useEffect(() => {
+    if (userId) return open(key);
+  }, [userId, key, open]);
 
   const savedDraft = useComposerStore((s) => s.drafts[key]);
   const reply = savedDraft?.reply;
@@ -55,6 +103,9 @@ export function Composer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -67,6 +118,8 @@ export function Composer({
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
 
+    setError(null);
+    setStatus(null);
     let targetId = sessionId;
 
     if (isNew) {
@@ -74,9 +127,11 @@ export function Composer({
         const newSession = await api.sessions.create();
         upsertSession(newSession);
         targetId = newSession.id;
+        useComposerStore.getState().moveDraft("new", targetId);
         navigate(`/chat/${targetId}`, { replace: true });
       } catch (err) {
         console.error("Gagal membuat sesi baru", err);
+        setError(t("composer.errors.newSessionWithAttachments"));
         return;
       }
     }
@@ -90,7 +145,7 @@ export function Composer({
   };
 
   const handleSend = async () => {
-    if (isStreaming) return;
+    if (isStreaming || isPreparing) return;
 
     if (
       !draft.text.trim() &&
@@ -100,66 +155,181 @@ export function Composer({
       return;
     }
 
-    const combinedText = encodeUserTurn({
-      text: draft.text,
-      pastes: draft.pastedTexts.map((p) => p.text),
-      ...(reply ? { reply } : {}),
-    });
-
-    if (combinedText.length > 100_000) {
-      textareaRef.current?.setCustomValidity(
-        "Total pesan, kutipan, dan lampiran teks melebihi 100.000 karakter.",
-      );
-      textareaRef.current?.reportValidity();
-      textareaRef.current?.setCustomValidity("");
-      return;
-    }
-
-    if (
-      draft.attachments.some(
-        (a) =>
-          a.state === "failed" ||
-          a.state === "uploading" ||
-          a.state === "queued" ||
-          a.state === "presigning" ||
-          a.state === "completing" ||
-          a.state === "processing",
-      )
-    ) {
-      return;
-    }
-
-    const readyAttachments = draft.attachments.filter(
-      (a) => a.state === "ready" && a.fileId !== null,
+    const snapshot = useComposerStore.getState().drafts[key] ?? draft;
+    const blockedByFailure = snapshot.attachments.find(
+      (a) => a.state === "failed",
     );
+    if (blockedByFailure) {
+      setError(
+        blockedByFailure.error || t("composer.errors.failedAttachment"),
+      );
+      return;
+    }
+    if (snapshot.attachments.some((a) => a.state !== "ready")) {
+      setError(t("composer.errors.waitForUploads"));
+      return;
+    }
 
-    const attachments = readyAttachments.map((a) => ({
-      id: a.fileId as string,
-      name: a.name,
-      mime: a.mime,
-      size: a.size,
-      localUrl: a.localUrl,
-    }));
+    setError(null);
+    setStatus(null);
+    setIsPreparing(true);
 
-    const editOfMessageId = editing?.messageId;
-    let targetId = sessionId;
+    try {
+      const baseText = encodeUserTurn({
+        text: draft.text,
+        pastes: [],
+        ...(reply ? { reply } : {}),
+      });
 
-    if (isNew) {
-      try {
-        const newSession = await api.sessions.create();
-        upsertSession(newSession);
-        targetId = newSession.id;
-        navigate(`/chat/${targetId}`, { replace: true });
-      } catch (err) {
-        console.error("Gagal membuat sesi baru", err);
+      if (baseText.length > MAX_MESSAGE_CHARS) {
+        setError(
+          t("composer.errors.messageTooLong", {
+            limit: messageLimitLabel,
+          }),
+        );
         return;
       }
+
+      const initialCombinedText = encodeUserTurn({
+        text: draft.text,
+        pastes: draft.pastedTexts.map((p) => p.text),
+        ...(reply ? { reply } : {}),
+      });
+
+      let targetId = sessionId;
+      let activeKey = key;
+
+      if (isNew) {
+        try {
+          const newSession = await api.sessions.create();
+          upsertSession(newSession);
+          targetId = newSession.id;
+          activeKey = targetId;
+          useComposerStore.getState().moveDraft("new", targetId);
+          navigate(`/chat/${targetId}`, { replace: true });
+        } catch (err) {
+          console.error("Gagal membuat sesi baru", err);
+          setError(t("composer.errors.newSessionWithMessage"));
+          return;
+        }
+      }
+
+      let combinedText = initialCombinedText;
+
+      if (initialCombinedText.length > MAX_MESSAGE_CHARS) {
+        if (draft.pastedTexts.length === 0) {
+          setError(
+            t("composer.errors.totalTooLong", {
+              limit: messageLimitLabel,
+            }),
+          );
+          return;
+        }
+
+        setStatus(t("composer.uploadingPastes"));
+        const pasteFiles = draft.pastedTexts.map(
+          (paste, index) =>
+            new File(
+              [paste.text],
+              draft.pastedTexts.length === 1
+                ? "paste.txt"
+                : `paste-${index + 1}.txt`,
+              { type: "text/plain" },
+            ),
+        );
+        const uploads = addFiles(activeKey, pasteFiles, targetId);
+
+        useComposerStore
+          .getState()
+          .setMessageContext(activeKey, [], reply ?? undefined);
+
+        const uploadsReady = await waitForUploadsReady(
+          activeKey,
+          uploads.map((u) => u.localId),
+        );
+
+        if (!uploadsReady) {
+          const current = useComposerStore.getState().drafts[activeKey];
+          const failed = current?.attachments.find(
+            (a) =>
+              uploads.some((u) => u.localId === a.localId) &&
+              a.state === "failed",
+          );
+          setError(
+            failed?.error || t("composer.errors.uploadPastesFailed"),
+          );
+          return;
+        }
+
+        const current = useComposerStore.getState().drafts[activeKey] ?? draft;
+        combinedText = encodeUserTurn({
+          text: current.text,
+          pastes: [],
+          ...(current.reply ? { reply: current.reply } : {}),
+        });
+
+        if (combinedText.length > MAX_MESSAGE_CHARS) {
+          setError(
+            t("composer.errors.messageTooLong", {
+              limit: messageLimitLabel,
+            }),
+          );
+          return;
+        }
+
+        setStatus(null);
+      }
+
+      const currentDraft =
+        useComposerStore.getState().drafts[activeKey] ?? draft;
+      const failedAttachment = currentDraft.attachments.find(
+        (a) => a.state === "failed",
+      );
+
+      if (failedAttachment) {
+        setError(
+          failedAttachment.error || t("composer.errors.failedAttachment"),
+        );
+        return;
+      }
+
+      if (
+        currentDraft.attachments.some(
+          (a) => a.state !== "ready" && a.state !== "failed",
+        )
+      ) {
+        setError(t("composer.errors.waitForUploads"));
+        return;
+      }
+
+      const readyAttachments = currentDraft.attachments.filter(
+        (a) => a.state === "ready" && a.fileId !== null,
+      );
+
+      const attachments = readyAttachments.map((a) => ({
+        id: a.fileId as string,
+        name: a.name,
+        mime: a.mime,
+        size: a.size,
+        localUrl: a.localUrl,
+      }));
+
+      const editOfMessageId = editing?.messageId;
+
+      clear(activeKey, { keepServerFiles: true });
+      await send(
+        targetId,
+        combinedText,
+        attachments,
+        undefined,
+        editOfMessageId,
+      );
+
+      if (editOfMessageId) cancelEdit(targetId);
+    } finally {
+      setIsPreparing(false);
+      setStatus(null);
     }
-
-    clear(key, { keepServerFiles: true });
-    await send(targetId, combinedText, attachments, undefined, editOfMessageId);
-
-    if (editOfMessageId) cancelEdit(targetId);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -227,13 +397,18 @@ export function Composer({
   const isUploading = draft.attachments.some(
     (a) => a.state !== "ready" && a.state !== "failed",
   );
+  const hasFailedAttachment = draft.attachments.some(
+    (a) => a.state === "failed",
+  );
 
   const isDisabled =
     isStreaming ||
+    isPreparing ||
     (!draft.text.trim() &&
       draft.pastedTexts.length === 0 &&
       draft.attachments.length === 0) ||
-    isUploading;
+    isUploading ||
+    hasFailedAttachment;
 
   return (
     <div className="w-full max-w-3xl mx-auto min-w-0">
@@ -254,7 +429,9 @@ export function Composer({
       {reply && (
         <div className="mb-2 flex items-start gap-3 rounded-xl border border-line bg-surface px-3 py-2">
           <div className="min-w-0 flex-1 border-l-2 border-accent pl-3">
-            <p className="text-xs font-medium text-accent">{t("chat.replyingToAssistant")}</p>
+            <p className="text-xs font-medium text-accent">
+              {t("chat.replyingToAssistant")}
+            </p>
             <p className="mt-1 line-clamp-2 whitespace-pre-wrap wrap-break-word text-sm text-muted">
               {reply.text}
             </p>
@@ -357,6 +534,15 @@ export function Composer({
           </button>
         </div>
       </div>
+
+      {status && (
+        <div className="text-center mt-2 text-[11px] text-muted">{status}</div>
+      )}
+      {error && (
+        <div className="text-center mt-2 text-xs text-red-500" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="text-center mt-2 text-[11px] text-muted">
         {t("composer.disclaimer")}
